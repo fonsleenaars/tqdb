@@ -65,7 +65,7 @@ The *tqdb-parser.py* script uses the TextureViewer program created by Max McGuir
 readme in its entirey in the repo.
 
 ### ReactJS Website implementation
-I've currently put the JSON outputs of these parsers to use on [tqdb][tq-db.net], and will continue to develop the website over the next few weeks.
+I've currently put the JSON outputs of these parsers to use on [tq-db.net][tqdb], and will continue to develop the website over the next few weeks.
 
 [ng]: <http://www.nordicgames.at/index.php/product/titan_quest_gold_edition>
 [gb]: <http://www.gamebanshee.com/titanquest/>
