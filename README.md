@@ -64,5 +64,9 @@ PNG from it, ordered by texture sizes (ex 32x32, 64x64). It will create a sprite
 The *tqdb-parser.py* script uses the TextureViewer program created by Max McGuire in case the -bitmap option is specified. I included the program, the DLL and the
 readme in its entirey in the repo.
 
+### ReactJS Website implementation
+I've currently put the JSON outputs of these parsers to use on [tqdb][tq-db.net], and will continue to develop the website over the next few weeks.
+
 [ng]: <http://www.nordicgames.at/index.php/product/titan_quest_gold_edition>
 [gb]: <http://www.gamebanshee.com/titanquest/>
+[tqdb]: <http://www.tq-db.net>
