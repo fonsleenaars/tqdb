@@ -60,5 +60,9 @@ The main parser (*tqdb-parser.py*) needs the **full path** to your locally extra
 The last script (*tqdb-sprite.py*) will take the **full path** to the newly created bitmap folder (currently set to "uibitmaps") and create a single
 PNG from it, ordered by texture sizes (ex 32x32, 64x64). It will create a sprite.css file alongside it, that has a reference to the tags of the equipment names.
 
+### TextureViewer
+The *tqdb-parser.py* script uses the TextureViewer program created by Max McGuire in case the -bitmap option is specified. I included the program, the DLL and the
+readme in its entirey in the repo.
+
 [ng]: <http://www.nordicgames.at/index.php/product/titan_quest_gold_edition>
 [gb]: <http://www.gamebanshee.com/titanquest/>
