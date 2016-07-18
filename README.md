@@ -19,7 +19,20 @@ The result is a few Python files that can achieve the following results:
   - Subsequently turn that folder containing all the bitmap images into a single sprite image (5MB in size), including a CSS sprite sheet.
   
 ### Extracting ARZ and ARC
-TODO: Instructions
+Extracting the existing Titan Quest Resources (such as the Items.arc and Text_EN.arc files) is done using the provided ArchiveTool in the Titan Quest 
+Immortal Throne folder. 
+
+Run the program in a prompt or shell:
+
+> ArchiveTool.exe Resources\Items.arc -extract C:\ExtractToThisFolder\
+
+The above command will extract all resources inside the packed Items.arc to the desired folder. 
+The ArchiveTool usage can be further explored by simply running the program without any parameters.
+
+The support script *tqdb-support-json.py* requires the **Text_EN.arc** and **Items.arc** to be extracted.
+Both files can be found in the Resources folder of your TQ:IT directory.
+
+TODO: ARZ Instructions
   
 ### DBR Parser
 Titan Quest works with so called DBR files (Database Records). These files are basically dictionaries of all properties of whatever the file
