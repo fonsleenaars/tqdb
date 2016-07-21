@@ -133,6 +133,9 @@ for file in files:
 		#Add members
 		set_dict['members'] = []
 		for member in set_properties['setMembers'].split(';'):
+			if 'equipment' not in member.lower():
+				continue;
+
 			try:
 				with open(db_dir + member) as member_file:
 					member_lines = [line.rstrip(',\n') for line in member_file]
@@ -141,6 +144,10 @@ for file in files:
 					set_dict['members'].append({ 'tag' : member_tag, 'name' : tags[member_tag] })
 			except FileNotFoundError:
 				set_dict['members'].append({ 'tag': member, 'name' : 'Could not be found.' })
+
+		#If this set has no members; remove it:
+		if len(set_dict['members']) == 0:
+			continue;
 				
 		#Add set bonuses
 		set_dict['bonuses'] = parse_tiered_properties(set_properties)

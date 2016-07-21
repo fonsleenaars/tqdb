@@ -653,11 +653,26 @@ def parse_tiered_properties(properties):
 	if not tiered_properties:
 		return [parse_properties(properties)]
 
+	#Check if there are any 0 values for lists:
+	#Example of this: chance to freeze" [0,5,10] - freezeMin: 1, freezeMax: 3
+	#This will result in the freeze always being shown, even on the first, resulting in an erroneous bonus
+	no_chance_singles = {}
+	for key, value in tiered_properties.items():
+		if('Chance' in key and float(value[0]) == 0):
+			#Store the prefix to check on another iteration
+			no_chance_singles[key[0:key.index('Chance')]] = len(value)
+
 	#Find longest list of split fields:
 	tiers = len(tiered_properties[max(tiered_properties, key=lambda x:len(tiered_properties[x]))])
 
 	#Now add all non-tiered properties:
 	tiered_properties.update(dict([(key, value) for key, value in properties.items() if ';' not in value]))
+
+	#Now check if there are values with a 0 chance, but singular corresponding amount:
+	for prefix, total in no_chance_singles.items():
+		for key, value in tiered_properties.items():
+			if 'Chance' not in key and prefix in key and not isinstance(value, list):
+				tiered_properties[key] = ['0.000000'] + ([value] * (total - 1))
 
 	result = []
 	for i in range(0, tiers):
