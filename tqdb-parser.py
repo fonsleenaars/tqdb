@@ -29,9 +29,13 @@ relic_files.extend(glob.glob(db_dir + "\\records\\xpack\\item\\relics\\*.dbr"))
 relic_files.extend(glob.glob(db_dir + "\\records\\item\\animalrelics\\*.dbr"))
 relic_files.extend(glob.glob(db_dir + "\\records\\xpack\\item\\charms\\*.dbr"))
 
+#Load the artifact files
+artifact_files 	= glob.glob(db_dir + "\\records\\xpack\\item\\artifacts\\**\\*.dbr", recursive=True)
+
 #Difficulties for relics:
 difficulties = ["Normal", "Epic", "Legendary"]
 requirements = ["Strength", "Dexterity", "Intelligence", "Level"]
+artifact_difficulties = { 'e': 'Epic', 'l': 'Legendary', 'n' : 'Normal'}
 
 #Filter on rarity:
 if not rarity:
@@ -187,6 +191,30 @@ for relic_file in relic_files:
 			bitmap = str(bmp_dir + item_properties['relicBitmap'])
 			command = ['utils/textureviewer/TextureViewer.exe', bitmap, 'output/uibitmaps/' + new_item['tag'] + '.png']
 			subprocess.run(command)
+
+for artifact_file in artifact_files: 
+	with open(artifact_file) as artifact:
+		#DBR file into a list of lines
+		lines = [line.rstrip(',\n') for line in artifact]
+
+		#Parse line into a dictionary of key, value properties:
+		item_properties = dict([(k,v) for k,v in (dict(properties.split(',') for properties in lines)).items()  if has_numeric_value(v)])
+
+		#Parse the difficulty and act from the filename:
+		file_meta = os.path.basename(artifact_file).split('_')
+
+		new_item = dict()
+		new_item['tag'] = item_properties['description']
+		new_item['name'] = tags[item_properties['description']]
+		new_item['classification'] = item_properties['artifactClassification']
+		new_item['difficulty'] = artifact_difficulties[file_meta[1]]
+
+		#Check bitmap:
+		if bmp_dir and  'artifactBitmap' in item_properties:
+			bitmap = str(bmp_dir + item_properties['artifactBitmap'])
+			command = ['utils/textureviewer/TextureViewer.exe', bitmap, 'output/uibitmaps/' + new_item['tag'] + '.png']
+			subprocess.run(command)
+
 
 with open('output/items.json', 'w') as items_file:
 	json.dump(items, items_file)
