@@ -73,10 +73,12 @@ for canvas in canvases:
 	sprite_y += canvas.size[1]
 
 #Save the sprite
-sprite_image.save('sprite.png', optimize=True)
+sprite_image.save('output/sprite.png', optimize=True)
 
 #Save the CSS
 css.sort()
-with open('sprite.css', 'w') as css_file:
+with open('output/sprite.css', 'w') as css_file:
 	for line in css:
 		css_file.write("{0}\n".format(line))
+
+print('sprite.png and sprite.css were saved to the output folder')

@@ -12,7 +12,7 @@ from dbr_parser import *
 #TODO: Checking arguments for validity
 parser = argparse.ArgumentParser(description='Parse all TitanQuest equipment from an extracted database.arz folder into a single JSON equipment_file.')
 parser.add_argument('dir', type=str, help='Directory that the database.arz is extracted to')
-parser.add_argument('-rarity', type=str, default='Rare,Epic,Legendary', help='Comma separated list of the possible rarities: Rare,Epic,Legendary')
+parser.add_argument('-rarity', type=str, default='Rare,Epic,Legendary,Magical', help='Comma separated list of the possible rarities: Rare,Epic,Legendary,Magical')
 parser.add_argument('-bitmap', type=str, help='Directory that the item textures are extracted to')
 args = parser.parse_args()
 db_dir = os.path.join(args.dir, '')
@@ -33,8 +33,17 @@ relic_files.extend(glob.glob(db_dir + "\\records\\xpack\\item\\charms\\*.dbr"))
 difficulties = ["Normal", "Epic", "Legendary"]
 requirements = ["Strength", "Dexterity", "Intelligence", "Level"]
 
+#Filter on rarity:
+if not rarity:
+	rarity = ['Rare', 'Epic', 'Legendary', 'Magical']
+
+#Prepare directory
+if bmp_dir and not os.path.exists('./output/uibitmaps'):
+    os.makedirs('./output/uibitmaps')
+
+
 #Load the tags
-with open('tags.json', 'r') as tags_file:
+with open('output/tags.json', 'r') as tags_file:
 	tags = json.load(tags_file)
 
 items = dict()
@@ -49,10 +58,6 @@ for equipment_file in equipment_files:
 		#Check required keys:
 		if not all(k in item_properties for k in ("itemNameTag", "itemLevel")):
 			continue;
-
-		#Filter on rarity:
-		if not rarity:
-			rarity = ['Rare', 'Epic', 'Legendary']
 
 		if('itemClassification' not in item_properties or ('itemClassification' in item_properties and item_properties['itemClassification'] not in rarity)):
 			continue
@@ -115,8 +120,8 @@ for equipment_file in equipment_files:
 		#Check bitmap:
 		if bmp_dir and 'bitmap' in item_properties:
 			bitmap = str(bmp_dir + item_properties['bitmap'])
-			command = ['textureviewer/TextureViewer.exe', bitmap, 'uibitmaps/' + new_item['tag'] + '.png']
-			subprocess.run(command)
+			command = ['utils/textureviewer/TextureViewer.exe', bitmap, 'output/uibitmaps/' + new_item['tag'] + '.png']
+			subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 for relic_file in relic_files:
 	with open(relic_file) as relic:
@@ -180,18 +185,12 @@ for relic_file in relic_files:
 		#Check bitmap:
 		if bmp_dir and  'relicBitmap' in item_properties:
 			bitmap = str(bmp_dir + item_properties['relicBitmap'])
-			command = ['textureviewer/TextureViewer.exe', bitmap, 'uibitmaps/' + new_item['tag'] + '.png']
+			command = ['utils/textureviewer/TextureViewer.exe', bitmap, 'output/uibitmaps/' + new_item['tag'] + '.png']
 			subprocess.run(command)
 
-with open('items.json', 'w') as items_file:
+with open('output/items.json', 'w') as items_file:
 	json.dump(items, items_file)
 
-
-# Pretty print all the properties for this item that exist:
-#pp = pprint.PrettyPrinter()
-#if('itemSkillName' in properties and 'duneraider_flamestrike.dbr' in properties['itemSkillName'].lower() ):
-#if(properties['itemNameTag'] == 'tagUWeapon100'):
-#for field, text in defensive_absolute.items():
-	#field_prefix = 'defensive' + field
-	#if (field_prefix + 'DurationModifier') in properties:
-	#pp.pprint(dict([(k,v) for k,v in item.items() if has_numeric_value(v)]))		
+print('Items were stored in items.json in the output folder')
+if bmp_dir:
+	print('Converted bitmaps were saved to output/uibitmaps')

@@ -60,7 +60,7 @@ character_requirement_redux = {
 }
 
 defensive_absolute = {
-	'Protection' : 			{ 'flat' : ' Armor', 'modifier' : '% Armor Protection', 'format_modifier' : '{0:+.0f}' },
+	'Protection' : 			{ 'flat' : ' Armor', 'modifier' : '% Armor Protection', 'format_modifier' : val_int_signed },
 	'Absorption' : 			{ 'flat' : '% Armor Absorption' },
 	'Physical' : 			{ 'flat' : '% Physical Resistance', 'duration' : '% Reduction in Physical Duration', 'duration_modifier' : '% Wound Duration Reduction' },
 	'Pierce' : 				{ 'flat' : '% Pierce Resistance' },
@@ -74,7 +74,7 @@ defensive_absolute = {
 	'SlowLifeLeach' : 		{ 'flat' : '% Life Leech Resistance', 'duration' : '% Reduction in Life Leech Duration', 'duration_modifier' : '% Life Leech Duration Reduction' },
 	'SlowManaLeach' : 		{ 'flat' : '% Energy Leech Resistance', 'duration' : '% Reduction in Energy Leech Duration', 'duration_modifier' : '% Energy Leech Reduction' },
 	'Bleeding' : 			{ 'flat' : '% Bleeding Resistance', 'duration' : '% Reduction in Bleeding Duration', 'duration_modifier' : '% Bleeding Duration Reduction' },
-	'BlockModifier' : 		{ 'flat' : '% Shield Block' },
+	'BlockModifier' : 		{ 'flat' : '% Shield Block', 'format_flat' : val_int_signed, 'format_modifier': val_int_signed },
 	'Reflect' :				{ 'flat' : '% Damage Reflected' },
 	'Confusion' : 			{ 'flat' : '% Reduced Confusion Duration (Pet/Trap Only)' },
 	'Taunt' : 				{ 'flat' : '% Protection from Taunting (Pet/Trap Only)' },
@@ -208,8 +208,11 @@ skill_parameters_fields = {
 	'TargetRadius' :			'{0:.0f} Meter Radius'
 }
 
-with open('skills.json', 'r') as skillsFile:
-	skills = json.load(skillsFile)	
+try:
+	with open('output/skills.json', 'r') as skillsFile:
+		skills = json.load(skillsFile)	
+except FileNotFoundError:
+	skills = {}
 
 def has_numeric_value(value):
 	try:
@@ -620,7 +623,7 @@ def parse_properties(properties):
 
 		if field_value:
 			format_flat = val_int if 'format_flat' not in text else text['format_flat']
-			resistance = val_int.format(field_value) + text['flat']
+			resistance = format_flat.format(field_value) + text['flat']
 			result[field_prefix] = [field_chance, resistance] if field_chance else resistance
 
 		if modifier_value:

@@ -35,7 +35,7 @@ for tag_file in tag_files:
 		tags.update(dict(properties.split('=') for properties in lines if(properties != '' and properties[0] != '/')))
 
 #Output all tags to JSON
-with open('tags.json', 'w') as tagsFile:
+with open('output/tags.json', 'w') as tagsFile:
 	json.dump(tags, tagsFile)
 
 skills = dict()
@@ -109,7 +109,7 @@ for file in files:
 			if('skillUltimateLevel' in skill_properties):
 				skills[skill_key]['skillUltimateLevel'] 	= skill_properties['skillUltimateLevel']
 
-with open('skills.json', 'w') as skillsFile:
+with open('output/skills.json', 'w') as skillsFile:
 	json.dump(skills, skillsFile)	
 
 #Prepare the set dictionary
@@ -153,5 +153,5 @@ for file in files:
 		sets[set_properties['setName']] = set_dict
 
 #Output all sets to JSON
-with open('sets.json', 'w') as setsFile:
+with open('output/sets.json', 'w') as setsFile:
 	json.dump(sets, setsFile)
