@@ -200,6 +200,7 @@ skill_augment_fields = {
 }
 
 skill_parameters_fields = {
+	'ActiveDuration' :			'{0:.0f} Second Duration',
 	'CooldownTime' :			'{0:.0f} Second(s) Recharge',
 	'CooldownReduction' : 		'-{0:.0f}% Recharge',
 	'ManaCost' : 				'{0:.0f} Energy Cost',

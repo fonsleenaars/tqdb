@@ -29,8 +29,10 @@ relic_files.extend(glob.glob(db_dir + "\\records\\xpack\\item\\relics\\*.dbr"))
 relic_files.extend(glob.glob(db_dir + "\\records\\item\\animalrelics\\*.dbr"))
 relic_files.extend(glob.glob(db_dir + "\\records\\xpack\\item\\charms\\*.dbr"))
 
-#Load the artifact files
-artifact_files 	= glob.glob(db_dir + "\\records\\xpack\\item\\artifacts\\**\\*.dbr", recursive=True)
+#Load the scroll, artifact & formulae:
+scroll_files 	= glob.glob(db_dir + "\\records\\xpack\\item\\scrolls\\*.dbr")
+artifact_files 	= glob.glob(db_dir + "\\records\\xpack\\item\\artifacts\\*.dbr")
+formulae_files 	= glob.glob(db_dir + "\\records\\xpack\\item\\artifacts\\arcaneformulae\\*.dbr")
 
 #Difficulties for relics:
 difficulties = ["Normal", "Epic", "Legendary"]
@@ -191,6 +193,22 @@ for relic_file in relic_files:
 			bitmap = str(bmp_dir + item_properties['relicBitmap'])
 			command = ['utils/textureviewer/TextureViewer.exe', bitmap, 'output/uibitmaps/' + new_item['tag'] + '.png']
 			subprocess.run(command)
+
+for scroll_file in scroll_files:
+	with open(scroll_file) as scroll:
+		#DBR file into a list of lines
+		lines = [line.rstrip(',\n') for line in scroll]
+
+		#Parse line into a dictionary of key, value properties:
+		item_properties = dict([(k,v) for k,v in (dict(properties.split(',') for properties in lines)).items()  if has_numeric_value(v)])
+
+		new_item = dict()
+		new_item['tag'] = item_properties['description']
+		new_item['name'] = tags[item_properties['description']]
+		new_item['description'] = tags[item_properties['itemText']]
+
+		#Grab skill 
+
 
 for artifact_file in artifact_files: 
 	with open(artifact_file) as artifact:
