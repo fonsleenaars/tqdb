@@ -151,6 +151,11 @@ offensive_duration_effects = {
 
 offensive_mana_drain	  = { 'suffix' : '% Energy Drained', 'ratio' : ' ({0:.0f}% Energy Drained Causes Damage)' }
 
+projectile_fields = {
+	'LaunchNumber' : ' Projectiles',
+	'PiercingChance' : '% Chance to Pass Through Enemies'
+}
+
 racialBonusesFields = { 
 	'racialBonusAbsoluteDamage' : '+{0:.0f} Damage to {1}', 
 	'racialBonusAbsoluteDefense' : '{0:.0f} Less Damage from {1}', 
@@ -316,7 +321,7 @@ def parse_properties(properties):
 		field_chance_prefix		= field_prefix + 'Chance'
 		field_chance 			= float(properties[field_chance_prefix]) if field_chance_prefix in properties else 0
 
-		if field_value:
+		if field_value > 0:
 			result[field_prefix] = [field_chance, text.format(field_value)] if field_chance else text.format(field_value)
 
 	#Parse offensive chances (chance for more than one outcome)
@@ -644,6 +649,14 @@ def parse_properties(properties):
 		shieldBlock = float(properties['defensiveBlock'])
 		shieldBlockChance = float(properties['defensiveBlockChance'])
 		result['shieldBlock'] = defensive_shield.format(shieldBlockChance, shieldBlock)
+
+	#Projectiles:
+	for field, text in projectile_fields.items():
+		field_prefix = 'projectile' + field
+		field_value	 = float(properties[field_prefix]) if field_prefix in properties else 0
+
+		if field_value > 0:
+			result[field_prefix] = val_int.format(field_value) + text
 
 	return result
 

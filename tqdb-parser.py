@@ -73,7 +73,11 @@ for equipment_file in equipment_files:
 		new_item['name'] = tags[item_properties['itemNameTag']]
 		new_item['level'] = item_properties['itemLevel']
 		new_item['classification'] = item_properties['itemClassification']
-		new_item['properties'] = parse_properties(item_properties)
+		
+		try:
+			new_item['properties'] = parse_properties(item_properties)
+		except KeyError as e:
+			print(item_properties)
 
 		if 'characterBaseAttackSpeedTag' in item_properties:
 			new_item['attackSpeed'] = item_properties['characterBaseAttackSpeedTag'][len('CharacterAttackSpeed'):]
@@ -196,7 +200,7 @@ for relic_file in relic_files:
 
 for scroll_file in scroll_files:
 	with open(scroll_file) as scroll:
-		#DBR file into a list of lines
+ 		#DBR file into a list of lines
 		lines = [line.rstrip(',\n') for line in scroll]
 
 		#Parse line into a dictionary of key, value properties:
@@ -208,30 +212,46 @@ for scroll_file in scroll_files:
 		new_item['description'] = tags[item_properties['itemText']]
 
 		#Grab skill 
+		scroll_skill = skills[item_properties['skillName'].lower().replace('\\', '_').replace(' ', '_')]
+		if 'properties' in scroll_skill:
+			scroll_meta = os.path.basename(scroll_file).split('_')
+			scroll_skill_index = int(scroll_meta[0][1:2]) - 1 if 'x' not in scroll_meta[0] else 0
 
+			new_item['properties'] = scroll_skill['properties'][scroll_skill_index] if len(scroll_skill['properties']) > scroll_skill_index else scroll_skill['properties'][0]
 
-for artifact_file in artifact_files: 
-	with open(artifact_file) as artifact:
-		#DBR file into a list of lines
-		lines = [line.rstrip(',\n') for line in artifact]
-
-		#Parse line into a dictionary of key, value properties:
-		item_properties = dict([(k,v) for k,v in (dict(properties.split(',') for properties in lines)).items()  if has_numeric_value(v)])
-
-		#Parse the difficulty and act from the filename:
-		file_meta = os.path.basename(artifact_file).split('_')
-
-		new_item = dict()
-		new_item['tag'] = item_properties['description']
-		new_item['name'] = tags[item_properties['description']]
-		new_item['classification'] = item_properties['artifactClassification']
-		new_item['difficulty'] = artifact_difficulties[file_meta[1]]
+		if(item_properties['Class'] in items):
+			items[item_properties['Class']].append(new_item)
+		else:
+			items[item_properties['Class']] = [new_item]
 
 		#Check bitmap:
-		if bmp_dir and  'artifactBitmap' in item_properties:
-			bitmap = str(bmp_dir + item_properties['artifactBitmap'])
+		if bmp_dir and  'bitmap' in item_properties:
+			bitmap = str(bmp_dir + item_properties['bitmap'])
 			command = ['utils/textureviewer/TextureViewer.exe', bitmap, 'output/uibitmaps/' + new_item['tag'] + '.png']
 			subprocess.run(command)
+
+# for artifact_file in artifact_files: 
+# 	with open(artifact_file) as artifact:
+# 		#DBR file into a list of lines
+# 		lines = [line.rstrip(',\n') for line in artifact]
+
+# 		#Parse line into a dictionary of key, value properties:
+# 		item_properties = dict([(k,v) for k,v in (dict(properties.split(',') for properties in lines)).items()  if has_numeric_value(v)])
+
+# 		#Parse the difficulty and act from the filename:
+# 		file_meta = os.path.basename(artifact_file).split('_')
+
+# 		new_item = dict()
+# 		new_item['tag'] = item_properties['description']
+# 		new_item['name'] = tags[item_properties['description']]
+# 		new_item['classification'] = item_properties['artifactClassification']
+# 		new_item['difficulty'] = artifact_difficulties[file_meta[1]]
+
+# 		#Check bitmap:
+# 		if bmp_dir and  'artifactBitmap' in item_properties:
+# 			bitmap = str(bmp_dir + item_properties['artifactBitmap'])
+# 			command = ['utils/textureviewer/TextureViewer.exe', bitmap, 'output/uibitmaps/' + new_item['tag'] + '.png']
+# 			subprocess.run(command)
 
 
 with open('output/items.json', 'w') as items_file:

@@ -38,109 +38,156 @@ for tag_file in tag_files:
 with open('output/tags.json', 'w') as tagsFile:
 	json.dump(tags, tagsFile)
 
+skill_files = [
+	'\\skills\\defensive\\*.dbr',
+	'\\skills\\earth\\*.dbr',
+	'\\skills\\hunting\\*.dbr',
+	'\\skills\\item skills\\*.dbr',
+	'\\skills\\nature\\*.dbr',
+	'\\skills\\spirit\\*.dbr',
+	'\\skills\\stealth\\*.dbr',
+	'\\skills\\storm\\*.dbr',
+	'\\skills\\warfare\\*.dbr',
+	'\\xpack\\skills\\artifactskills\\*.dbr',
+	'\\xpack\\skills\\dream\\*.dbr',
+	'\\xpack\\skills\\equipment skills\\*.dbr',
+	'\\xpack\\skills\\scroll skills\\*.dbr'
+]
+
 skills = dict()
-files = glob.glob(db_dir + '\\records\\skills\\*\\*.dbr', recursive=True)
-files.extend(glob.glob(db_dir + '\\records\\xpack\\skills\\*\\*.dbr', recursive=True))
+files = []
+for skill_file in skill_files:
+	files.extend(glob.glob(db_dir + '\\records' + skill_file, recursive=True))
+
+files = [ file for file in files if "\\old\\" not in file ]
 
 #Prepare some reference values:
 buff_or_pet = ['buffSkillName', 'petSkillName']
 spawned 	= ['spawnObjects']
 all_refs	= buff_or_pet + spawned
 
+#First iterate over all the files and map all normal skills, and reference files (buffs, petskills, summons)
 for file in files:
 	with open(file) as skill_data:
-
 		#DBR file into a list of lines
 		lines = [line.rstrip(',\n') for line in skill_data]
 
 		#Parse line into a dictionary of key, value properties:
-		skill_properties = dict([(k,v) for k,v in (dict(properties.split(',') for properties in lines)).items()  if has_numeric_value(v)])
-
-		#Prepare the file key (remove prefix and change all slashes and spaces to _)
-		file_key = (file.replace(db_dir + '\\', '')).lower()
-		file_key = file_key.replace('\\', '_')
-		file_key = file_key.replace(' ', '_')
-
+		skill_properties = dict([(k,v) for k,v in (dict(properties.split(',') for properties in lines)).items() if has_numeric_value(v)])
 		skill_name = skill_properties['skillDisplayName'] if 'skillDisplayName' in skill_properties else None
 		skill_desc = skill_properties['skillBaseDescription'] if 'skillBaseDescription' in skill_properties else None
+		
+		if not skill_name and not skill_desc and not any (key in skill_properties for key in all_refs) and not 'scroll' in file:
+			continue
 
+		file_key = file.replace(db_dir + '\\', '').lower().replace('\\', '_').replace(' ', '_')
 		#If this file is simply the buff or pet reference, prepare the index:
-		if any (key in skill_properties for key in buff_or_pet):
-			field = 'buffSkillName' if 'buffSkillName' in skill_properties else 'petSkillName'
-			field_value = skill_properties[field].replace('\\', '_').lower()
-			field_value = field_value.replace(' ', '_')
-
-			#Check if an index is already prepared by a buff or pet:
-			for ref_key, skill in skills.items():
-				ref_field = next((key for key in buff_or_pet if key in skill), None)
-				if(ref_field and skill[ref_field] == file_key):
-					skill_key = ref_key		
-			
+		if 'buffSkillName' in skill_properties:
+			buff_key = skill_properties['buffSkillName'].replace(db_dir + '\\', '').lower().replace('\\', '_').replace(' ', '_')
 			if(file_key not in skills):
-				skills[file_key] = { field : field_value }
+				skills[file_key] = { 'buffSkillName' : buff_key }
 			else:
-				skills[file_key][field] = field_value
-
-		#If this file is simply the spawn reference file, prepare the index:
+				skills[file_key]['buffSkillName'] = buff_key
+		elif 'petSkillName' in skill_properties and file_key not in skills:
+			pet_skill_key = skill_properties['petSkillName'].replace(db_dir + '\\', '').lower().replace('\\', '_').replace(' ', '_')
+			skills[pet_skill_key] = {}
 		elif skill_name and 'spawnObjects' in skill_properties:
-			spawn_file = skill_properties['spawnObjects'].replace('\\', '_').lower()
-			spawn_file = spawn_file.replace(' ', '_')
+			spawn_file = skill_properties['spawnObjects']
 
 			skills[file_key] = dict()
-			skills[file_key]['spawnObjects'] = spawn_file
-			skills[file_key]['spawnObjectsTimeToLive'] = skill_properties.get('spawnObjectsTimeToLive', '')
-	
+			if ';' in spawn_file:
+				skills[file_key]['tag'] = skill_properties['skillDisplayName'] if skill_name else ''
+				skills[file_key]['name'] = tags[skill_properties['skillDisplayName']] if skill_name in tags else skill_name
+			else:
+				skills[file_key]['spawnObjects'] = spawn_file
+				skills[file_key]['spawnObjectsTimeToLive'] = skill_properties.get('spawnObjectsTimeToLive', '')
 		else:
-			skill_key = file_key
-
-			#Check if an index is already prepare by a buff or pet:
-			for ref_key, skill in skills.items():
-				ref_field = next((key for key in all_refs if key in skill), None)
-				if(ref_field and skill[ref_field] == file_key):
-					skill_key = ref_key
-
-			#If skill isn't stored yet, create a new entry
-			if skill_key not in skills:
-				skills[skill_key] = dict()
-
-			#The spawned skills need one more parsing; grab the properties from the DBR in 'specialAttackSkill'
-			if skill_key == 'spawnObjects':
-				# skills[skill_key]['tag'] = skill_properties['description'];
-				# skills[skill_key]['name'] = tags[skill_properties['description']];
-
-				# if 'specialAttackSkillName' in skill_properties:
-				# 	with open(db_dir + skill_properties['specialAttackSkillName']) as special_attack:
-				# 		print(special_attack)
-				# 		#DBR file into a list of lines
-				# 		attack_lines = [line.rstrip(',\n') for line in special_attack]
-
-				# 		#Parse line into a dictionary of key, value properties:
-				# 		attack_properties = dict([(k,v) for k,v in (dict(properties.split(',') for properties in attack_lines)).items()  if has_numeric_value(v)])
-
-				# 		skills[skill_key]['properties'] = parse_tiered_properties(attack_properties)
-				continue
+			#Check if this file key is set as a buffSkillName:
+			file_key = next((key for key, skill in skills.items() if 'buffSkillName' in skill and skill['buffSkillName'] == file_key), file_key)
+			
+			if file_key not in skills:
+				skills[file_key] = {}
 
 			#Store the properties and tag and name
-			else:
-				if skill_name: 
-					skills[skill_key]['tag'] = skill_name if skill_name in tags else ''
-					skills[skill_key]['name'] = tags.get(skill_name, '')
-
-				if skill_desc:
-					skills[skill_key]['description'] = tags[skill_desc] if skill_desc in tags else skill_desc
-				
-				skills[skill_key]['properties'] = parse_tiered_properties(skill_properties)
+			skills[file_key]['tag'] = skill_name if skill_name in tags else ''
+			skills[file_key]['name'] = tags.get(skill_name, '')
+			skills[file_key]['description'] = tags[skill_desc] if skill_desc in tags else skill_desc
+			skills[file_key]['properties'] = parse_tiered_properties(skill_properties)
 
 			#Store max levels or requirements, if available
 			if 'skillMasteryLevelRequired' in skill_properties:
-				skills[skill_key]['requiredMastery'] = skill_properties['skillMasteryLevelRequired']
-				skills[skill_key]['skillMaxLevel'] = skill_properties['skillMaxLevel']
+				skills[file_key]['skillMasteryLevelRequired'] = skill_properties['skillMasteryLevelRequired']
+
+			if 'skillMaxLevel' in skill_properties:
+				skills[file_key]['skillMaxLevel'] = skill_properties['skillMaxLevel']
 
 			if 'skillUltimateLevel' in skill_properties:
-				skills[skill_key]['skillUltimateLevel'] = skill_properties['skillUltimateLevel']
+				skills[file_key]['skillUltimateLevel'] = skill_properties['skillUltimateLevel']
 
-with open('output/skills.json', 'w') as skillsFile:
-	json.dump(skills, skillsFile)	
+#Now iterate through the list and fetch any buffs/petskills/spawns:
+for file_key, skill in skills.items():
+	if 'tag' in skill:
+		continue
+
+	if  'spawnObjects' in skill and ';' not in skill['spawnObjects']:
+		skill_field = skill['spawnObjects']
+
+		#Open reference files for spawning:
+		with open(db_dir + skill_field) as spawn_file:
+			#DBR file into a list of lines
+			lines = [line.rstrip(',\n') for line in spawn_file]
+
+			#Parse line into a dictionary of key, value properties:
+			skill_properties = dict([(k,v) for k,v in (dict(properties.split(',') for properties in lines)).items()  if has_numeric_value(v)])
+			skill_name = skill_properties['description']
+			if skill_name not in tags:
+				continue
+
+			skill['tag'] = skill_properties['description']
+			skill['name'] = tags[skill_properties['description']]
+
+			if 'specialAttackSkillName' in skill_properties:
+				with open(db_dir + skill_properties['specialAttackSkillName']) as special_attack:
+					#DBR file into a list of lines
+					attack_lines = [line.rstrip(',\n') for line in special_attack]
+
+					#Parse line into a dictionary of key, value properties:
+					attack_properties = dict([(k,v) for k,v in (dict(properties.split(',') for properties in attack_lines)).items()  if has_numeric_value(v)])
+
+					skill['properties'] = parse_tiered_properties(attack_properties)
+
+
+	# elif any (key in skill for key in buff_or_pet):
+	# 	skill_field = 'buffSkillName' if 'buffSkillName' in skill else 'petSkillName'
+
+	# 	try:
+	# 		with open(db_dir + skill[skill_field]) as skill_file:
+	# 			#DBR file into a list of lines
+	# 			lines = [line.rstrip(',\n') for line in skill_file]
+
+	# 			#Parse line into a dictionary of key, value properties:
+	# 			skill_properties = dict([(k,v) for k,v in (dict(properties.split(',') for properties in lines)).items()  if has_numeric_value(v)])
+
+	# 			if 'skillDisplayName' in skill_properties:
+	# 				skill_name = skill_properties['skillDisplayName'];
+	# 				if skill_name not in tags:
+	# 					continue
+
+	# 				skill['tag'] = skill_name
+	# 				skill['name'] = tags[skill_name]
+	# 			if 'skillBaseDescription' in skill_properties:
+	# 				skill_description = skill_properties['skillBaseDescription']
+	# 				skill['description'] = tags[skill_description] if skill_description in tags else skill_description
+
+	# 			skill['properties'] = parse_tiered_properties(skill_properties)
+	# 	except FileNotFoundError:
+	# 		continue
+
+# #Remove all skill entries that don't have a key:
+# result = { k:v for k,v in skills.items() if 'tag' in v and v['tag'] }
+
+with open('output/skills.json', 'w') as skills_file:
+	json.dump(skills, skills_file)	
 
 #Prepare the set dictionary
 sets = dict()
