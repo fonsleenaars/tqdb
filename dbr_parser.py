@@ -28,7 +28,7 @@ character_stat_fields = {
 	'ManaRegen' : 						{ 'suffix' : ' Energy Regeneration per second', 'modifier' : ' Energy Regeneration', 'format_flat' : '{0:+.1f}' }, 
 	'OffensiveAbility' :				{ 'suffix' : ' Offensive Ability' },
 	'DefensiveAbility' : 				{ 'suffix' : ' Defensive Ability' },
-	'DefensiveBlockRecoveryReduction' : { 'suffix' : ' Defensive Ability' },
+	'DefensiveBlockRecoveryReduction' : { 'suffix' : '% Shield Recovery Time' },
 	'EnergyAbsorptionPercent' : 		{ 'suffix' : ' Absorption of Spell Energy', 'format_flat' : '+{0:.0f}%' },
 	'DodgePercent' : 					{ 'suffix' : ' Chance to Dodge Attacks', 'format_flat' : '{0:.0f}%' },
 	'DeflectProjectile' : 				{ 'suffix' : ' Chance to Avoid Projectiles', 'format_flat' : '{0:.0f}%' },
