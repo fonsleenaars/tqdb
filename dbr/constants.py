@@ -1,10 +1,53 @@
-# Global constants (all DBR files have these)
+# DBR File constants
+FILES_EQUIPMENT = [
+    'records\\item\\equipment*\\**\\*.dbr',
+    'records\\xpack\\item\\equipment*\\**\\*.dbr',
+    'records\\item\\relics\\*.dbr',
+    'records\\item\\animalrelics\\*.dbr',
+    'records\\xpack\\item\\relics\\*.dbr',
+    'records\\xpack\\item\\charms\\*.dbr',
+    'records\\xpack\\item\\scrolls\\*.dbr',
+    'records\\xpack\\item\\artifacts\\*.dbr',
+    'records\\xpack\\item\\artifacts\\arcaneformulae\\*.dbr']
+FILES_SETS = [
+    'records\\item\\sets\\*.dbr',
+    'records\\xpack\\item\\sets\\*.dbr']
+FILES_SKILLS = [
+    'records\\skills\\defensive\\*.dbr',
+    'records\\skills\\earth\\*.dbr',
+    'records\\skills\\hunting\\*.dbr',
+    'records\\skills\\item skills\\*.dbr',
+    'records\\skills\\nature\\*.dbr',
+    'records\\skills\\spirit\\*.dbr',
+    'records\\skills\\stealth\\*.dbr',
+    'records\\skills\\storm\\*.dbr',
+    'records\\skills\\warfare\\*.dbr',
+    'records\\xpack\\skills\\dream\\*.dbr',
+    'records\\xpack\\skills\\artifactskills\\*.dbr',
+    'records\\xpack\\skills\\equipment skills\\*.dbr',
+    'records\\xpack\\skills\\scroll skills\\*.dbr']
+FILES_TAGS = [
+    'commonequipment.txt',
+    'monsters.txt',
+    'skills.txt',
+    'uniqueequipment.txt',
+    'xcommonequipment.txt',
+    'xmonsters.txt',
+    'xuniqueequipment.txt',
+    'xskills.txt'
+]
+
+# Global constants
+# Most DBRs have these, don't belong to a specific category
 CLASS = 'Class'
 PROPERTIES = 'properties'
+DESCRIPTION = 'description'
+FILE_DESCRIPTION = 'FileDescription'
+EQUIPMENT = 'equipment'
 
 # Class Types
-CLASS_TYPE = 'class'
-CLASS_TYPE_EQUIPMENT = [
+TYPE = 'type'
+TYPE_EQUIPMENT = [
     'ArmorJewelry_Ring',
     'ArmorJewelry_Jewelry',
     'ArmorProtective_Head',
@@ -17,19 +60,79 @@ CLASS_TYPE_EQUIPMENT = [
     'WeaponHunting_Bow',
     'WeaponHunting_Spear',
     'WeaponMagical_Staff',
-    'WeaponArmor_Shield'
-]
-
-CLASS_TYPE_RELIC = [
+    'WeaponArmor_Shield']
+TYPE_LOOT_TABLE = [
+    'LootRandomizerTable']
+TYPE_RELIC = [
     'ItemRelic',
-    'ItemCharm'
+    'ItemCharm']
+TYPE_SCROLL = [
+    'OneShot_Scroll']
+TYPE_SKILL = [
+    'Skill_AttackChain',
+    'Skill_AttackProjectile',
+    'Skill_AttackProjectileAreaEffect',
+    'Skill_AttackProjectileBurst',
+    'Skill_AttackProjectileFan',
+    'Skill_AttackProjectileRing',
+    'Skill_AttackRadius',
+    'Skill_AttackRadiusLightning',
+    'Skill_AttackSpell',
+    'Skill_AttackSpellChaos',
+    'Skill_AttackWeapon',
+    'Skill_AttackWeaponBlink',
+    'Skill_AttackWeaponCharge',
+    'Skill_AttackWeaponRangedSpread',
+    'Skill_Buff',
+    'Skill_BuffAttackRadiusToggled',
+    'Skill_BuffSelfColossus',
+    'Skill_BuffSelfDuration',
+    'Skill_BuffSelfImmobilize',
+    'Skill_BuffSelfToggled',
+    'Skill_DefensiveWall',
+    'Skill_DispelMagic',
+    'Skill_DropProjectileTelekinesis',
+    'Skill_GiveBonus',
+    'Skill_Mastery',
+    'Skill_Modifier',
+    'Skill_OnHitAttackRadius',
+    'Skill_Passive',
+    'Skill_PassiveOnHitBuffSelf',
+    'Skill_PassiveOnLifeBuffSelf',
+    'Skill_ProjectileModifier',
+    'Skill_RefreshCooldown',
+    'Skill_WPAttack_BasicAttack',
+    'Skill_WeaponPool_BasicAttack',
+    'Skill_WeaponPool_ChargedFinale',
+    'Skill_WeaponPool_ChargedLinear',
+    'SkillBuff_Contageous',
+    'SkillBuff_Debuf',
+    'SkillBuff_DebufFreeze',
+    'SkillBuff_DebufTrap',
+    'SkillBuff_Passive',
+    'SkillBuff_PassiveShield',
+    'SkillSecondary_AttackRadius',
+    'SkillSecondary_ChainLightning']
+TYPE_SKILL_BUFF_REF = [
+    'Skill_AttackBuff',
+    'Skill_AttackBuffRadius',
+    'Skill_AttackProjectileDebuf',
+    'Skill_BuffRadius',
+    'Skill_BuffRadiusToggled',
+    'Skill_BuffOther']
+TYPE_SKILL_PET_REF = [
+    'SkillSecondary_PetModifier']
+TYPE_SKILL_SPAWN = [
+    'Skill_AttackProjectileSpawnPet',
+    'Skill_SpawnPet']
+TYPE_SKILL_TREE = [
+    'SkillTree'
 ]
 
-CLASS_TYPE_SCROLL = [
-    'OneShot_Scroll'
-]
-
-CLASS_TYPE_SKILL = 'Skill_'
+# Difficulty / act constants
+ACT = 'act'
+DIFFICULTY = 'difficulty'
+DIFFICULTIES = ["Normal", "Epic", "Legendary"]
 
 # Damage constants
 DMG_BLEED = 'Bleeding'
@@ -57,10 +160,13 @@ PREFIX_OFF = 'offensive'
 PREFIX_PET = 'pet'
 PREFIX_PROJ = 'projectile'
 PREFIX_RACE = 'racial'
+PREFIX_REQ = 'requirement'
 PREFIX_RETAL = 'retaliation'
+PREFIX_SET = 'set'
 PREFIX_SKILL = 'skill'
 PREFIX_SHIELD = 'Shield'
 PREFIX_SLOW = 'Slow'
+PREFIX_SPAWN = 'spawn'
 PREFIX_WEAPON = 'Weapon'
 
 # STATUSSES
@@ -78,6 +184,7 @@ STATUS_TRAP = 'Trap'
 SUFFIX_CHANCE = 'Chance'
 SUFFIX_DRAIN = 'Drain'
 SUFFIX_DUR = 'Duration'
+SUFFIX_EQUATION = 'Equation'
 SUFFIX_GLOBAL = 'Global'
 SUFFIX_MAX = 'Max'
 SUFFIX_MIN = 'Min'
@@ -106,7 +213,9 @@ FORMAT_REDUCTION = '-{0:.0f}%'
 
 # Skill constants
 SKILL_AUGMENT_ALL = PREFIX_AUGMENT + 'AllLevel'
+SKILL_DESC = PREFIX_SKILL + 'BaseDescription'
 SKILL_DISPLAY = PREFIX_SKILL + 'DisplayName'
+SKILL_TAG = PREFIX_SKILL + 'Tag'
 SKILL_NAME = 'SkillName'
 SKILL_LEVEL = 'SkillLevel'
 SKILL_MAST_NAME = 'MasteryName'
@@ -118,11 +227,10 @@ SKILL_COST = 'ManaCost'
 SKILL_COST_RED = SKILL_COST + SUFFIX_RED
 SKILL_PROJ_MOD = 'ProjectileSpeedModifier'
 SKILL_RADIUS = 'TargetRadius'
-# SKILL_TAG = PREFIX_SKILL + 'Tag'
 
-# TEMPS:
-SKILL_TAG = 'tag'
-SKILL_DNAME = 'name'
+# Pet constants
+PET_OBJECT = PREFIX_SPAWN + 'Objects'
+PET_TTL = PREFIX_SPAWN + 'ObjectsTimeToLive'
 
 # DBR reference constants
 DBR_BUFF_SKILL = PREFIX_BUFF + SKILL_NAME
@@ -134,9 +242,33 @@ ITEM = 'item'
 ITEM_CLASSIFICATION = ITEM + 'Classification'
 ITEM_COST = ITEM + 'CostName'
 ITEM_LEVEL = ITEM + 'Level'
+ITEM_NAME = ITEM + 'Name'
+ITEM_RARITIES = ['Rare', 'Epic', 'Legendary', 'Magical']
 ITEM_SET = ITEM + 'SetName'
-ITEM_TAG = ITEM + 'NameTag'
+ITEM_SET_NAME = 'setName'
+ITEM_SET_TAG = 'setTag'
 ITEM_SKILL = ITEM + SKILL_NAME
+ITEM_TAG = ITEM + 'NameTag'
+ITEM_TEXT = ITEM + 'Text'
+
+# Set constants
+SET_MEMBERS = PREFIX_SET + 'Members'
+SET_NAME = PREFIX_SET + 'Name'
+SET_TAG = PREFIX_SET + 'Tag'
+
+# Relic constants
+RELIC_TAG = 'relicTag'
+RELIC_NAME = 'relicName'
+
+# Scroll constants
+SCROLL_SKILL = 'skillName'
+
+# Loot table / bonus constants
+BONUS = 'bonus'
+BONUS_TABLE = BONUS + 'TableName'
+BONUS_CHANCE = BONUS + SUFFIX_CHANCE
+LOOT_RANDOMIZER_NAME = 'randomizerName'
+LOOT_RANDOMIZER_WEIGHT = 'randomizerWeight'
 
 # Projectile constants
 PROJ_NUMBER = PREFIX_PROJ + 'LaunchNumber'
@@ -260,6 +392,7 @@ CHARACTER_FIELDS = {
         TXT_ABS: ' less Energy Reserver'}
 }
 
+REQUIREMENTS = ["Strength", "Dexterity", "Intelligence", "Level"]
 REQUIREMENT_FIELDS = {
     SUFFIX_GLOBAL + 'Req': ' Reduction to all Requirements',
     PREFIX_WEAPON + STAT_STR: ' Strength Requirement for all Weapons',
@@ -314,10 +447,10 @@ DEFENSIVE_FIELDS = {
         TXT_ABS: '% Skill Disruption Resistance'},
     STAT_ELE: {
         TXT_ABS: '% Elemental Resistance'},
-    PREFIX_SLOW + STAT_HP_LEECH: {
+    STAT_HP_LEECH: {
         TXT_ABS: '% Life Leech Resistance',
         TXT_DUR: '% Reduction in Life Leech Duration'},
-    PREFIX_SLOW + STAT_MP_LEECH: {
+    STAT_MP_LEECH: {
         TXT_ABS: '% Energy Leech Resistance',
         TXT_DUR: '% Reduction in Energy Leech Duration'},
     DMG_BLEED: {
@@ -408,8 +541,8 @@ OFFENSIVE_DUR_DMG_FIELDS = {
     PREFIX_SLOW + DMG_LIGHT: ' Electrical Burn Damage',
     PREFIX_SLOW + DMG_POISON: ' Poison Damage',
     PREFIX_SLOW + DMG_VIT: ' Vitality Decay',
-    PREFIX_SLOW + STAT_HP_LEECH: ' Life Leech',
-    PREFIX_SLOW + STAT_MP_LEECH: ' Energy Leech'
+    STAT_HP_LEECH: ' Life Leech',
+    STAT_MP_LEECH: ' Energy Leech'
 }
 
 OFFENSIVE_DUR_EFF_FIELDS = {
@@ -513,8 +646,8 @@ RETALIATION_DUR_DMG_FIELDS = {
     PREFIX_SLOW + DMG_LIGHT: ' Electrical Burn Retaliation',
     PREFIX_SLOW + DMG_POISON: ' Poison Retaliation',
     PREFIX_SLOW + DMG_VIT: ' Vitality Decay Retaliation',
-    PREFIX_SLOW + STAT_HP_LEECH: ' Life Leech Retaliation',
-    PREFIX_SLOW + STAT_MP_LEECH: ' Energy Leech Retaliation',
+    STAT_HP_LEECH: ' Life Leech Retaliation',
+    STAT_MP_LEECH: ' Energy Leech Retaliation',
 }
 
 RETALIATION_DUR_EFF_FIELDS = {
@@ -538,7 +671,7 @@ SKILL_AUGMENT_FIELDS = {
 }
 
 SKILL_GRANTS_FIELD = 'Grants skill: '
-SKILL_AUGMENT_FORMAT = '+{0} to {1}'
+SKILL_AUGMENT_FORMAT = '+{0:.0f} to {1}'
 SKILL_AUGMENT_ALL_FORMAT = '+{0} to All Skills'
 
 SKILL_PROPERTY_FIELDS = {

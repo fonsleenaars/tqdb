@@ -1,90 +1,104 @@
 from .constants import *
+import math
+import os
+import re
 
 
 class DBRReader:
     '''Class that parses DBR files'''
 
-    def __init__(self, dbr, skills):
+    def __init__(self, dbr, tags, allow_recursion=True):
         self.dbr = dbr
         self.properties = {}
+        self.tiered = []
         self.parsed = {}
-        self.skills = skills
+        self.tags = tags
 
+        # Parsing Sets and Equipment can lead to infinite
+        # recursion, this will disable that:
+        self.allow_recursion = allow_recursion
+
+        # Open the DBR and prepare the properties
         try:
             self.file = open(dbr)
-        except OSError:
-            self.file = None
-
-    def parse(self):
-        if not self.file:
-            return False
-
-        # DBR file into a list of lines
-        lines = [line.rstrip(',\n') for line in self.file]
-
-        # Parse line into a dictionary of key, value properties:
-        self.properties = dict([(k, v) for k, v in (dict(properties.split(',')
-                               for properties in lines)).items()
-                               if self.property_isset(v)])
+            self.prepare_properties()
+        except (FileNotFoundError, TypeError):
+            self.dbr = ''
 
         # Set the class type
-        self.parsed[CLASS_TYPE] = self.properties.get(CLASS, '')
+        if(CLASS in self.properties):
+            self.parsed[TYPE] = self.properties[CLASS]
 
-        # Determine what kind of file is being parsed:
-        if(self.parsed[CLASS_TYPE] in CLASS_TYPE_EQUIPMENT):
+    def parse(self):
+        # Determine what kind of file is being parsed and run it
+        if(SET_NAME in self.properties):
+            self.parse_set()
+        elif TYPE not in self.parsed:
+            self.parse_base()
+        elif self.parsed[TYPE] in TYPE_EQUIPMENT:
             self.parse_equipment()
-        elif(self.parsed[CLASS_TYPE] in CLASS_TYPE_RELIC):
+        elif self.parsed[TYPE] in TYPE_RELIC:
             self.parse_relic()
-        elif(self.parsed[CLASS_TYPE] in CLASS_TYPE_SCROLL):
+        elif self.parsed[TYPE] in TYPE_SCROLL:
             self.parse_scroll()
-        elif(CLASS_TYPE_SKILL in self.parsed[CLASS_TYPE]):
+        elif self.parsed[TYPE] in TYPE_SKILL_BUFF_REF:
+            self.parse_skill_buff()
+        elif self.parsed[TYPE] in TYPE_SKILL_PET_REF:
+            self.parse_skill_pet()
+        elif self.parsed[TYPE] in TYPE_SKILL_SPAWN:
+            self.parse_skill_spawn()
+        elif self.parsed[TYPE] in TYPE_SKILL:
             self.parse_skill()
-        else: 
+        elif self.parsed[TYPE] in TYPE_LOOT_TABLE:
+            self.parse_loot_table()
+        else:
+            # Also parse base case if no other match was found:
             self.parse_base()
 
+    # -------------------------------------------------------------------------
+    #
+    #                   PARSE FUNCTIONS START BELOW
+    #
+    # -------------------------------------------------------------------------
+
     def parse_base(self):
-        '''Parse the DBR file as a non-Classed file'''
-        self.parsed[PROPERTIES] = {}
-        self.parse_character()
-        self.parse_defensive()
-        self.parse_offensive()
-        self.parse_retaliation()
-        self.parse_skill_properties()
+        # Parsed properties are a list (because they're tiered)
+        if(self.tiered):
+            self.parsed[PROPERTIES] = []
+            for index, tier in enumerate(self.tiered):
+                # Prepare the next properties list:
+                self.parsed[PROPERTIES].insert(index, {})
 
-    def parse_equipment(self):
-        '''Parse the DBR file as an equipment file'''
+                # Parse the properties
+                self.parse_character(index)
+                self.parse_defensive(index)
+                self.parse_item_skill_augment(index)
+                self.parse_offensive(index)
+                self.parse_petbonus(index)
+                self.parse_racial(index)
+                self.parse_retaliation(index)
+                self.parse_skill_properties(index)
+        else:
+            # Prepare the properties
+            self.parsed[PROPERTIES] = {}
 
-        # Based on the class, call the respective parse:
-        self.parsed[ITEM_CLASSIFICATION] = (
-            self.properties.get(ITEM_CLASSIFICATION, None))
-        self.parsed[ITEM_LEVEL] = int(self.properties.get(ITEM_LEVEL, 0))
-        self.parsed[ITEM_TAG] = self.properties.get(ITEM_TAG, None)
+            # Parse the properties
+            self.parse_character()
+            self.parse_defensive()
+            self.parse_item_skill_augment()
+            self.parse_offensive()
+            self.parse_petbonus()
+            self.parse_racial()
+            self.parse_retaliation()
+            self.parse_skill_properties()
 
-        # Initialize the properties and parse them:
-        self.parsed[PROPERTIES] = {}
-        self.parse_character()
-        self.parse_defensive()
-        self.parse_item_skill_augment()
-        self.parse_offensive()
-        self.parse_petbonus()
-        self.parse_racial()
-        self.parse_retaliation()
-        self.parse_skill_properties()
-
-    def parse_relic(self):
-        '''Parse the DBR file as a relic file'''
-
-    def parse_scroll(self):
-        '''Parse the DBR file as a scroll file'''
-
-    def parse_skill(self):
-        '''Parse the DBR file as a skill file'''
-
-    def parse_character(self):
+    def parse_character(self, tier=-1):
         '''Parse the character DBR parameters'''
 
-        result = {}
+        # Set the properties to parse (tiered or non-tiered):
+        properties = self.tiered[tier] if tier >= 0 else self.properties
 
+        result = {}
         # Parse character bonuses (only absolutes and modifiers)
         for prop, output in CHARACTER_FIELDS.items():
             field = PREFIX_CHAR + prop
@@ -93,8 +107,8 @@ class DBRReader:
             format_modifier = output.get(TXT_FMOD, FORMAT_MOD)
             text_absolute = output.get(TXT_ABS)
             text_modifier = output.get(TXT_MOD, text_absolute)
-            value_absolute = float(self.properties.get(field, 0))
-            value_modifier = float(self.properties.get(field + SUFFIX_MOD, 0))
+            value_absolute = float(properties.get(field, 0))
+            value_modifier = float(properties.get(field + SUFFIX_MOD, 0))
 
             if value_absolute:
                 result[field] = format_absolute.format(value_absolute) + (
@@ -107,27 +121,68 @@ class DBRReader:
         # Parse requirement reductions
         for prop, output in REQUIREMENT_FIELDS.items():
             field = PREFIX_CHAR + prop + SUFFIX_RED
-            if field in self.properties:
+            if field in properties:
                 result[field] = FORMAT_REDUCTION.format(
-                                float(self.properties[field])) + output
+                                float(properties[field])) + output
 
         # Append the character results to the properties:
-        self.parsed[PROPERTIES].update(result)
+        if tier == -1:
+            self.parsed[PROPERTIES].update(result)
+        else:
+            self.parsed[PROPERTIES][tier].update(result)
 
-    def parse_defensive(self):
+    def parse_cost(self):
+        if ITEM_COST in self.properties:
+            # Cost prefix of this item is determined by its class
+            cost_prefix = self.properties[CLASS].split('_')[1]
+            cost_prefix = cost_prefix[0:1].lower() + cost_prefix[1:]
+
+            # Open cost file
+            cost_reference = self.get_reference_dbr(self.properties[ITEM_COST])
+            with open(cost_reference) as cost_file:
+                # Grab the cost equations:
+                cost_lines = [line.rstrip(',\n') for line in cost_file]
+                cost_properties = dict([(k, v) for k, v
+                                       in (dict(properties.split(',')
+                                           for properties
+                                           in cost_lines)).items()
+                                       if self.property_isset(v)])
+
+                # Grab the item level (it's a variable in the equations)
+                itemLevel = self.parsed[ITEM_LEVEL]
+                for requirement in REQUIREMENTS:
+                    # Create the equation key
+                    equation_key = cost_prefix + requirement + SUFFIX_EQUATION
+
+                    if equation_key in cost_properties:
+                        equation = cost_properties[equation_key]
+
+                        # Set the possible parameters in the equation:
+                        totalAttCount = len(self.parsed[PROPERTIES])
+                        itemLevel = self.parsed[ITEM_LEVEL]
+
+                        # Evaluate the equation to determine the requirement
+                        self.parsed[PREFIX_REQ + requirement] = (
+                            math.ceil(eval(equation)))
+
+    def parse_defensive(self, tier=-1):
         '''Parse the defensive DBR parameters'''
-        result = {}
 
+        # Set the properties to parse (tiered or non-tiered):
+        properties = self.tiered[tier] if tier >= 0 else self.properties
+
+        result = {}
+        # Parse defensive bonuses:
         for prop, output in DEFENSIVE_FIELDS.items():
             field = PREFIX_DEF + prop
 
             # Setup the output chances, format, texts, and values
             chance_absolute = int(float(
-                self.properties.get(field + SUFFIX_CHANCE, 0)))
+                properties.get(field + SUFFIX_CHANCE, 0)))
             chance_duration = int(float(
-                self.properties.get(field + SUFFIX_DCHANCE, 0)))
+                properties.get(field + SUFFIX_DCHANCE, 0)))
             chance_modifier = int(float(
-                self.properties.get(field + SUFFIX_MCHANCE, 0)))
+                properties.get(field + SUFFIX_MCHANCE, 0)))
             format_absolute = output.get(TXT_FABS, FORMAT_INT)
             format_modifier = output.get(TXT_FMOD, FORMAT_MOD)
             format_range = output.get(TXT_FRANGE, FORMAT_RANGE)
@@ -135,9 +190,9 @@ class DBRReader:
             text_duration = output.get(TXT_DUR, text_absolute)
             text_modifier = output.get(TXT_MOD, text_absolute)
 
-            value = float(self.properties.get(field, 0))
-            value_duration = float(self.properties.get(field + SUFFIX_DUR, 0))
-            value_modifier = float(self.properties.get(field + SUFFIX_MOD, 0))
+            value = float(properties.get(field, 0))
+            value_duration = float(properties.get(field + SUFFIX_DUR, 0))
+            value_modifier = float(properties.get(field + SUFFIX_MOD, 0))
 
             if value:
                 absolute = format_absolute.format(value) + text_absolute
@@ -157,63 +212,139 @@ class DBRReader:
                                               else modifier)
 
         # Append the defensive results to the properties:
-        self.parsed[PROPERTIES].update(result)
+        if tier == -1:
+            self.parsed[PROPERTIES].update(result)
+        else:
+            self.parsed[PROPERTIES][tier].update(result)
 
-    def parse_item_skill_augment(self):
+    def parse_equipment(self):
+        '''Parse the DBR file as an equipment file'''
+
+        # Grab item rarity and check it against required:
+        self.parsed[ITEM_CLASSIFICATION] = (
+            self.properties.get(ITEM_CLASSIFICATION, None))
+
+        if self.parsed[ITEM_CLASSIFICATION] not in ITEM_RARITIES:
+            return
+
+        # Set item level, tag & name
+        self.parsed[ITEM_LEVEL] = int(self.properties.get(ITEM_LEVEL, 0))
+        self.parsed[ITEM_TAG] = self.properties.get(ITEM_TAG, None)
+        self.parsed[ITEM_NAME] = (self.tags[self.parsed[ITEM_TAG]]
+                                  if self.parsed[ITEM_TAG] in self.tags
+                                  else '')
+
+        # Check if the item is part of a set:
+        if ITEM_SET in self.properties:
+            # Parse the set file
+            set_file = self.get_reference_dbr(self.properties[ITEM_SET])
+            item_set = DBRReader(set_file, self.tags, False)
+            item_set.parse()
+
+            self.parsed[ITEM_SET] = item_set.parsed[SET_TAG]
+
+        # Initialize the properties and parse them:
+        self.parsed[PROPERTIES] = {}
+        self.parse_character()
+        self.parse_defensive()
+        self.parse_item_skill_augment()
+        self.parse_offensive()
+        self.parse_petbonus()
+        self.parse_racial()
+        self.parse_retaliation()
+        self.parse_skill_properties()
+        self.parse_cost()
+
+    def parse_item_skill_augment(self, tier=-1):
+        '''Parse the item bsaed skill augment DBR parameters'''
+
+        # Set the properties to parse (tiered or non-tiered):
+        properties = self.tiered[tier] if tier >= 0 else self.properties
+
         result = {}
+        if ITEM_SKILL in properties:
+            # Grab the skill file:
+            skill_file = self.get_reference_dbr(properties[ITEM_SKILL])
+            skill = DBRReader(skill_file, self.tags)
+            skill.parse()
 
-        if ITEM_SKILL in self.properties:
-
-            # TODO: Fix tihs into a single line:
-            skill_tag = self.properties[ITEM_SKILL].replace('\\', '_').lower()
-            skill_tag = skill_tag.replace(' ', '_')
-
-            # Find the skill:
-            skill = self.find_skill(skill_tag)
-
-            if skill:
+            if PROPERTIES in skill.parsed:
                 # Add skill json:
                 result[ITEM_SKILL] = {
-                    SKILL_TAG: skill[SKILL_TAG],
-                    SKILL_DISPLAY: SKILL_GRANTS_FIELD + skill[SKILL_DNAME]
+                    SKILL_TAG: skill.parsed.get(SKILL_TAG, ''),
+                    SKILL_DISPLAY: SKILL_GRANTS_FIELD + (
+                                   skill.parsed.get(SKILL_DISPLAY, ''))
                 }
 
         for augment_name, augment_level in SKILL_AUGMENT_FIELDS.items():
-            if augment_name not in self.properties:
+            if augment_name not in properties:
                 continue
 
-            # TODO: Fix tihs into a single line:
-            skill_tag = self.properties[augment_name].lower()
-            skill_tag = skill_tag.replace('\\', '_').replace(' ', '_')
-            skill_level = self.properties[augment_level]
+            # Grab the skill file:
+            skill_file = self.get_reference_dbr(properties[augment_name])
+            skill = DBRReader(skill_file, self.tags)
+            skill.parse()
 
-            # Find the skill:
-            skill = self.find_skill(skill_tag)
+            if PROPERTIES in skill.parsed:
+                result[augment_name] = {
+                    SKILL_TAG: skill.parsed.get(SKILL_TAG, ''),
+                    SKILL_DISPLAY: SKILL_AUGMENT_FORMAT.format(
+                                    float(self.properties[augment_level]),
+                                    skill.parsed.get(SKILL_DISPLAY, ''))
+                }
 
-            if not skill:
-                continue
-
-            result[augment_name] = {
-                SKILL_TAG: skill[SKILL_TAG],
-                SKILL_DISPLAY: SKILL_AUGMENT_FORMAT.format(
-                                    skill_level, skill[SKILL_DNAME])
-            }
-
-        if SKILL_AUGMENT_ALL in self.properties:
+        if SKILL_AUGMENT_ALL in properties:
             result[SKILL_AUGMENT_ALL] = SKILL_AUGMENT_ALL_FORMAT.format(
-                                            self.properties[SKILL_AUGMENT_ALL])
+                                            properties[SKILL_AUGMENT_ALL])
 
         # Append the item skill results to the properties:
-        self.parsed[PROPERTIES].update(result)
+        if tier == -1:
+            self.parsed[PROPERTIES].update(result)
+        else:
+            self.parsed[PROPERTIES][tier].update(result)
 
-    def parse_offensive(self):
+    def parse_loot_table(self):
+        bonuses = []
+        bonus_files = {}
+        weights = {}
+
+        # Parse the possible completion bonuses:
+        for field, value in self.properties.items():
+            if LOOT_RANDOMIZER_NAME in field:
+                number = re.search(r'\d+', field).group()
+                bonus_files[number] = value
+            if LOOT_RANDOMIZER_WEIGHT in field:
+                number = re.search(r'\d+', field).group()
+                weights[number] = int(value)
+
+        # Add all the weights together to determined % later
+        total_weight = sum(weights.values())
+        for field, value in bonus_files.items():
+            if field in weights:
+                bonus_file = self.get_reference_dbr(value)
+                bonus = DBRReader(bonus_file, self.tags)
+                bonus.parse()
+
+                # Append the parsed bonus with its chance:
+                bonuses.append({
+                    BONUS_CHANCE: float('{0:.2f}'.format(
+                        (weights[field] / total_weight) * 100)),
+                    BONUS: bonus.parsed[PROPERTIES]})
+
+        # Set all parsed bonuses
+        self.parsed[BONUS] = bonuses
+
+    def parse_offensive(self, tier=-1):
         '''Parse the offensive DBR parameters'''
+
+        # Set the properties to parse (tiered or non-tiered):
+        properties = self.tiered[tier] if tier >= 0 else self.properties
 
         result = {}
         chance_properties = []
         chance_key = PREFIX_OFF + SUFFIX_GCHANCE
-        chance_value = int(float(self.properties.get(chance_key, 0)))
-        chance_isset = chance_key in self.properties
+        chance_value = int(float(properties.get(chance_key, 0)))
+        chance_isset = chance_key in properties
 
         offensive_fields = {
             **OFFENSIVE_FIELDS,
@@ -225,11 +356,11 @@ class DBRReader:
 
             # Setup the output chances, format, texts, and values
             chance_absolute = int(float(
-                self.properties.get(field + SUFFIX_CHANCE, 0)))
+                properties.get(field + SUFFIX_CHANCE, 0)))
             chance_modifier = int(float(
-                self.properties.get(field + SUFFIX_MCHANCE, 0)))
-            chance_global = self.properties.get(field + SUFFIX_GLOBAL, 0)
-            chance_xor = self.properties.get(field + SUFFIX_XOR, 0)
+                properties.get(field + SUFFIX_MCHANCE, 0)))
+            chance_global = properties.get(field + SUFFIX_GLOBAL, 0)
+            chance_xor = properties.get(field + SUFFIX_XOR, 0)
 
             # Format and texts are decided by the type of output:
             format_absolute = (output.get(TXT_FABS, FORMAT_INT)
@@ -248,18 +379,18 @@ class DBRReader:
                              if isinstance(output, dict)
                              else output)
 
-            value_min = float(self.properties.get(field + SUFFIX_MIN, 0))
-            value_max = float(self.properties.get(field + SUFFIX_MIN, 0))
-            value_modifier = float(self.properties.get(field + SUFFIX_MOD, 0))
+            value_min = float(properties.get(field + SUFFIX_MIN, 0))
+            value_max = float(properties.get(field + SUFFIX_MIN, 0))
+            value_modifier = float(properties.get(field + SUFFIX_MOD, 0))
 
             # Duration fields will only be relevant for non-absolute properties
             if prop not in OFFENSIVE_FIELDS:
                 duration_min = float(
-                    self.properties.get(field + SUFFIX_DURMIN, 0))
+                    properties.get(field + SUFFIX_DURMIN, 0))
                 duration_max = float(
-                    self.properties.get(field + SUFFIX_DURMAX, 0))
+                    properties.get(field + SUFFIX_DURMAX, 0))
                 duration_mod = float(
-                    self.properties.get(field + SUFFIX_DURMOD, 0))
+                    properties.get(field + SUFFIX_DURMOD, 0))
 
                 # Check if text fields need duration modifiers appended:
                 if duration_mod:
@@ -319,7 +450,8 @@ class DBRReader:
 
                 # Edge case: Physical and Piercing damage are never chance
                 # based (absolute values only)
-                elif ((prop == DMG_PHYS and SUFFIX_WEAPON in self.classType) or
+                elif ((prop == DMG_PHYS and
+                       PREFIX_WEAPON in self.parsed[TYPE]) or
                       (prop == DMG_PIERCE)):
                     result[field] = absolute
                 else:
@@ -339,10 +471,10 @@ class DBRReader:
 
         # Edge case: ManaBurn, set apart and follow a different format
         # than that of the other fields in the offensive template:
-        mb_chance = int(self.properties.get(STAT_MP_BURN + SUFFIX_GLOBAL, 0))
-        mb_min = float(self.properties.get(STAT_MP_BURN_MIN, 0))
-        mb_max = float(self.properties.get(STAT_MP_BURN_MAX, 0))
-        mb_ratio = float(self.properties.get(STAT_MP_BURN_RATIO, 0))
+        mb_chance = int(properties.get(STAT_MP_BURN + SUFFIX_GLOBAL, 0))
+        mb_min = float(properties.get(STAT_MP_BURN_MIN, 0))
+        mb_max = float(properties.get(STAT_MP_BURN_MAX, 0))
+        mb_ratio = float(properties.get(STAT_MP_BURN_RATIO, 0))
 
         if mb_min:
             mb_value = (FORMAT_RANGE.format(mb_min, mb_max)
@@ -368,38 +500,51 @@ class DBRReader:
             result[chance_key] = chance_properties
 
         # Append the offensive results to the properties:
-        self.parsed[PROPERTIES].update(result)
+        if tier == -1:
+            self.parsed[PROPERTIES].update(result)
+        else:
+            self.parsed[PROPERTIES][tier].update(result)
 
-    def parse_petbonus(self):
+    def parse_petbonus(self, tier=-1):
         '''Parse the pet bonus DBR parameters'''
-        if DBR_PET_BONUS in self.properties:
+
+        # Set the properties to parse (tiered or non-tiered):
+        properties = self.tiered[tier] if tier >= 0 else self.properties
+
+        if DBR_PET_BONUS in properties:
             # Parse the pet bonus file
-            pet_bonus_file = self.get_reference_dbr(
-                             self.properties[DBR_PET_BONUS])
-            pet_bonus = DBRReader(pet_bonus_file, self.skills)
+            pet_bonus_file = self.get_reference_dbr(properties[DBR_PET_BONUS])
+            pet_bonus = DBRReader(pet_bonus_file, self.tags)
             pet_bonus.parse()
 
-            # Append the bonus
-            self.parsed[PROPERTIES][DBR_PET_BONUS] = (
-                pet_bonus.parsed[PROPERTIES])
+            # Append the pet bonus
+            if tier == -1:
+                self.parsed[PROPERTIES][DBR_PET_BONUS] = (
+                    pet_bonus.parsed[PROPERTIES])
+            else:
+                self.parsed[PROPERTIES][tier][DBR_PET_BONUS] = (
+                    pet_bonus.parsed[PROPERTIES])
 
-    def parse_racial(self):
+    def parse_racial(self, tier=-1):
         '''Parse the racial bonus DBR parameters'''
 
-        if STAT_RACE not in self.properties:
+        # Set the properties to parse (tiered or non-tiered):
+        properties = self.tiered[tier] if tier >= 0 else self.properties
+
+        if STAT_RACE not in properties:
             return
 
         result = {}
-        bonus_list = self.properties[STAT_RACE].split(';')
+        bonus_list = properties[STAT_RACE].split(';')
         for prop, output in RACIAL_FIELDS.items():
             field = PREFIX_RACE + prop
 
-            if field not in self.properties:
+            if field not in properties:
                 continue
 
             # Start with an empty list for this bonus:
             result[field] = []
-            values = self.properties[field].split(';')
+            values = properties[field].split(';')
 
             for i in range(0, len(bonus_list)):
                 result[field].append(output.format(float(values[0])
@@ -407,14 +552,56 @@ class DBRReader:
                                      else value[i],
                                      bonus_list[i]))
 
-    def parse_retaliation(self):
+        if tier == -1:
+            self.parsed[PROPERTIES].update(result)
+        else:
+            self.parsed[PROPERTIES][tier].update(result)
+
+    def parse_relic(self):
+        '''Parse the DBR file as a relic file'''
+
+        # Grab the file name and split it:
+        file_name = os.path.basename(self.dbr).split('_')
+
+        # Set the relic specfic properties:
+        self.parsed[RELIC_TAG] = self.properties[DESCRIPTION]
+        self.parsed[RELIC_NAME] = self.tags[self.parsed[RELIC_TAG]]
+        self.parsed[DESCRIPTION] = self.tags[self.properties[ITEM_TEXT]]
+        self.parsed[DIFFICULTY] = DIFFICULTIES[int(file_name[0][1:]) - 1]
+        self.parsed[ACT] = file_name[1]
+
+        # Parsed properties are a list (because they're tiered)
+        self.parsed[PROPERTIES] = []
+        for index, tier in enumerate(self.tiered):
+            # Prepare the next properties list:
+            self.parsed[PROPERTIES].insert(index, {})
+
+            # Parse the relic properties
+            self.parse_character(index)
+            self.parse_defensive(index)
+            self.parse_offensive(index)
+            self.parse_retaliation(index)
+            self.parse_skill_properties(index)
+
+        self.parse_cost()
+
+        # Parse completion bonuses and set it:
+        bonus_file = self.get_reference_dbr(self.properties[BONUS_TABLE])
+        bonus = DBRReader(bonus_file, self.tags)
+        bonus.parse()
+        self.parsed[BONUS] = bonus.parsed.get(BONUS, [])
+
+    def parse_retaliation(self, tier=-1):
         '''Parse the retaliation DBR parameters'''
+
+        # Set the properties to parse (tiered or non-tiered):
+        properties = self.tiered[tier] if tier >= 0 else self.properties
 
         result = {}
         chance_properties = []
         chance_key = PREFIX_RETAL + SUFFIX_GCHANCE
-        chance_value = int(float(self.properties.get(chance_key, 0)))
-        chance_isset = chance_key in self.properties
+        chance_value = int(float(properties.get(chance_key, 0)))
+        chance_isset = chance_key in properties
 
         retaliation_fields = {
             **RETALIATION_FIELDS,
@@ -426,11 +613,11 @@ class DBRReader:
 
             # Setup the output chances, format, texts, and values
             chance_absolute = int(float(
-                self.properties.get(field + SUFFIX_CHANCE, 0)))
+                properties.get(field + SUFFIX_CHANCE, 0)))
             chance_modifier = int(float(
-                self.properties.get(field + SUFFIX_MCHANCE, 0)))
-            chance_global = self.properties.get(field + SUFFIX_GLOBAL, 0)
-            chance_xor = self.properties.get(field + SUFFIX_XOR, 0)
+                properties.get(field + SUFFIX_MCHANCE, 0)))
+            chance_global = properties.get(field + SUFFIX_GLOBAL, 0)
+            chance_xor = properties.get(field + SUFFIX_XOR, 0)
 
             # Format and texts are decided by the type of output:
             format_absolute = (output.get(TXT_FABS, FORMAT_INT)
@@ -449,18 +636,18 @@ class DBRReader:
                              if isinstance(output, dict)
                              else output)
 
-            value_min = float(self.properties.get(field + SUFFIX_MIN, 0))
-            value_max = float(self.properties.get(field + SUFFIX_MIN, 0))
-            value_modifier = float(self.properties.get(field + SUFFIX_MOD, 0))
+            value_min = float(properties.get(field + SUFFIX_MIN, 0))
+            value_max = float(properties.get(field + SUFFIX_MIN, 0))
+            value_modifier = float(properties.get(field + SUFFIX_MOD, 0))
 
             # Duration fields will only be relevant for non-absolute properties
             if prop not in RETALIATION_FIELDS:
                 duration_min = float(
-                    self.properties.get(field + SUFFIX_DURMIN, 0))
+                    properties.get(field + SUFFIX_DURMIN, 0))
                 duration_max = float(
-                    self.properties.get(field + SUFFIX_DURMAX, 0))
+                    properties.get(field + SUFFIX_DURMAX, 0))
                 duration_mod = float(
-                    self.properties.get(field + SUFFIX_DURMOD, 0))
+                    properties.get(field + SUFFIX_DURMOD, 0))
 
                 # Check if text fields need duration modifiers appended:
                 if duration_mod:
@@ -538,25 +725,132 @@ class DBRReader:
             result[chance_key] = chance_properties
 
         # Append the retaliation results to the properties:
-        self.parsed[PROPERTIES].update(result)
+        if tier == -1:
+            self.parsed[PROPERTIES].update(result)
+        else:
+            self.parsed[PROPERTIES][tier].update(result)
 
-    def parse_skill_properties(self):
-        result = {}
+    def parse_scroll(self):
+        '''Parse the DBR file as a scroll file'''
+        self.parsed[ITEM_TAG] = self.properties[DESCRIPTION]
+        self.parsed[ITEM_NAME] = self.tags[self.parsed[ITEM_TAG]]
+        self.parsed[DESCRIPTION] = self.tags[self.properties[ITEM_TEXT]]
 
+    def parse_set(self):
+        self.parsed[SET_TAG] = self.properties.get(SET_NAME, '')
+        self.parsed[SET_NAME] = self.tags[self.parsed[SET_TAG]]
+
+        self.parsed[PROPERTIES] = []
+        for index, tier in enumerate(self.tiered):
+            # Prepare the next properties list:
+            self.parsed[PROPERTIES].insert(index, {})
+
+            # Parse the properties
+            self.parse_character(index)
+            self.parse_defensive(index)
+            self.parse_offensive(index)
+            self.parse_retaliation(index)
+            self.parse_skill_properties(index)
+
+        # Parse members:
+        if self.allow_recursion:
+            self.parsed[SET_MEMBERS] = []
+            for member in self.properties[SET_MEMBERS].split(';'):
+                if EQUIPMENT not in member.lower():
+                    continue
+
+                # Grab the member file and only extract name:
+                member_file = self.get_reference_dbr(member)
+                member = DBRReader(member_file, self.tags)
+                member.parse()
+
+                if(ITEM_NAME in member.parsed):
+                    member_tag = member.parsed[ITEM_NAME]
+                    self.parsed[SET_MEMBERS].append({
+                        ITEM_TAG: member.parsed[ITEM_TAG],
+                        ITEM_NAME: member.parsed[ITEM_NAME]})
+
+        # Pop off the first element of the properties (1 set item)
+        if(len(self.parsed[PROPERTIES]) > 1):
+            if(not self.parsed[PROPERTIES][0]):
+                self.parsed[PROPERTIES].pop(0)
+
+    def parse_skill(self):
+        '''Parse the DBR file as a skill file'''
+
+        # Set the skill specfic properties:
+        if SKILL_DISPLAY in self.properties:
+            self.parsed[SKILL_TAG] = self.properties[SKILL_DISPLAY]
+
+            # Convert tag to text if possible
+            if self.parsed[SKILL_TAG] in self.tags:
+                self.parsed[SKILL_DISPLAY] = self.tags[self.parsed[SKILL_TAG]]
+
+        if SKILL_DESC in self.properties and (
+                self.properties[SKILL_DESC] in self.tags):
+            self.parsed[DESCRIPTION] = self.tags[self.properties[SKILL_DESC]]
+        elif FILE_DESCRIPTION in self.properties:
+            self.parsed[DESCRIPTION] = self.properties[FILE_DESCRIPTION]
+
+        # Parsed properties are a list (because they're tiered)
+        self.parsed[PROPERTIES] = []
+        for index, tier in enumerate(self.tiered):
+            # Prepare the next properties list:
+            self.parsed[PROPERTIES].insert(index, {})
+
+            # Parse the skill properties
+            self.parse_character(index)
+            self.parse_defensive(index)
+            self.parse_offensive(index)
+            self.parse_petbonus(index)
+            self.parse_racial(index)
+            self.parse_retaliation(index)
+            self.parse_skill_properties(index)
+
+    def parse_skill_buff(self):
+        '''Parse the DBR reference skill buff file'''
+
+        # Parse the buff file
+        skill_buff_file = self.get_reference_dbr(
+                            self.properties[DBR_BUFF_SKILL])
+        skill_buff = DBRReader(skill_buff_file, self.tags)
+        skill_buff.parse()
+
+        # Set the known properties
+        self.parsed = skill_buff.parsed
+
+    def parse_skill_pet(self):
+        '''Parse the DBR reference pet modifier file'''
+
+        # Parse the pet file
+        skill_pet_file = self.get_reference_dbr(
+                            self.properties[DBR_PET_SKILL])
+        skill_pet = DBRReader(skill_pet_file, self.tags)
+        skill_pet.parse()
+
+        # Set the known properties
+        self.parsed = skill_pet.parsed
+
+    def parse_skill_properties(self, tier=-1):
         '''Parses skill property DBR parameters'''
+
+        # Set the properties to parse (tiered or non-tiered):
+        properties = self.tiered[tier] if tier >= 0 else self.properties
+
+        result = {}
         for prop, output in SKILL_PROPERTY_FIELDS.items():
             field = PREFIX_SKILL = prop
 
             # Setup the output chances, format, texts, and values
             chance_absolute = int(float(
-                self.properties.get(field + SUFFIX_CHANCE, 0)))
+                properties.get(field + SUFFIX_CHANCE, 0)))
             format_absolute = (output.get(TXT_FABS, FORMAT_INT)
                                if isinstance(output, dict)
                                else FORMAT_INT)
             text_absolute = (output.get(TXT_ABS)
                              if isinstance(output, dict)
                              else output)
-            value_absolute = float(self.properties.get(field, 0))
+            value_absolute = float(properties.get(field, 0))
             absolute = format_absolute.format(value_absolute) + (
                        text_absolute)
 
@@ -566,42 +860,117 @@ class DBRReader:
                                  else absolute)
 
         # Append the skill results to the properties:
-        self.parsed[PROPERTIES].update(result)
+        if tier == -1:
+            self.parsed[PROPERTIES].update(result)
+        else:
+            self.parsed[PROPERTIES][tier].update(result)
+
+    def parse_skill_spawn(self):
+        '''Parse the DBR reference spawning file'''
+
+        # Set the known properties
+        self.parsed[SKILL_TAG] = self.properties[SKILL_DISPLAY]
+        self.parsed[SKILL_DISPLAY] = self.tags[self.parsed[SKILL_TAG]]
+        self.parsed[DESCRIPTION] = (self.tags[self.properties[SKILL_DESC]]
+                                    if SKILL_DESC in self.properties
+                                    else '')
+
+        # Only set time to live it's it exists (otherwise it's infinite)
+        if PET_TTL in self.properties:
+            self.parsed[PET_TTL] = self.properties[PET_TTL]
+
+    # -------------------------------------------------------------------------
+    #
+    #                   HELPER FUNCTIONS START BELOW
+    #
+    # -------------------------------------------------------------------------
 
     def get_reference_dbr(self, new_dbr):
-        ''' Return path to new file by replacing the last part.
-        Example self.dbr will be:
-        C:/Users/Fons/TQDB/Records/Items/foo/bar
-        and the new_dbr will be
-        Records/Items/foo/waz
-        The result will be
-         C:/Users/Fons/Records/Items/foo/waz'''
+        '''Return full path for a DBR file referenced in
+        a DBR file, by using the current full path'''
         try:
+            # Lowercase the new DBR
             new_dbr = new_dbr.lower()
-            return self.dbr[:self.dbr.index(new_dbr.split('\\')[0])] + new_dbr
+
+            # Create the reference
+            dbr_ref = self.dbr[:self.dbr.index(new_dbr.split('\\')[0])] + (
+                   new_dbr)
+
+            # Quick check to avoid infinite recursion (new reference = self)
+            return dbr_ref if self.dbr != dbr_ref else None
         except ValueError:
             return None
 
-    def find_skill(self, needle):
-        ''' Test if a skill is set in the known skill list, either
-        the actual skill name or a reference pet or buff skill name'''
+    def prepare_properties(self):
 
-        # Check if needle is the key in the skill list
-        if needle in self.skills:
-            return self.skills[needle]
+        # DBR file into a list of lines
+        lines = [line.rstrip(',\n') for line in self.file]
 
-        # Check if the needle is a buff or pet reference
-        for key, haystack in self.skills.items():
-            if haystack.get(DBR_BUFF_SKILL, None) == needle:
-                return haystack.get(DBR_BUFF_SKILL)
-            elif haystack.get(DBR_PET_SKILL, None) == needle:
-                return haystack.get(DBR_PET_SKILL)
+        # Parse line into a dictionary of key, value properties:
+        self.properties = dict([(k, v) for k, v in (dict(properties.split(',')
+                               for properties in lines)).items()
+                               if self.property_isset(v)])
 
-        return False
+        # Parse into tiered properties as well, if applicable
+        tiered_properties = (dict([(key, value.split(';'))
+                             for key, value
+                             in self.properties.items()
+                             if ';' in value]))
+
+        # If there are no tiered propreties, return here
+        if not tiered_properties:
+            return
+
+        # Check occurences where value is set, but first iteration
+        # is 0% chance:
+        chance_zeroes = {}
+        for key, value in tiered_properties.items():
+            if(SUFFIX_CHANCE in key and float(value[0]) == 0):
+                # Store the prefix to check on another iteration
+                chance_zeroes[key[0:key.index(SUFFIX_CHANCE)]] = len(value)
+
+        # Find longest list of split fields:
+        tiers = len(tiered_properties[max(tiered_properties,
+                                      key=lambda
+                                      x:len(tiered_properties[x]))])
+
+        # Now add all non-tiered properties:
+        tiered_properties.update(dict([(key, value)
+                                 for key, value
+                                 in self.properties.items()
+                                 if ';' not in value]))
+
+        # Check the edge case mentioned above
+        for prefix, total in chance_zeroes.items():
+            for key, value in tiered_properties.items():
+                if (SUFFIX_CHANCE not in key and prefix in key and not
+                   isinstance(value, list)):
+                    # Fix the first occurance by seting it to zero
+                    # and repeating the normal value for the others
+                    tiered_properties[key] = (['0.000000'] +
+                                              ([value] * (total - 1)))
+
+        self.tiered = []
+        for i in range(0, tiers):
+            tier = {}
+
+            # Setup the current tier
+            for key, value in tiered_properties.items():
+                if key == STAT_RACE:
+                    tier[key] = (';'.join(value)
+                                 if isinstance(value, list)
+                                 else value)
+                elif not isinstance(value, list):
+                    tier[key] = value
+                elif i < len(value) and self.property_isset(value[i]):
+                    tier[key] = value[i]
+
+            # Append this tier
+            self.tiered.append(tier)
 
     def property_isset(self, property):
-        try:
-            float(property)
-            return float(property) != 0
-        except:
-            return True
+            try:
+                float(property)
+                return float(property) != 0
+            except:
+                return True
