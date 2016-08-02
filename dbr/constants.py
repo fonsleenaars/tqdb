@@ -40,10 +40,11 @@ FILES_TAGS = [
 # Global constants
 # Most DBRs have these, don't belong to a specific category
 CLASS = 'Class'
-PROPERTIES = 'properties'
 DESCRIPTION = 'description'
 FILE_DESCRIPTION = 'FileDescription'
 EQUIPMENT = 'equipment'
+PATH = 'path'
+PROPERTIES = 'properties'
 
 # Class Types
 TYPE = 'type'
@@ -79,6 +80,7 @@ TYPE_SKILL = [
     'Skill_AttackRadiusLightning',
     'Skill_AttackSpell',
     'Skill_AttackSpellChaos',
+    'Skill_AttackWave',
     'Skill_AttackWeapon',
     'Skill_AttackWeaponBlink',
     'Skill_AttackWeaponCharge',

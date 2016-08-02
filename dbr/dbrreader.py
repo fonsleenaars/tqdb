@@ -262,6 +262,8 @@ class DBRReader:
         properties = self.tiered[tier] if tier >= 0 else self.properties
 
         result = {}
+
+        # Parse skills that are granted
         if ITEM_SKILL in properties:
             # Grab the skill file:
             skill_file = self.get_reference_dbr(properties[ITEM_SKILL])
@@ -269,13 +271,9 @@ class DBRReader:
             skill.parse()
 
             if PROPERTIES in skill.parsed:
-                # Add skill json:
-                result[ITEM_SKILL] = {
-                    SKILL_TAG: skill.parsed.get(SKILL_TAG, ''),
-                    SKILL_DISPLAY: SKILL_GRANTS_FIELD + (
-                                   skill.parsed.get(SKILL_DISPLAY, ''))
-                }
+                result[ITEM_SKILL] = skill.parsed
 
+        # Parse skills that are augmented:
         for augment_name, augment_level in SKILL_AUGMENT_FIELDS.items():
             if augment_name not in properties:
                 continue
@@ -286,13 +284,11 @@ class DBRReader:
             skill.parse()
 
             if PROPERTIES in skill.parsed:
-                result[augment_name] = {
-                    SKILL_TAG: skill.parsed.get(SKILL_TAG, ''),
-                    SKILL_DISPLAY: SKILL_AUGMENT_FORMAT.format(
-                                    float(self.properties[augment_level]),
-                                    skill.parsed.get(SKILL_DISPLAY, ''))
-                }
+                skill_level = int(self.properties[augment_level])
+                skill.parsed[augment_level] = skill_level
+                result[augment_name] = skill.parsed
 
+        # Parse augment to all skills:
         if SKILL_AUGMENT_ALL in properties:
             result[SKILL_AUGMENT_ALL] = SKILL_AUGMENT_ALL_FORMAT.format(
                                             properties[SKILL_AUGMENT_ALL])
@@ -792,6 +788,9 @@ class DBRReader:
         elif FILE_DESCRIPTION in self.properties:
             self.parsed[DESCRIPTION] = self.properties[FILE_DESCRIPTION]
 
+        # Keep track of the skill path (this will determine the key)
+        self.parsed[PATH] = re.sub(r'[\ \\]', '_', self.dbr).lower()
+
         # Parsed properties are a list (because they're tiered)
         self.parsed[PROPERTIES] = []
         for index, tier in enumerate(self.tiered):
@@ -818,6 +817,7 @@ class DBRReader:
 
         # Set the known properties
         self.parsed = skill_buff.parsed
+        self.parsed[PATH] = re.sub(r'[\ \\]', '_', self.dbr).lower()
 
     def parse_skill_pet(self):
         '''Parse the DBR reference pet modifier file'''
@@ -830,6 +830,7 @@ class DBRReader:
 
         # Set the known properties
         self.parsed = skill_pet.parsed
+        self.parsed[PATH] = re.sub(r'[\ \\]', '_', self.dbr).lower()
 
     def parse_skill_properties(self, tier=-1):
         '''Parses skill property DBR parameters'''
@@ -839,20 +840,19 @@ class DBRReader:
 
         result = {}
         for prop, output in SKILL_PROPERTY_FIELDS.items():
-            field = PREFIX_SKILL = prop
+            field = PREFIX_SKILL + prop
 
             # Setup the output chances, format, texts, and values
             chance_absolute = int(float(
                 properties.get(field + SUFFIX_CHANCE, 0)))
-            format_absolute = (output.get(TXT_FABS, FORMAT_INT)
-                               if isinstance(output, dict)
-                               else FORMAT_INT)
-            text_absolute = (output.get(TXT_ABS)
-                             if isinstance(output, dict)
-                             else output)
+            # format_absolute = (output.get(TXT_FABS, FORMAT_INT)
+            #                    if isinstance(output, dict)
+            #                    else FORMAT_INT)
+            # text_absolute = (output.get(TXT_ABS)
+            #                  if isinstance(output, dict)
+            #                  else output)
             value_absolute = float(properties.get(field, 0))
-            absolute = format_absolute.format(value_absolute) + (
-                       text_absolute)
+            absolute = output.format(value_absolute)
 
             if value_absolute:
                 result[field] = ([chance_absolute, absolute]
@@ -874,6 +874,7 @@ class DBRReader:
         self.parsed[DESCRIPTION] = (self.tags[self.properties[SKILL_DESC]]
                                     if SKILL_DESC in self.properties
                                     else '')
+        self.parsed[PATH] = re.sub(r'[\ \\]', '_', self.dbr).lower()
 
         # Only set time to live it's it exists (otherwise it's infinite)
         if PET_TTL in self.properties:
