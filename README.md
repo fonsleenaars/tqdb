@@ -52,14 +52,14 @@ The parser uses a constants (*constants.py*) file that contains reference materi
 
 Parameters for the main parser:
 
-**Required** Full path to locally extracted database.arz folder
-The main parser (*tqdb-parser.py*) needs the **full path** to your locally extracted database.arz folder (ex: "C:\Users\Foo\Bar\database")
+**Required** Full path to locally extracted database.arz folder  
+The parser needs the **full path** to your locally extracted database.arz folder (ex: "C:\Users\Foo\Bar\database")
 
-**Required** Full path to locally extracted ARC resources
-The main parser (*tqdb-parser.py*) needs the **full path** to your locally extracted ARC resources folder (ex: "C:\Users\Foo\Bar\resources")
+**Required** Full path to locally extracted ARC resources  
+The parser needs the **full path** to your locally extracted text_en.arc resources folder (ex: "C:\Users\Foo\Bar\resources")
 
-**Required** Full path to locally extracted ARC textures
-The main parser (*tqdb-parser.py*) needs the **full path** to your locally extracted items.arc textures folder (ex: "C:\Users\Foo\Bar\textures")
+**Required** Full path to locally extracted ARC textures  
+The parser needs the **full path** to your locally extracted items.arc textures folder (ex: "C:\Users\Foo\Bar\textures")
 
 ### TextureViewer
 The *tqdb-parser.py* script uses the TextureViewer program created by Max McGuire to convert the TEX files into transparent PNGs. I included the program, the DLL and the readme in its entirety in the repo.
