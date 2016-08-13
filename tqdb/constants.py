@@ -33,14 +33,16 @@ FILES_TAGS = [
     'xskills.txt'
 ]
 
-# Global constants
-# Most DBRs have these, don't belong to a specific category
+# Global constants (don't belong to a specific category)
 CLASS = 'Class'
+CLASSIFICATION = 'classification'
 DESCRIPTION = 'description'
 FILE_DESCRIPTION = 'FileDescription'
 EQUIPMENT = 'equipment'
+NAME = 'name'
 PATH = 'path'
 PROPERTIES = 'properties'
+TAG = 'tag'
 
 # Class Types
 TYPE = 'type'
@@ -50,7 +52,7 @@ TYPE_ARTIFACT_FORMULA = [
     'ItemArtifactFormula']
 TYPE_EQUIPMENT = [
     'ArmorJewelry_Ring',
-    'ArmorJewelry_Jewelry',
+    'ArmorJewelry_Amulet',
     'ArmorProtective_Head',
     'ArmorProtective_Forearm',
     'ArmorProtective_UpperBody',
@@ -305,7 +307,6 @@ ITEM_TEXT = ITEM + 'Text'
 # Set constants
 SET_MEMBERS = PREFIX_SET + 'Members'
 SET_NAME = PREFIX_SET + 'Name'
-SET_TAG = PREFIX_SET + 'Tag'
 
 # Loot table / bonus constants
 BONUS = 'bonus'
@@ -314,15 +315,10 @@ BONUS_CHANCE = BONUS + SUFFIX_CHANCE
 LOOT_RANDOMIZER_NAME = 'randomizerName'
 LOOT_RANDOMIZER_WEIGHT = 'randomizerWeight'
 
-# Relic constants
-RELIC_TAG = 'relicTag'
-RELIC_NAME = 'relicName'
-
 # Artifact constants
-ARTIFACT_TAG = 'artifactTag'
-ARTIFACT_NAME = 'artifactName'
 ARTIFACT_CLASSIFICATION = 'artifactClassification'
 ARTIFACT_DROP = 'dropsFrom'
+ARTIFACT_NAME = 'artifactName'
 
 # Artifact formula constants
 FORMULA_BONUS = 'artifactBonusTableName'
@@ -387,7 +383,7 @@ STAT_ABS = 'Absorption'
 STAT_DIS = 'Disruption'
 STAT_ELE = 'ElementalResistance'
 STAT_HP_LEECH = PREFIX_SLOW + STAT_HP + 'Leach'
-STAT_MP_LEECH = PREFIX_SLOW + STAT_ENERGY + 'Leach'
+STAT_MP_LEECH = PREFIX_SLOW + STAT_MP + 'Leach'
 STAT_BLOCK = 'Block'
 STAT_REFL = 'Reflect'
 

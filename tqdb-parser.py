@@ -53,21 +53,31 @@ def cli_progress(label,  i, end_val, bar_length=20):
 # Bitmap function
 def save_bitmap(item):
     bitmap = ''
-    tag = ''
+    tag = item[TAG]
 
     # Check what kind of bitmap exists:
     if BITMAP_ARTIFACT in item:
         bitmap = item[BITMAP_ARTIFACT]
-        tag = item[ARTIFACT_TAG]
 
         # Now remove the bitmap from the item:
         del(item[BITMAP_ARTIFACT])
+
+    elif BITMAP_FORMULA in item:
+        # Formula's all share 3 possible icons (lesser, greater, artifact):
+        bitmap = item[BITMAP_FORMULA]
+        tag = item[CLASSIFICATION].lower()
+
+        del(item[BITMAP_FORMULA])
     elif BITMAP_ITEM in item:
         bitmap = item[BITMAP_ITEM]
-        tag = item[ITEM_TAG]
 
         # Now remove the bitmap from the item:
         del(item[BITMAP_ITEM])
+    elif BITMAP_RELIC in item:
+        bitmap = item[BITMAP_RELIC]
+
+        # Now remove the bitmap from the item:
+        del(item[BITMAP_RELIC])
 
     # Run the texture viewer if a bitmap and tag are set:
     if bitmap and tag and os.path.isfile(tex_dir + bitmap):
@@ -121,9 +131,7 @@ for index, equipment_file in enumerate(equipment_files):
     equipment.parse()
 
     # Skip items without tags
-    if (ITEM_TAG not in equipment.parsed and
-       RELIC_TAG not in equipment.parsed and
-       ARTIFACT_TAG not in equipment.parsed):
+    if (TAG not in equipment.parsed or not equipment.parsed[TAG]):
         cli_progress("Parsing equipment", index, len(equipment_files))
         continue
 
@@ -139,20 +147,24 @@ sets = {}
 cli_progress("Parsing sets", 0, len(set_files))
 for index, set_file in enumerate(set_files):
     # Create a new DBRReader object and pass along the tags
-    item_set = DBRReader(set_file, tags)
-    item_set.parse()
+    set_item = DBRReader(set_file, tags)
+    set_item.parse()
 
     # If this set has no members; skip it:
-    if len(item_set.parsed[SET_MEMBERS]) == 0:
+    if len(set_item.parsed[SET_MEMBERS]) == 0:
         cli_progress("Parsing sets", index, len(set_files))
         continue
 
+    # Change properties, to bonuses:
+    set_item.parsed[BONUS] = set_item.parsed[PROPERTIES]
+    del(set_item.parsed[PROPERTIES])
+
     # Grab the item tag and remove it from the properties:
-    item_tag = item_set.parsed[ITEM_SET_TAG]
-    del(item_set.parsed[ITEM_SET_TAG])
+    set_tag = set_item.parsed[TAG]
+    del(set_item.parsed[TAG])
 
     # Store the new item set with its tag being the key
-    sets[item_tag] = item_set.parsed
+    sets[set_tag] = set_item.parsed
 
     cli_progress("Parsing sets", index, len(set_files))
 

@@ -78,10 +78,10 @@ class DBRReader:
             return
 
         # Set the artifact properties
-        self.parsed[ARTIFACT_TAG] = self.properties[DESCRIPTION]
-        self.parsed[ARTIFACT_NAME] = self.tags[self.parsed[ARTIFACT_TAG]]
-        self.parsed[ARTIFACT_CLASSIFICATION] = (self.properties
-                                                [ARTIFACT_CLASSIFICATION])
+        self.parsed[TAG] = self.properties[DESCRIPTION]
+        self.parsed[NAME] = self.tags[self.parsed[TAG]]
+        self.parsed[CLASSIFICATION] = (self.properties
+                                       [ARTIFACT_CLASSIFICATION])
         self.parsed[ARTIFACT_DROP] = DIFFICULTIES_DICT[file_name[0]]
 
         # Set the bitmap if it exists
@@ -261,18 +261,18 @@ class DBRReader:
         '''Parse the DBR file as an equipment file'''
 
         # Grab item rarity and check it against required:
-        self.parsed[ITEM_CLASSIFICATION] = (
+        self.parsed[CLASSIFICATION] = (
             self.properties.get(ITEM_CLASSIFICATION, None))
 
-        if self.parsed[ITEM_CLASSIFICATION] not in ITEM_RARITIES:
+        if self.parsed[CLASSIFICATION] not in ITEM_RARITIES:
             return
 
         # Set item level, tag & name
         self.parsed[ITEM_LEVEL] = int(self.properties.get(ITEM_LEVEL, 0))
-        self.parsed[ITEM_TAG] = self.properties.get(ITEM_TAG, None)
-        self.parsed[ITEM_NAME] = (self.tags[self.parsed[ITEM_TAG]]
-                                  if self.parsed[ITEM_TAG] in self.tags
-                                  else '')
+        self.parsed[TAG] = self.properties.get(ITEM_TAG, None)
+        self.parsed[NAME] = (self.tags[self.parsed[TAG]]
+                             if self.parsed[TAG] in self.tags
+                             else '')
 
         # Check if the item is part of a set:
         if ITEM_SET in self.properties:
@@ -281,7 +281,7 @@ class DBRReader:
             item_set = DBRReader(set_file, self.tags, False)
             item_set.parse()
 
-            self.parsed[ITEM_SET] = item_set.parsed[SET_TAG]
+            self.parsed[ITEM_SET] = item_set.parsed[TAG]
 
         # Set the bitmap if it exists
         if BITMAP_ITEM in self.properties:
@@ -312,8 +312,9 @@ class DBRReader:
         artifact.parse()
 
         # Set the artifact tag and name for this formula:
-        self.parsed[ARTIFACT_TAG] = artifact.parsed[ARTIFACT_TAG]
-        self.parsed[ARTIFACT_NAME] = artifact.parsed[ARTIFACT_NAME]
+        self.parsed[TAG] = artifact.parsed[TAG]
+        self.parsed[NAME] = artifact.parsed[NAME]
+        self.parsed[CLASSIFICATION] = artifact.parsed[CLASSIFICATION]
 
         # Grab the reagents (ingredients):
         for index, prop in enumerate(FORMULA_REAGENT_TAGS):
@@ -325,12 +326,7 @@ class DBRReader:
             reagent_name = FORMULA_REAGENT_NAMES[index]
 
             # Add the reagent (relic, scroll or artifact)
-            if reagent.parsed[TYPE] in TYPE_RELIC:
-                self.parsed[reagent_name] = reagent.parsed[RELIC_TAG]
-            elif reagent.parsed[TYPE] in TYPE_SCROLL:
-                self.parsed[reagent_name] = reagent.parsed[ITEM_TAG]
-            elif reagent.parsed[TYPE] in TYPE_ARTIFACT:
-                self.parsed[reagent_name] = reagent.parsed[ARTIFACT_TAG]
+            self.parsed[reagent_name] = reagent.parsed[TAG]
 
             # Add the name, from the tags list:
             self.parsed[reagent_name + 'Name'] = self.tags[
@@ -649,8 +645,8 @@ class DBRReader:
         file_name = os.path.basename(self.dbr).split('_')
 
         # Set the relic specfic properties:
-        self.parsed[RELIC_TAG] = self.properties[DESCRIPTION]
-        self.parsed[RELIC_NAME] = self.tags[self.parsed[RELIC_TAG]]
+        self.parsed[TAG] = self.properties[DESCRIPTION]
+        self.parsed[NAME] = self.tags[self.parsed[TAG]]
         self.parsed[DESCRIPTION] = self.tags[self.properties[ITEM_TEXT]]
         self.parsed[DIFFICULTY] = DIFFICULTIES[int(file_name[0][1:]) - 1]
         self.parsed[ACT] = file_name[1]
@@ -821,8 +817,8 @@ class DBRReader:
 
     def parse_scroll(self):
         '''Parse the DBR file as a scroll file'''
-        self.parsed[ITEM_TAG] = self.properties[DESCRIPTION]
-        self.parsed[ITEM_NAME] = self.tags[self.parsed[ITEM_TAG]]
+        self.parsed[TAG] = self.properties[DESCRIPTION]
+        self.parsed[NAME] = self.tags[self.parsed[TAG]]
         self.parsed[DESCRIPTION] = self.tags[self.properties[ITEM_TEXT]]
 
         # Set the bitmap if it exists
@@ -838,8 +834,8 @@ class DBRReader:
         self.parsed[SKILL_NAME_LOWER] = skill.parsed
 
     def parse_set(self):
-        self.parsed[SET_TAG] = self.properties.get(SET_NAME, '')
-        self.parsed[SET_NAME] = self.tags[self.parsed[SET_TAG]]
+        self.parsed[TAG] = self.properties.get(SET_NAME, '')
+        self.parsed[NAME] = self.tags[self.parsed[TAG]]
 
         self.parsed[PROPERTIES] = []
         for index, tier in enumerate(self.tiered):
@@ -853,7 +849,7 @@ class DBRReader:
             self.parse_retaliation(index)
             self.parse_skill_properties(index)
 
-        # Parse members:
+        # Parse members (recursion check to prevent infinite member/set loop)
         if self.allow_recursion:
             self.parsed[SET_MEMBERS] = []
             for member in self.properties[SET_MEMBERS].split(';'):
@@ -865,11 +861,11 @@ class DBRReader:
                 member = DBRReader(member_file, self.tags)
                 member.parse()
 
-                if(ITEM_NAME in member.parsed):
-                    member_tag = member.parsed[ITEM_NAME]
+                if(NAME in member.parsed):
+                    member_tag = member.parsed[NAME]
                     self.parsed[SET_MEMBERS].append({
-                        ITEM_TAG: member.parsed[ITEM_TAG],
-                        ITEM_NAME: member.parsed[ITEM_NAME]})
+                        TAG: member.parsed[TAG],
+                        NAME: member.parsed[NAME]})
 
         # Pop off the first element of the properties (1 set item)
         if(len(self.parsed[PROPERTIES]) > 1):
