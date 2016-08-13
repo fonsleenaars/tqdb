@@ -29,7 +29,7 @@ Run the program in a prompt or shell:
 The above command will extract all resources inside the packed Items.arc to the desired folder. 
 The ArchiveTool usage can be further explored by simply running the program without any parameters.
 
-The support script *tqdb-support-json.py* requires the **Text_EN.arc** and **Items.arc** to be extracted.
+The parser requires the **Text_EN.arc** and **Items.arc** to be extracted, to be used as the 2nd and 3rd parameter in the usage.
 Both files can be found in the Resources folder of your TQ:IT directory.
 
 TODO: ARZ Instructions
@@ -47,7 +47,9 @@ meaning the parser checks for its presence and assumes all present keys, have us
 
 The parser uses a constants (*constants.py*) file that contains reference materials for the currently supported results.
 
-### Main equipment and set parser
+### Equipment, set and skill parser:
+> Usage: tqdb-parser.py database-path resources-path textures-path
+
 Parameters for the main parser:
 
 **Required** Full path to locally extracted database.arz folder
