@@ -274,6 +274,18 @@ class DBRReader:
                              if self.parsed[TAG] in self.tags
                              else '')
 
+        # Set attack speed for weapons:
+        if (ATK_SPD_TAG in self.properties and
+           PREFIX_WEAPON in self.parsed[TYPE] and
+           PREFIX_SHIELD not in self.parsed[TYPE]):
+            # Grab attack speed tag:
+            attackSpeed = (self.properties[ATK_SPD_TAG]
+                                          [len(ATK_SPD_PRE):])
+
+            # Format attack speed (put space between capitalized words):
+            self.parsed[ATK_SPD] = re.sub(r"(\w)([A-Z])", r"\1 \2",
+                                          attackSpeed)
+
         # Check if the item is part of a set:
         if ITEM_SET in self.properties:
             # Parse the set file
@@ -424,7 +436,6 @@ class DBRReader:
         properties = self.tiered[tier] if tier >= 0 else self.properties
 
         result = {}
-        chance_properties = []
         chance_key = PREFIX_OFF + SUFFIX_GCHANCE
         chance_value = int(float(properties.get(chance_key, 0)))
         chance_isset = chance_key in properties
@@ -463,7 +474,7 @@ class DBRReader:
                              else output)
 
             value_min = float(properties.get(field + SUFFIX_MIN, 0))
-            value_max = float(properties.get(field + SUFFIX_MIN, 0))
+            value_max = float(properties.get(field + SUFFIX_MAX, 0))
             value_modifier = float(properties.get(field + SUFFIX_MOD, 0))
 
             # Duration fields will only be relevant for non-absolute properties
@@ -503,7 +514,7 @@ class DBRReader:
                     text_absolute += FORMAT_DUR_FOR.format(duration_min)
 
             # Format values now that durations are taken into account
-            absolute = (format_range(value_min, value_max)
+            absolute = (format_range.format(value_min, value_max)
                         if value_max and value_max > value_min
                         else format_absolute.format(value_min)) + (
                         text_absolute)
@@ -518,13 +529,13 @@ class DBRReader:
             if chance_global:
                 if value_modifier:
                     # Append modifier damage to chance properties:
-                    chance_properties.append(modifier)
+                    result[field + SUFFIX_MOD + SUFFIX_GLOBAL] = modifier
 
                     if chance_xor and value_min:
                         # Normal case: both modifier and absolute
                         # damages can be chanced based.
                         if prop not in OFFENSIVE_FIELDS:
-                            chance_properties.append(absolute)
+                            result[field + SUFFIX_GLOBAL] = absolute
                         # Edge case: for absolute offensive fields, the
                         # absolute property will be a general property
                         # if it's set while the modifier is chanced
@@ -539,7 +550,7 @@ class DBRReader:
                     result[field] = absolute
                 else:
                     # Append flat (or range) damage to chances:
-                    chance_properties.append(absolute)
+                    result[field + SUFFIX_GLOBAL] = absolute
             else:
                 if value_modifier:
                     # Add modifier as general property
@@ -573,14 +584,13 @@ class DBRReader:
             # Append the mana burn to the chance properties,
             # or general properties:
             if mb_chance:
-                chance_properties.append(mb_value)
+                result[STAT_MP_BURN + SUFFIX_GLOBAL] = mb_value
             else:
                 result[STAT_MP_BURN] = mb_value
 
         # Now append teh chance properties if they exist:
         if chance_isset:
-            chance_properties.insert(0, chance_value)
-            result[chance_key] = chance_properties
+            result[chance_key] = chance_value
 
         # Append the offensive results to the properties:
         if tier == -1:
@@ -683,7 +693,6 @@ class DBRReader:
         properties = self.tiered[tier] if tier >= 0 else self.properties
 
         result = {}
-        chance_properties = []
         chance_key = PREFIX_RETAL + SUFFIX_GCHANCE
         chance_value = int(float(properties.get(chance_key, 0)))
         chance_isset = chance_key in properties
@@ -722,7 +731,7 @@ class DBRReader:
                              else output)
 
             value_min = float(properties.get(field + SUFFIX_MIN, 0))
-            value_max = float(properties.get(field + SUFFIX_MIN, 0))
+            value_max = float(properties.get(field + SUFFIX_MAX, 0))
             value_modifier = float(properties.get(field + SUFFIX_MOD, 0))
 
             # Duration fields will only be relevant for non-absolute properties
@@ -762,7 +771,7 @@ class DBRReader:
                     text_absolute += FORMAT_DUR_FOR.format(duration_min)
 
             # Format values now that durations are taken into account
-            absolute = (format_range(value_min, value_max)
+            absolute = (format_range.format(value_min, value_max)
                         if value_max and value_max > value_min
                         else format_absolute.format(value_min)) + (
                         text_absolute)
@@ -777,13 +786,13 @@ class DBRReader:
             if chance_global:
                 if value_modifier:
                     # Append modifier damage to chance properties:
-                    chance_properties.append(modifier)
+                    result[field + SUFFIX_MOD + SUFFIX_GLOBAL] = modifier
 
                     if chance_xor and value_min:
                         # Normal case: both modifier and absolute
                         # damages can be chanced based.
                         if prop not in RETALIATION_FIELDS:
-                            chance_properties.append(absolute)
+                            result[field + SUFFIX_GLOBAL] = absolute
                         # Edge case: for absolute retaliation fields, the
                         # absolute property will be a general property
                         # if it's set while the modifier is chanced
@@ -791,7 +800,7 @@ class DBRReader:
                             result[field] = absolute
                 else:
                     # Append flat (or range) damage to chances:
-                    chance_properties.append(absolute)
+                    result[field + SUFFIX_GLOBAL] = absolute
             else:
                 if value_modifier:
                     # Add modifier as general property
@@ -806,8 +815,7 @@ class DBRReader:
 
         # Now append the chance properties if they exist:
         if chance_isset:
-            chance_properties.insert(0, chance_value)
-            result[chance_key] = chance_properties
+            result[chance_key] = chance_value
 
         # Append the retaliation results to the properties:
         if tier == -1:

@@ -34,6 +34,9 @@ FILES_TAGS = [
 ]
 
 # Global constants (don't belong to a specific category)
+ATK_SPD_TAG = 'characterBaseAttackSpeedTag'
+ATK_SPD_PRE = 'CharacterAttackSpeed'
+ATK_SPD = 'attackSpeed'
 CLASS = 'Class'
 CLASSIFICATION = 'classification'
 DESCRIPTION = 'description'
