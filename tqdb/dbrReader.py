@@ -369,6 +369,10 @@ class DBRReader:
             skill = DBRReader(skill_file, self.tags)
             skill.parse()
 
+            if ITEM_SKILL_LEVEL in properties:
+                skill.parsed[SKILL_LEVEL_LOWER] = int(self.properties
+                                                      [ITEM_SKILL_LEVEL])
+
             if PROPERTIES in skill.parsed:
                 result[ITEM_SKILL] = skill.parsed
 

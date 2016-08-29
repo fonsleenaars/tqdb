@@ -183,6 +183,7 @@ for index, item in enumerate(items):
             # Replace the skill with a reference
             item[PROPERTIES][ITEM_SKILL] = {
                 PATH: skill_path,
+                SKILL_LEVEL_LOWER: skill[SKILL_LEVEL_LOWER],
                 SKILL_DISPLAY: skill[SKILL_DISPLAY]
             }
 
