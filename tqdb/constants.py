@@ -222,6 +222,7 @@ SUFFIX_XOR = 'XOR'
 FORMAT_DUR_FOR = ' for {0:.1f} Second(s)'
 FORMAT_DUR_IMP = ' with +{0:.0f}% Improved Duration'
 FORMAT_DUR_OVER = ' over {0:.1f} Second(s)'
+FORMAT_FLOAT_G = '{0:g}'
 FORMAT_FLOAT = '{0:.1f}'
 FORMAT_INT = '{0:.0f}'
 FORMAT_INT_SIGNED = '{0:+.0f}'
@@ -269,8 +270,10 @@ SKILL_TRIGGER = PREFIX_SKILL + 'ChanceWeight'
 # Pet constants
 PET_OBJECT = PREFIX_SPAWN + 'Objects'
 PET_TTL = PREFIX_SPAWN + 'ObjectsTimeToLive'
+PET_TTL_TEXT = 'Life Time ' + FORMAT_INT + ' Seconds'
 PET_DMG = 'handHitDamage'
 PET_LIMIT = PREFIX_PET + 'Limit'
+PET_LIMIT_TEXT = FORMAT_INT + ' Summon Limit'
 
 # Pet skill constants
 PET_ATTACK = 'attack' + SKILL_NAME
@@ -647,21 +650,29 @@ OFFENSIVE_DUR_EFF_FIELDS = {
     STAT_RFUMBLE: {
         TXT_ABS: '% Chance of Impaired Aim'},
     STATUS_CONF: {
+        TXT_FABS: FORMAT_FLOAT_G,
         TXT_ABS: ' second(s) of Confusion'},
     STATUS_FEAR: {
+        TXT_FABS: FORMAT_FLOAT_G,
         TXT_ABS: ' second(s) of Fear'},
     STATUS_CONV: {
+        TXT_FABS: FORMAT_FLOAT_G,
         TXT_ABS: ' second(s) of Mind Control'},
     STATUS_TRAP: {
+        TXT_FABS: FORMAT_FLOAT_G,
         TXT_ABS: ' second(s) of Immobilization'},
     STATUS_PETR: {
+        TXT_FABS: FORMAT_FLOAT_G,
         TXT_ABS: ' second(s) of Petrify'},
     STATUS_FREE: {
+        TXT_FABS: FORMAT_FLOAT_G,
         TXT_ABS: ' second(s) of Freeze'},
     STATUS_STUN: {
+        TXT_FABS: FORMAT_FLOAT_G,
         TXT_ABS: ' second(s) of Stun',
         TXT_MOD: ' Stun Duration'},
     STATUS_SLEEP: {
+        TXT_FABS: FORMAT_FLOAT_G,
         TXT_ABS: ' second(s) of Sleep'}
 }
 
@@ -669,7 +680,7 @@ PROJECTILE_FIELDS = {
     PROJ_NUMBER: FORMAT_INT + ' Projectiles',
     PROJ_PIERCE: FORMAT_INT + '% Chance to Pass Through Enemies',
     PROJ_PIERCE_CHANCE: FORMAT_INT + '% Chance to Pass Through Enemies',
-    PROJ_EXPLODE: FORMAT_INT + ' Meter Radius',
+    PROJ_EXPLODE: FORMAT_FLOAT_G + ' Meter Radius',
     PROJ_FRAGMENTS: FORMAT_RANGE + ' Fragments'
 }
 
@@ -762,7 +773,7 @@ SKILL_PROPERTY_FIELDS = {
     SKILL_HEAL: FORMAT_INT_SIGNED + ' Health Restored',
     SKILL_PROJ: FORMAT_INT + ' Projectiles',
     SKILL_PROJ_MOD: FORMAT_MOD + ' Increase in Projectile Speed',
-    SKILL_RADIUS: FORMAT_INT + ' Meter Radius',
+    SKILL_RADIUS: FORMAT_FLOAT_G + ' Meter Radius',
     SKILL_REFRESH: '-' + FORMAT_INT + ' Second(s) to all Recharge Times',
     SKILL_TARGETS: FORMAT_INT + ' Target Maximum',
     SKILL_TRIGGER: FORMAT_INT + '% Chance to be Used'

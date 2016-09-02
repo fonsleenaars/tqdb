@@ -987,7 +987,7 @@ class DBRReader:
             value = float(properties.get(prop, 0))
 
             # Determine text output:
-            if value or value_min:
+            if value > 0.01 or value_min:
                 text = (output.format(value_min, value_max)
                         if value_min
                         else output.format(value))
@@ -1041,15 +1041,20 @@ class DBRReader:
 
             # Only set time to live it's it exists (otherwise it's infinite)
             if PET_TTL in tier:
-                spawn.parsed[PET_TTL] = int(float(tier[PET_TTL]))
+                spawn.parsed[PET_TTL] = PET_TTL_TEXT.format(
+                                            int(float(tier[PET_TTL])))
 
             if PET_LIMIT in tier:
-                spawn.parsed[PET_LIMIT] = int(tier[PET_LIMIT])
+                spawn.parsed[PET_LIMIT] = PET_LIMIT_TEXT.format(
+                                            int(tier[PET_LIMIT]))
 
             if SKILL_COST in tier:
-                spawn.parsed[SKILL_COST] = int(float(tier[SKILL_COST]))
+                spawn.parsed[SKILL_COST] = (SKILL_PROPERTY_FIELDS
+                                            [SKILL_COST].format(
+                                                int(float(tier[SKILL_COST]))))
 
             # Save the skills and the summon:
+            del(spawn.parsed[TYPE])
             self.parsed[PET_OBJECT].append(spawn.parsed)
 
     def parse_skilltree(self):
@@ -1072,17 +1077,13 @@ class DBRReader:
         # Set HP/MP values as a list, in case there's difficult scaling:
         spawn_hp = self.properties.get(PREFIX_CHAR + STAT_HP, '0')
         if(spawn_hp != '0'):
+            # Format the HP value to include text:
             spawn_hp = [int(float(hp)) for hp in spawn_hp.split(';')]
-            self.parsed[PREFIX_CHAR + STAT_HP] = (spawn_hp[0]
-                                                  if len(spawn_hp) == 1
-                                                  else spawn_hp)
+            spawn_hp_val = spawn_hp[0] if len(spawn_hp) == 1 else spawn_hp
 
-        spawn_mp = self.properties.get(PREFIX_CHAR + STAT_ENERGY, '0')
-        if(spawn_mp != '0'):
-            spawn_mp = [int(float(mp)) for mp in spawn_mp.split(';')]
-            self.parsed[PREFIX_CHAR + STAT_ENERGY] = (spawn_mp[0]
-                                                      if len(spawn_mp) == 1
-                                                      else spawn_mp)
+            # Set the HP as a property
+            self.parsed[PREFIX_CHAR + STAT_HP] = (
+                str(spawn_hp_val) + CHARACTER_FIELDS[STAT_HP][TXT_ABS])
 
         # Set the min/max damage:
         damage_min = int(float(self.properties.get(PET_DMG + SUFFIX_MIN, 0)))
