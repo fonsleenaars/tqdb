@@ -19,20 +19,26 @@ The result is a few Python files that can achieve the following results:
   - Subsequently turn that folder containing all the bitmap images into a single sprite image (6MB in size), including a CSS sprite sheet.
   
 ### Extracting ARZ and ARC
-Extracting the existing Titan Quest Resources (such as the Items.arc and Text_EN.arc files) is done using the provided ArchiveTool in the Titan Quest 
-Immortal Throne folder. 
+In order to run the parser you'll need the 3 parameters corresponding to the extracted *database*, *text resources*, *textures*.
+The last two resources are ARC resources and the database is an ARZ (zipped ARC) resource.
 
-Run the program in a prompt or shell:
+**Database**  
+Using the ARZ extractor provided in the *utils* folder, extract the database.arz found in the Database folder in your Titan Quest install directory (ex: C:\Steam\SteamApps\Common\Titan Quest - Anniversary Edition\). The folder you extract to is the first parameter the parser needs when called from the command line.
 
-> ArchiveTool.exe Resources\Items.arc -extract C:\ExtractToThisFolder\
+**Text Resources**  
+Create a folder **text**, for this example let's say that folder is C:\TQDB\extracted\text\
 
-The above command will extract all resources inside the packed Items.arc to the desired folder. 
-The ArchiveTool usage can be further explored by simply running the program without any parameters.
+Open up a prompt, change directory to your TQ install (ex: C:\Steam\SteamApps\Common\Titan Quest - Anniversary Edition\)  
+Run the following command:
+> ArchiveTool.exe Text\Text_EN.arc -extract C:\TQDB\extracted\text 
 
-The parser requires the **Text_EN.arc** and **Items.arc** to be extracted, to be used as the 2nd and 3rd parameter in the usage.
-Both files can be found in the Resources folder of your TQ:IT directory.
+**Textures**  
+Create the folders, **textures**, **textures\Items**, and **textures\XPack\Items** for this example let's say the first of these folders to create would be C:\TQDB\extracted\textures\
 
-TODO: ARZ Instructions
+Open up a prompt, change directory to your TQ install (ex: C:\Steam\SteamApps\Common\Titan Quest - Anniversary Edition\)  
+Run the following commands:
+> ArchiveTool.exe Resources\Items.arc -extract C:\TQDB\extracted\textures\Items  
+> ArchiveTool.exe Resources\XPack\Items.arc -extract C:\TQDB\extracted\textures\XPack\Items
   
 ### DBR Parser
 Titan Quest works with so called DBR files (Database Records). These files are basically dictionaries of all properties of whatever the file
