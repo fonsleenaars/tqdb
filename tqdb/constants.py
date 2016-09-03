@@ -463,7 +463,7 @@ CHARACTER_FIELDS = {
     STAT_MP_RES: {
         TXT_ABS: ' Energy Reserved'},
     STAT_MP_RES_RED: {
-        TXT_ABS: ' less Energy Reserver'}
+        TXT_ABS: ' less Energy Reserved'}
 }
 
 REQUIREMENTS = ["Strength", "Dexterity", "Intelligence", "Level"]

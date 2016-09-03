@@ -274,6 +274,10 @@ class DBRReader:
                              if self.parsed[TAG] in self.tags
                              else '')
 
+        # Fix for {} appearing in MI names:
+        if(self.parsed[NAME]):
+            self.parsed[NAME] = re.sub(r'\{[^)]*\}', '', self.parsed[NAME])
+
         # Set attack speed for weapons:
         if (ATK_SPD_TAG in self.properties and
            PREFIX_WEAPON in self.parsed[TYPE] and
