@@ -41,6 +41,8 @@ class DBRReader:
             self.parse_formula()
         elif self.parsed[TYPE] in TYPE_EQUIPMENT:
             self.parse_equipment()
+        elif self.parsed[TYPE] in TYPE_LOOT_AFFIX:
+            self.parse_loot_affix()
         elif self.parsed[TYPE] in TYPE_LOOT_TABLE:
             self.parse_loot_table()
         elif self.parsed[TYPE] in TYPE_RELIC:
@@ -240,7 +242,7 @@ class DBRReader:
                                  if chance_absolute
                                  else absolute)
             if value_duration:
-                duration = FORMAT_INT.format(value_duration) + text_absolute
+                duration = FORMAT_INT.format(value_duration) + text_duration
                 result[field + SUFFIX_DUR] = ([chance_duration, duration]
                                               if chance_duration
                                               else duration)
@@ -267,12 +269,20 @@ class DBRReader:
         if self.parsed[CLASSIFICATION] not in ITEM_RARITIES:
             return
 
+        # If item is a MI, add when it drops:
+        if(self.parsed[CLASSIFICATION] == ITEM_RARE):
+            file_name = os.path.basename(self.dbr).split('_')
+
+            # Skip MI's without indicator of when they drop
+            if len(file_name) < 2 or file_name[1] not in DIFFICULTIES_DICT:
+                return
+
+            self.parsed[ITEM_MI_DROP] = DIFFICULTIES_DICT[file_name[1]]
+
         # Set item level, tag & name
         self.parsed[ITEM_LEVEL] = int(self.properties.get(ITEM_LEVEL, 0))
         self.parsed[TAG] = self.properties.get(ITEM_TAG, None)
-        self.parsed[NAME] = (self.tags[self.parsed[TAG]]
-                             if self.parsed[TAG] in self.tags
-                             else '')
+        self.parsed[NAME] = self.tags.get(self.parsed[TAG], '')
 
         # Fix for {} appearing in MI names:
         if(self.parsed[NAME]):
@@ -406,6 +416,22 @@ class DBRReader:
         else:
             self.parsed[PROPERTIES][tier].update(result)
 
+    def parse_loot_affix(self):
+        self.parsed[TAG] = self.properties.get(LOOT_RANDOMIZER_NAME, None)
+        self.parsed[NAME] = self.tags.get(self.parsed[TAG], '')
+
+        # After setting the tag for the affix; just parse it as a base case
+        self.parsed[PROPERTIES] = {}
+        self.parse_character()
+        self.parse_defensive()
+        self.parse_item_skill_augment()
+        self.parse_offensive()
+        self.parse_petbonus()
+        self.parse_racial()
+        self.parse_retaliation()
+        self.parse_skill_properties()
+        self.parse_cost()
+
     def parse_loot_table(self):
         bonuses = []
         bonus_files = {}
@@ -413,10 +439,10 @@ class DBRReader:
 
         # Parse the possible completion bonuses:
         for field, value in self.properties.items():
-            if LOOT_RANDOMIZER_NAME in field:
+            if RANDOMIZER_NAME in field:
                 number = re.search(r'\d+', field).group()
                 bonus_files[number] = value
-            if LOOT_RANDOMIZER_WEIGHT in field:
+            if RANDOMIZER_WEIGHT in field:
                 number = re.search(r'\d+', field).group()
                 weights[number] = int(value)
 
@@ -869,9 +895,6 @@ class DBRReader:
         if self.allow_recursion:
             self.parsed[SET_MEMBERS] = []
             for member in self.properties[SET_MEMBERS].split(';'):
-                if EQUIPMENT not in member.lower():
-                    continue
-
                 # Grab the member file and only extract name:
                 member_file = self.get_reference_dbr(member)
                 member = DBRReader(member_file, self.tags)

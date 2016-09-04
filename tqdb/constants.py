@@ -1,10 +1,15 @@
 # DBR File constants
+FILES_AFFIXES = [
+    'records\\item\\\lootmagicalaffixes\\*ix\\**\\*.dbr',
+    'records\\xpack\\item\\\lootmagicalaffixes\\*ix\\**\\*.dbr'
+]
 FILES_EQUIPMENT = [
     'records\\item\\equipment*\\**\\*.dbr',
     'records\\xpack\\item\\equipment*\\**\\*.dbr',
     'records\\item\\relics\\*.dbr',
     'records\\item\\animalrelics\\*.dbr',
     'records\\xpack\\item\\relics\\*.dbr',
+    'records\\xpack\\item\\le_new\\*.dbr',
     'records\\xpack\\item\\charms\\*.dbr',
     'records\\xpack\\item\\scrolls\\*.dbr',
     'records\\xpack\\item\\artifacts\\*.dbr',
@@ -41,7 +46,6 @@ CLASS = 'Class'
 CLASSIFICATION = 'classification'
 DESCRIPTION = 'description'
 FILE_DESCRIPTION = 'FileDescription'
-EQUIPMENT = 'equipment'
 NAME = 'name'
 PATH = 'path'
 PROPERTIES = 'properties'
@@ -67,6 +71,8 @@ TYPE_EQUIPMENT = [
     'WeaponHunting_Spear',
     'WeaponMagical_Staff',
     'WeaponArmor_Shield']
+TYPE_LOOT_AFFIX = [
+    'LootRandomizer']
 TYPE_LOOT_TABLE = [
     'LootRandomizerTable']
 TYPE_RELIC = [
@@ -299,10 +305,12 @@ DBR_IGNORE = [
 # Item constants
 ITEM = 'item'
 ITEM_CLASSIFICATION = ITEM + 'Classification'
+ITEM_MI_DROP = ITEM + 'DropsIn'
 ITEM_COST = ITEM + 'CostName'
 ITEM_LEVEL = ITEM + 'Level'
 ITEM_NAME = ITEM + 'Name'
-ITEM_RARITIES = ['Rare', 'Epic', 'Legendary', 'Magical']
+ITEM_RARE = 'Rare'
+ITEM_RARITIES = [ITEM_RARE, 'Epic', 'Legendary', 'Magical']
 ITEM_SET = ITEM + 'SetName'
 ITEM_SET_NAME = 'setName'
 ITEM_SET_TAG = 'setTag'
@@ -319,8 +327,12 @@ SET_NAME = PREFIX_SET + 'Name'
 BONUS = 'bonus'
 BONUS_TABLE = BONUS + 'TableName'
 BONUS_CHANCE = BONUS + SUFFIX_CHANCE
-LOOT_RANDOMIZER_NAME = 'randomizerName'
-LOOT_RANDOMIZER_WEIGHT = 'randomizerWeight'
+RANDOMIZER_NAME = 'randomizerName'
+RANDOMIZER_WEIGHT = 'randomizerWeight'
+LOOT_RANDOMIZER_NAME = 'lootRandomizerName'
+LOOT_PREFIX = 'prefix'
+LOOT_PREFIXES = 'prefixes'
+LOOT_SUFFIXES = 'suffixes'
 
 # Artifact constants
 ARTIFACT_CLASSIFICATION = 'artifactClassification'
@@ -512,7 +524,7 @@ DEFENSIVE_FIELDS = {
         TXT_ABS: '% Lightning Resistance',
         TXT_DUR: '% Reduction in Electrical Burn Duration'},
     DMG_POISON: {
-        TXT_ABS: '% Poison Duration',
+        TXT_ABS: '% Poison Resistance',
         TXT_DUR: '% Reduction in Poison Duration'},
     DMG_VIT: {
         TXT_ABS: '% Vitality Damage Resistance',

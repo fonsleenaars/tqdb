@@ -69,6 +69,18 @@ def save_bitmap(item):
 
         del(item[BITMAP_FORMULA])
     elif BITMAP_ITEM in item:
+        # If the file already exists, append a counter:
+        if (item.get(CLASSIFICATION, None) != ITEM_RARE and
+           os.path.isfile(graphics_dir + tag + '.png')):
+            # Append the type:
+            counter = 1
+            images = glob.glob(graphics_dir)
+            for image in enumerate(images):
+                if tag in images:
+                    counter += 1
+
+            tag += '-' + str(counter)
+
         bitmap = item[BITMAP_ITEM]
 
         # Now remove the bitmap from the item:
@@ -90,6 +102,12 @@ def save_bitmap(item):
 if not os.path.exists('./' + graphics_dir):
     os.makedirs('./' + graphics_dir)
 
+# Clean graphics directory:
+for file in os.listdir('./' + graphics_dir):
+    file_path = os.path.join('./' + graphics_dir, file)
+    if(os.path.isfile(file_path)):
+        os.unlink(file_path)
+
 # Load tags
 tags = {}
 for index, tag_file in enumerate(FILES_TAGS):
@@ -102,6 +120,12 @@ equipment_files = []
 for index, equipment_file in enumerate(FILES_EQUIPMENT):
     equipment_files.extend(glob.glob(db_dir + equipment_file, recursive=True))
     cli_progress("Loading equipment", index, len(FILES_EQUIPMENT))
+
+# Load affixes:
+affix_files = []
+for index, affix_file in enumerate(FILES_AFFIXES):
+    affix_files.extend(glob.glob(db_dir + affix_file, recursive=True))
+    cli_progress("Loading affixes", index, len(FILES_AFFIXES))
 
 # Index set files:
 set_files = []
@@ -119,6 +143,12 @@ for index, skill_file in enumerate(FILES_SKILLS):
 items = []
 cli_progress("Parsing equipment", 0, len(equipment_files))
 for index, equipment_file in enumerate(equipment_files):
+
+    # Skip all '/old/' and '/default/' files:
+    if '\\old\\' in equipment_file or '\\default\\' in equipment_file:
+        cli_progress("Parsing equipment", index, len(equipment_files))
+        continue
+
     # Create a new DBRReader object and pass along the tags
     equipment = DBRReader(equipment_file, tags)
 
@@ -135,13 +165,79 @@ for index, equipment_file in enumerate(equipment_files):
         cli_progress("Parsing equipment", index, len(equipment_files))
         continue
 
-    # Append parsed item:
-    items.append(equipment.parsed)
+    existingItems = []
 
-    # Save a bitmap, if it's set:
-    save_bitmap(equipment.parsed)
+    # Check if a corresponding unique already exists:
+    if (CLASSIFICATION in equipment.parsed and
+       equipment.parsed[CLASSIFICATION] != ITEM_RARE):
+        # Uniques only match if same tag AND same type
+        existingItems = list(filter(
+                            lambda x: ((x.get(CLASSIFICATION, None) !=
+                                        ITEM_RARE) and
+                                       x[TAG] == equipment.parsed[TAG] and
+                                       x[TYPE] == equipment.parsed[TYPE]),
+                            items))
+
+    # Check if a corresponding MI already exists:
+    if (CLASSIFICATION in equipment.parsed and
+       equipment.parsed[CLASSIFICATION] == ITEM_RARE):
+        # MI's only match if same tag AND same difficulty they drop in
+        existingItems = list(filter(
+                            lambda x: ((x.get(CLASSIFICATION, None) ==
+                                        ITEM_RARE) and
+                                       x[TAG] == equipment.parsed[TAG] and
+                                       (x.get(ITEM_MI_DROP, None) ==
+                                        equipment.parsed[ITEM_MI_DROP])),
+                            items))
+
+    # Only append new items:
+    if not existingItems:
+        items.append(equipment.parsed)
+
+        # Save a bitmap, if it's set:
+        save_bitmap(equipment.parsed)
 
     cli_progress("Parsing equipment", index, len(equipment_files))
+
+affixes = {LOOT_PREFIXES: [], LOOT_SUFFIXES: []}
+cli_progress("Parsing affixes", 0, len(affix_files))
+for index, affix_file in enumerate(affix_files):
+    # Create a new DBRReader object and pass along the tags
+    affix = DBRReader(affix_file, tags)
+
+    if(TYPE not in affix.parsed or affix.parsed[TYPE] not in TYPE_LOOT_AFFIX):
+        cli_progress("Parsing affixes", index, len(affix_files))
+        continue
+
+    # Parse the affix now
+    affix.parse()
+
+    # Determine if this is a prefix or suffix
+    affixType = (LOOT_PREFIXES
+                 if LOOT_PREFIX in affix.parsed[TAG].lower()
+                 else LOOT_SUFFIXES)
+
+    # Remove unnecessary data:
+    del(affix.parsed[TYPE])
+    del(affix.parsed[TAG])
+
+    # Check if the affix already exists, if so, append properties
+    existingAffixes = list(filter(lambda x: (NAME in x and
+                                             x[NAME] == affix.parsed[NAME]),
+                                  affixes[affixType]))
+    if not existingAffixes:
+        affixes[affixType].append(affix.parsed)
+    else:
+        existingAffix = existingAffixes[0]
+        if isinstance(existingAffix[PROPERTIES], list):
+            # If a properties list already exists, append the new one
+            existingAffix[PROPERTIES].append(affix.parsed[PROPERTIES])
+        else:
+            # If a properties list does not exist yet, make a list:
+            existingAffix[PROPERTIES] = [existingAffix[PROPERTIES],
+                                         affix.parsed[PROPERTIES]]
+
+    cli_progress("Parsing affixes", index, len(affix_files))
 
 sets = {}
 cli_progress("Parsing sets", 0, len(set_files))
@@ -169,7 +265,8 @@ for index, set_file in enumerate(set_files):
     cli_progress("Parsing sets", index, len(set_files))
 
 # Run through all items to parse the granted/augmented skills:
-for index, item in enumerate(items):
+itemsToCheck = items + affixes[LOOT_PREFIXES] + affixes[LOOT_SUFFIXES]
+for index, item in enumerate(itemsToCheck):
 
     # Check PROPERTIES:
     if PROPERTIES in item:
@@ -226,7 +323,7 @@ for index, item in enumerate(items):
         skills[skill_path] = skill
 
     # Update progress
-    cli_progress("Parsing item skills", index, len(items))
+    cli_progress("Parsing item skills", index, len(itemsToCheck))
 
 # Parse mastery skills
 mastery_skills = []
@@ -349,6 +446,9 @@ skills.update(pet_skills)
 print("Done parsing, writing to JSON")
 with open('output/items.json', 'w') as items_file:
     json.dump(items, items_file)
+
+with open('output/affixes.json', 'w') as affixes_file:
+    json.dump(affixes, affixes_file)
 
 with open('output/sets.json', 'w') as sets_file:
     json.dump(sets, sets_file)
