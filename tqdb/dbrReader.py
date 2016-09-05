@@ -236,6 +236,9 @@ class DBRReader:
             value_duration = float(properties.get(field + SUFFIX_DUR, 0))
             value_modifier = float(properties.get(field + SUFFIX_MOD, 0))
 
+            # Edge case defensiveTotalSpeedResistance:
+            value_resistance = float(properties.get(field + SUFFIX_RES, 0))
+
             if value:
                 absolute = format_absolute.format(value) + text_absolute
                 result[field] = ([chance_absolute, absolute]
@@ -252,6 +255,13 @@ class DBRReader:
                 result[field + SUFFIX_MOD] = ([chance_modifier, modifier]
                                               if chance_modifier
                                               else modifier)
+
+            if value_resistance:
+                absolute = format_absolute.format(value_resistance) + (
+                           text_absolute)
+                result[field] = ([chance_absolute, absolute]
+                                 if chance_absolute
+                                 else absolute)
 
         # Append the defensive results to the properties:
         if tier == -1:

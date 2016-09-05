@@ -216,6 +216,7 @@ SUFFIX_MOD = 'Modifier'
 SUFFIX_QUAL = 'DamageQualifier'
 SUFFIX_RATIO = 'Ratio'
 SUFFIX_RED = 'Reduction'
+SUFFIX_RES = 'Resistance'
 SUFFIX_DURMIN = SUFFIX_DUR + SUFFIX_MIN
 SUFFIX_DURMAX = SUFFIX_DUR + SUFFIX_MAX
 SUFFIX_DURMOD = SUFFIX_DUR + SUFFIX_MOD
@@ -566,7 +567,13 @@ DEFENSIVE_FIELDS = {
     STATUS_STUN: {
         TXT_ABS: '% Stun Resistance'},
     STATUS_SLEEP: {
-        TXT_ABS: '% Sleep Resistance'}
+        TXT_ABS: '% Sleep Resistance'},
+    STAT_TOT_SPD: {
+        TXT_ABS: '% Slow Resistance'},
+    STAT_MP_BURN: {
+        TXT_ABS: '% Energy Drain Resistance'},
+    STAT_RED: {
+        TXT_ABS: '% Health Reduction Resistance'}
 }
 
 OFFENSIVE_FIELDS = {
