@@ -174,6 +174,12 @@ class DBRReader:
             self.parsed[PROPERTIES][tier].update(result)
 
     def parse_cost(self):
+        # Check regular requirements first:
+        for requirement in REQUIREMENTS:
+            req = requirement.lower() + SUFFIX_REQ
+            if req in self.properties:
+                self.parsed[req] = self.properties[req]
+
         if ITEM_COST in self.properties:
             # Cost prefix of this item is determined by its class
             cost_prefix = self.properties[CLASS].split('_')[1]
@@ -203,9 +209,12 @@ class DBRReader:
                         totalAttCount = len(self.parsed[PROPERTIES])
                         itemLevel = self.parsed[ITEM_LEVEL]
 
-                        # Evaluate the equation to determine the requirement
-                        self.parsed[PREFIX_REQ + requirement] = (
-                            math.ceil(eval(equation)))
+                        # Only overwrite if not set yet:
+                        req = requirement.lower() + SUFFIX_REQ
+                        if req not in self.parsed:
+                            # Eval the equation:
+                            self.parsed[req] = (
+                                math.ceil(eval(equation)))
 
     def parse_defensive(self, tier=-1):
         '''Parse the defensive DBR parameters'''

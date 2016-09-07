@@ -216,6 +216,7 @@ SUFFIX_MOD = 'Modifier'
 SUFFIX_QUAL = 'DamageQualifier'
 SUFFIX_RATIO = 'Ratio'
 SUFFIX_RED = 'Reduction'
+SUFFIX_REQ = 'Requirement'
 SUFFIX_RES = 'Resistance'
 SUFFIX_DURMIN = SUFFIX_DUR + SUFFIX_MIN
 SUFFIX_DURMAX = SUFFIX_DUR + SUFFIX_MAX
