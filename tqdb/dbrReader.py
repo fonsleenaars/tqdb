@@ -102,6 +102,7 @@ class DBRReader:
         self.parse_racial()
         self.parse_retaliation()
         self.parse_skill_properties()
+        self.parse_cost()
 
     def parse_base(self):
         # Parsed properties are a list (because they're tiered)
@@ -360,6 +361,9 @@ class DBRReader:
         self.parsed[TAG] = artifact.parsed[TAG]
         self.parsed[NAME] = artifact.parsed[NAME]
         self.parsed[CLASSIFICATION] = artifact.parsed[CLASSIFICATION]
+
+        # Parse the cost
+        self.parse_cost()
 
         # Grab the reagents (ingredients):
         for index, prop in enumerate(FORMULA_REAGENT_TAGS):
@@ -881,6 +885,9 @@ class DBRReader:
         self.parsed[TAG] = self.properties[DESCRIPTION]
         self.parsed[NAME] = self.tags[self.parsed[TAG]]
         self.parsed[DESCRIPTION] = self.tags[self.properties[ITEM_TEXT]]
+
+        # Parse the cost
+        self.parse_cost()
 
         # Set the bitmap if it exists
         if BITMAP_ITEM in self.properties:

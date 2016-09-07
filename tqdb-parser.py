@@ -280,7 +280,7 @@ for index, item in enumerate(itemsToCheck):
             # Replace the skill with a reference
             item[PROPERTIES][ITEM_SKILL] = {
                 PATH: skill_path,
-                SKILL_LEVEL_LOWER: skill[SKILL_LEVEL_LOWER],
+                SKILL_LEVEL_LOWER: skill.get(SKILL_LEVEL_LOWER, ''),
                 SKILL_DISPLAY: skill[SKILL_DISPLAY]
             }
 

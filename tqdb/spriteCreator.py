@@ -48,23 +48,37 @@ class SpriteCreator:
         for key in sorted_keys:
             canvas_width, canvas_height = tuple(map(int, key.split('x')))
 
-            canvas = Image.new(mode='RGBA', size=(sprite_width, canvas_height),
+            canvas = Image.new(mode='RGBA',
+                               size=(sprite_width, canvas_height),
                                color=(0, 0, 0, 0))
             x = 0
 
             # Iterate over all the images in this size:
-            for image in images_map[key]:
+            for index, image in enumerate(images_map[key]):
                 image_width, image_height = image.size
-                if x + image_width <= sprite_width:
+                if x + image_width < sprite_width:
                     canvas.paste(image, (x, 0))
                     css.append(sprite_css.format(image.filename, 0 - x,
                                0 - sprite_height, image_width, image_height))
                     x += image_width
 
+                elif x + image_width == sprite_width:
+                    canvas.paste(image, (x, 0))
+                    css.append(sprite_css.format(image.filename, 0 - x,
+                               0 - sprite_height, image_width, image_height))
+
+                    if index == len(images_map[key]) - 1:
+                        # Last image, append canvas:
+                        canvases.append(canvas)
+                        sprite_height += canvas_height
+                    else:
+                        # More images to come, reset row:
+                        x += image_width
                 else:
                     canvases.append(canvas)
-                    canvas = Image.new(mode='RGBA', size=(sprite_width,
-                                       canvas_height), color=(0, 0, 0, 0))
+                    canvas = Image.new(mode='RGBA',
+                                       size=(sprite_width, canvas_height),
+                                       color=(0, 0, 0, 0))
                     canvas.paste(image, (0, 0))
                     x = image_width
                     sprite_height += canvas_height
@@ -77,8 +91,9 @@ class SpriteCreator:
                 sprite_height += canvas_height
 
         # Create the new sprite image
-        sprite_image = Image.new(mode='RGBA', size=(sprite_width,
-                                 sprite_height), color=(0, 0, 0, 0))
+        sprite_image = Image.new(mode='RGBA',
+                                 size=(sprite_width, sprite_height),
+                                 color=(0, 0, 0, 0))
         sprite_y = 0
 
         # Paste all the canvases on the sprite image
