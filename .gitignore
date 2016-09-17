@@ -1,0 +1,5 @@
+__pycache__
+config.ini
+data
+output/graphics
+output/sprite.png

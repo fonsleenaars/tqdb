@@ -1,4 +1,5 @@
 import json
+import configparser
 import glob
 import argparse
 import pprint
@@ -7,47 +8,9 @@ import re
 import subprocess
 import sys
 
+from shutil import rmtree
 from tqdb import *
 from tqdb.constants import *
-
-# Parse command line call
-argparser = argparse.ArgumentParser(description='TQ:IT Database parser')
-argparser.add_argument('db',
-                       help=('Directory that the database.arz is '
-                             'extracted to'))
-argparser.add_argument('text',
-                       help='Directory that the text_en.arc is extracted to')
-
-argparser.add_argument('textures',
-                       help='Directory that the textures are extracted to')
-
-# Grab the arguments:
-args = argparser.parse_args()
-db_dir = os.path.join(args.db, '')
-text_dir = os.path.join(args.text, '')
-tex_dir = os.path.join(args.textures, '')
-graphics_dir = 'output/graphics/'
-
-# Determine directory prefix (remove spaces and lowercase it)
-dir_prefix = re.sub(r'[\ \\]', '_', db_dir).lower()
-
-
-# Progress function:
-# Credit: http://stackoverflow.com/a/13685020
-def cli_progress(label,  i, end_val, bar_length=20):
-    percent = float(i) / (end_val - 1)
-    hashes = '#' * int(round(percent * bar_length))
-    spaces = ' ' * (bar_length - len(hashes))
-
-    if i == end_val - 1:
-        print("\r{0:25} [{1}] DONE".format(label, hashes + spaces))
-    else:
-        # Write out the progress
-        progress = int(round(percent * 100))
-        sys.stdout.write("\r{0:25} [{1}] {2}%".format(label,
-                                                      hashes + spaces,
-                                                      progress))
-        sys.stdout.flush()
 
 
 # Bitmap function
@@ -98,6 +61,119 @@ def save_bitmap(item):
                    graphics_dir + tag + '.png']
         subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+
+# Progress function:
+# Credit: http://stackoverflow.com/a/13685020
+def cli_progress(label,  i, end_val, bar_length=20):
+    percent = float(i) / (end_val - 1)
+    hashes = '#' * int(round(percent * bar_length))
+    spaces = ' ' * (bar_length - len(hashes))
+
+    if i == end_val - 1:
+        print("\r{0:25} [{1}] DONE".format(label, hashes + spaces))
+    else:
+        # Write out the progress
+        progress = int(round(percent * 100))
+        sys.stdout.write("\r{0:25} [{1}] {2}%".format(label,
+                                                      hashes + spaces,
+                                                      progress))
+        sys.stdout.flush()
+
+# Parse command line call
+argparser = argparse.ArgumentParser(description='TQ:IT Database parser')
+argparser.add_argument('--clean', action='store_true')
+
+# Grab the arguments:
+args = argparser.parse_args()
+
+# Set the directories for the database, resources and textures:
+base_dir = os.path.dirname(os.path.realpath(__file__))
+data_dir = os.path.join(base_dir, 'data')
+db_dir = os.path.join(data_dir, 'database')
+txt_dir = os.path.join(data_dir, 'texts')
+tex_dir = os.path.join(data_dir, 'textures')
+ini_file = os.path.join(base_dir, 'config.ini')
+
+# If the config file doesn't exist yet, create and close it:
+if not os.path.isfile(ini_file):
+    open(ini_file, 'a').close()
+
+# Try to read the config file:
+config = configparser.ConfigParser()
+config.read(ini_file)
+
+# Check if key exists:
+if 'InstallDirectory' not in config or (
+   'titanquest' not in config['InstallDirectory']):
+    # Ask for the titan quest install directory
+    print('Enter the full path to your Titan Quest Installation.\n'
+          'Example: C:\Program Files (x86)\Steam\SteamApps\Common\\'
+          'Titan Quest Anniversary Edition')
+    installdir = input('Directory: ')
+
+    # Reinitialize the config parser and file:
+    configfile = open(ini_file, 'w')
+    config = configparser.ConfigParser()
+
+    # Save the install directory in the config
+    config['InstallDirectory'] = {'titanquest': installdir}
+    config.write(configfile)
+    configfile.close()
+
+# Check if the required directories are created and populated:
+if args.clean or not (
+        os.path.exists(db_dir) and
+        os.path.exists(txt_dir) and
+        os.path.exists(tex_dir)):
+
+    if args.clean and os.path.exists(data_dir):
+        print('Cleaning data directory, this might take a while...')
+        rmtree(data_dir)
+
+    # Make the directories and execute extractions:
+    os.makedirs(db_dir)
+    os.makedirs(txt_dir)
+    os.makedirs(os.path.join(tex_dir, 'Items'))
+    os.makedirs(os.path.join(tex_dir, 'XPack\\Items'))
+
+    # Grab install directory
+    installdir = config['InstallDirectory']['titanquest']
+
+    # Extract database.arz:
+    command = ['utils/arzextractor/ARZExtractor.exe',
+               os.path.join(installdir, 'database\\database.arz'),
+               db_dir]
+    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    # Extract text resources:
+    print('Extracting Resource: text files')
+    command = [os.path.join(installdir, 'ArchiveTool.exe'),
+               os.path.join(installdir, 'Text\\Text_EN.arc'),
+               '-extract',
+               txt_dir]
+    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    # Extract textures resources:
+    print('Extracting Resource: Titan Quest textures')
+    command = [os.path.join(installdir, 'ArchiveTool.exe'),
+               os.path.join(installdir, 'Resources\\Items.arc'),
+               '-extract',
+               os.path.join(tex_dir, 'Items')]
+    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    # Extract XPack textures resources:
+    print('Extracting Resource: Immortal Throne textures')
+    command = [os.path.join(installdir, 'ArchiveTool.exe'),
+               os.path.join(installdir, 'Resources\\XPack\\Items.arc'),
+               '-extract',
+               os.path.join(tex_dir, 'XPack\\Items')]
+    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+graphics_dir = 'output/graphics/'
+
+# Determine directory prefix (remove spaces and lowercase it)
+dir_prefix = re.sub(r'[\ \\]', '_', db_dir).lower()
+
 # Prepare directory
 if not os.path.exists('./' + graphics_dir):
     os.makedirs('./' + graphics_dir)
@@ -111,7 +187,7 @@ for file in os.listdir('./' + graphics_dir):
 # Load tags
 tags = {}
 for index, tag_file in enumerate(FILES_TAGS):
-    txt = TXTReader(text_dir + tag_file)
+    txt = TXTReader(os.path.join(txt_dir, tag_file))
     tags.update(txt.properties)
     cli_progress("Loading tags", index, len(FILES_TAGS))
 

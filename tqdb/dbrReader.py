@@ -734,6 +734,7 @@ class DBRReader:
             self.parse_offensive(index)
             self.parse_retaliation(index)
             self.parse_skill_properties(index)
+            self.parse_racial(index)
 
         self.parse_cost()
 
