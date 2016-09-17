@@ -88,10 +88,10 @@ args = argparser.parse_args()
 
 # Set the directories for the database, resources and textures:
 base_dir = os.path.dirname(os.path.realpath(__file__))
-data_dir = os.path.join(base_dir, 'data')
-db_dir = os.path.join(data_dir, 'database')
-txt_dir = os.path.join(data_dir, 'texts')
-tex_dir = os.path.join(data_dir, 'textures')
+data_dir = os.path.join(base_dir, 'data', '')
+db_dir = os.path.join(data_dir, 'database', '')
+txt_dir = os.path.join(data_dir, 'texts', '')
+tex_dir = os.path.join(data_dir, 'textures', '')
 ini_file = os.path.join(base_dir, 'config.ini')
 
 # If the config file doesn't exist yet, create and close it:
