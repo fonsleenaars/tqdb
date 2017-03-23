@@ -1,4 +1,4 @@
-from .constants import *
-from .dbrReader import DBRReader
-from .txtReader import TXTReader
-from .spriteCreator import SpriteCreator
+"""
+Modules to parse Titan Quest Equipment, skills, and more!
+
+"""
