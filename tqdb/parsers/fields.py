@@ -241,6 +241,52 @@ class OffensiveEOT(OffensiveAbsolute):
         return self.parsed
 
 
+class OffensiveMana:
+    """
+    The mana burn or drain field.
+
+    The mana burn field is an edge case in the offensive properties.
+    """
+    def __init__(self, props, field, strings):
+        self.field = field
+        self.parsed = {}
+        self.strings = strings
+
+        # Parse drain values & chance
+        self.chance = int(float(props.get(field + 'Chance', 0)))
+        self.min = int(float(props.get(field + 'DrainMin', 0)))
+        self.max = int(float(props.get(field + 'DrainMax', 0)))
+        self.ratio = int(float(props.get(field + 'DamageRatio', 0)))
+
+        # Set this to deal with global parsing (there is no mod for mana burn)
+        self.mod = 0
+
+        # Parse booleans:
+        self.is_global = props.get(field + 'Global', 0) == '1'
+        self.is_xor = props.get(field + 'XOR', 0) == '1'
+
+    def parse(self):
+        field = self.field
+        strings = self.strings
+
+        if self.min:
+            formatted = (
+                strings['offensiveManaDrainRanged'].format(self.min, self.max)
+                if self.max > self.min
+                else strings['offensiveManaDrain'].format(self.min))
+
+            if self.ratio:
+                formatted += strings['offensiveManaBurnRatio'].format(
+                    self.ratio)
+
+            if self.chance and not self.is_global:
+                formatted = strings[CHANCE].format(self.chance) + formatted
+
+            self.parsed[field] = formatted
+
+        return self.parsed
+
+
 class SkillPropertyBase():
     """
     The skill property class.

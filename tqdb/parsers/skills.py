@@ -85,12 +85,12 @@ class SkillParser():
 
         if len(self.props) > 1:
             result['properties'] = []
-            for props in self.props:
+            for index, props in enumerate(self.props):
                 util = UtilityParser(self.dbr, props, self.strings)
                 util.parse_character()
                 util.parse_damage()
                 util.parse_defense()
-                util.parse_pet_bonus()
+                util.parse_pet_bonus(index)
                 util.parse_racial()
                 util.parse_skill_properties()
 
@@ -248,8 +248,7 @@ class SkillTreeParser():
         util = UtilityParser(self.dbr, self.props, self.strings)
         for prop, dbr in self.props.items():
             if 'skillName' in prop:
-                skill_dbr = util.get_reference_dbr(dbr)
-                skill = self.parser.parse(skill_dbr)
+                skill = self.parser.parse(util.get_reference_dbr(dbr))
 
                 if not skill:
                     continue

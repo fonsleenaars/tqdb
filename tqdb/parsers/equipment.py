@@ -1,6 +1,8 @@
 import os
 import re
+from tqdb.parsers.util import format_path
 from tqdb.parsers.util import UtilityParser
+from tqdb.storage import equipment
 
 
 class ArmorWeaponParser():
@@ -131,3 +133,50 @@ class JewelryParser():
         result.update(util.parse_requirements())
 
         return result
+
+
+class SetParser():
+    """
+    Parser for set bonuses.
+
+    """
+    def __init__(self, dbr):
+        self.dbr = dbr
+
+    def parse(self):
+        from tqdb.parsers.main import parser
+
+        reader = parser.reader
+        strings = parser.strings
+
+        # Read the properties:
+        props = reader.read(self.dbr)
+
+        # Set some of the shared properties:
+        set_props = props[0]
+        result = {}
+
+        tag = set_props['setName']
+        result['name'] = strings[tag]
+
+        result['properties'] = []
+        result['items'] = []
+        for prop in props:
+            util = UtilityParser(self.dbr, prop, strings)
+            util.parse_character()
+            util.parse_damage()
+            util.parse_defense()
+            util.parse_skill_properties()
+
+            result['properties'].append(util.result)
+
+            # Add the set member:
+            set_item = equipment[format_path(prop['setMembers'])]
+            result['items'].append(set_item['tag'])
+
+        # Pop off the first element of the properties (1 set item)
+        if len(result['properties']) > 1:
+            if not result['properties'][0]:
+                result['properties'].pop(0)
+
+        return tag, result

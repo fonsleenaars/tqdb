@@ -6,6 +6,7 @@ import re
 
 from tqdb.constants import parsing as pc
 from tqdb.constants import resources
+from tqdb.parsers.generic import GenericParser
 
 
 class DBRReader:
@@ -109,7 +110,7 @@ class DBRParser:
         self.strings = strings
         self.reader = DBRReader()
 
-    def parse(self, dbr, include_type=False):
+    def parse(self, dbr, include_type=False, allow_generic=False):
         """
         Parse a list of properties.
 
@@ -122,20 +123,19 @@ class DBRParser:
         """
         # Grab the type from this file:
         props = self.reader.read(dbr)
+        parsed = {}
 
         # If a parser exists for this type, parse the file:
-        dbr_class = props[0]['Class']
+        dbr_class = props[0].get('Class', None)
         if dbr_class in self.parsers:
             parsed = self.parsers[dbr_class](dbr, props, self.strings).parse()
+        elif allow_generic:
+            parsed = GenericParser(dbr, props, self.strings).parse()
 
-            # Determine whether or not to return the type as well:
-            if include_type:
-                return parsed, dbr_class
-            return parsed
-
+        # Determine whether or not to return the type as well:
         if include_type:
-            return {}, None
-        return {}
+            return parsed, dbr_class
+        return parsed
 
 
 class TextParser:
