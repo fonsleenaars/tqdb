@@ -49,15 +49,15 @@ These values can thus easily be parsed into a usable dictionary or collection. I
 
 ### Equipment, set and skill parser:
 > usage: run.py [-h] [-d DIR] [-c CATEGORIES [CATEGORIES ...]]
-
+>
 > TQ:IT Database parser
-
+>
 > optional arguments:
-
+>
 >  -h, --help            show this help message and exit
-
+>
 >  -d DIR, --dir DIR     Specify a file or directory to parse
-
+>
 >  -c CATEGORIES [CATEGORIES ...], --categories CATEGORIES [CATEGORIES ...]
 >                        Specify the categories to parse. You can choose from:
 >                        affixes, bosses, equipment, sets, skills
