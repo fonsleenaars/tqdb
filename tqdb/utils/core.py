@@ -3,13 +3,12 @@ Utility functions.
 
 """
 import argparse
-import glob
 import os
-import subprocess
 import sys
 
-from tqdb.constants.resources import DB
+from tqdb.constants.resources import DB, TEX
 from tqdb.parsers.util import format_path
+from tqdb.utils.images import save_bitmap
 
 
 ###########################################################################
@@ -37,57 +36,6 @@ def is_dir(dirname):
         raise argparse.ArgumentTypeError(msg)
     else:
         return dirname
-
-
-###########################################################################
-#                             BITMAP UTILITY                              #
-###########################################################################
-def save_bitmap(item):
-    bitmap = ''
-    tag = item[TAG]
-
-    # Check what kind of bitmap exists:
-    if BITMAP_ARTIFACT in item:
-        bitmap = item[BITMAP_ARTIFACT]
-
-        # Now remove the bitmap from the item:
-        del(item[BITMAP_ARTIFACT])
-
-    elif BITMAP_FORMULA in item:
-        # Formula's all share 3 possible icons (lesser, greater, artifact):
-        bitmap = item[BITMAP_FORMULA]
-        tag = item[CLASSIFICATION].lower()
-
-        del(item[BITMAP_FORMULA])
-    elif BITMAP_ITEM in item:
-        # If the file already exists, append a counter:
-        if (item.get(CLASSIFICATION, None) != ITEM_RARE and
-           os.path.isfile(graphics_dir + tag + '.png')):
-            # Append the type:
-            counter = 1
-            images = glob.glob(graphics_dir)
-            for image in enumerate(images):
-                if tag in images:
-                    counter += 1
-
-            tag += '-' + str(counter)
-
-        bitmap = item[BITMAP_ITEM]
-
-        # Now remove the bitmap from the item:
-        del(item[BITMAP_ITEM])
-    elif BITMAP_RELIC in item:
-        bitmap = item[BITMAP_RELIC]
-
-        # Now remove the bitmap from the item:
-        del(item[BITMAP_RELIC])
-
-    # Run the texture viewer if a bitmap and tag are set:
-    if bitmap and tag and os.path.isfile(tex_dir + bitmap):
-        command = ['utils/textureviewer/TextureViewer.exe',
-                   tex_dir + bitmap,
-                   graphics_dir + tag + '.png']
-        subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 ###########################################################################
@@ -126,6 +74,9 @@ def index_equipment(files, parser, label):
         # The equipment files have some unwanted files, check classification:
         if not parsed or 'classification' not in parsed:
             continue
+
+        # Save the bitmap and remove the bitmap key
+        save_bitmap(parsed, category, 'output/graphics/', TEX)
 
         # Add to the global equipment list:
         equipment[format_path(dbr.replace(DB, ''))] = parsed

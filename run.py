@@ -11,6 +11,11 @@ from tqdb.utils.core import index_equipment
 from tqdb.utils.core import is_dir
 from tqdb.utils.core import pluck
 from tqdb.utils.core import print_progress
+from tqdb.utils.images import SpriteCreator
+
+# Directory preparations:
+if not os.path.exists('output/graphics'):
+    os.makedirs('output/graphics')
 
 # Parse command line call
 argparser = argparse.ArgumentParser(description='TQ:IT Database parser')
@@ -202,6 +207,11 @@ if args.dir is not None:
             parsed['file'] = dbr
             data.append(parsed)
 
+###############################################################################
+#                                    OUTPUT                                   #
+###############################################################################
+print('Writing output to files...')
+SpriteCreator('output/graphics/', 'output')
 
 with open('output/data.json', 'w') as data_file:
     json.dump(data, data_file)

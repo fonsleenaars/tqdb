@@ -6,6 +6,7 @@ All resource constants.
 # Input files and directories
 DB = 'data\\database-v144\\'
 RES = 'data\\resources-v144\\'
+TEX = 'data\\textures-v144\\'
 
 AFFIXES = [
     'records\\item\\\lootmagicalaffixes\\*ix\\default\\*.dbr',

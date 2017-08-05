@@ -65,6 +65,10 @@ class ArmorWeaponParser():
             # Fix for {} appearing in MI names:
             result['name'] = re.sub(r'\{[^)]*\}', '', result['name'])
 
+        # Set the bitmap if it exists
+        if 'bitmap' in self.props:
+            result['bitmap'] = self.props['bitmap']
+
         # Let the UtilityParser parse all the common properties:
         util = UtilityParser(self.dbr, self.props, self.strings)
         util.parse_character()
@@ -116,6 +120,10 @@ class JewelryParser():
         if not result['tag']:
             return {}
         result['name'] = self.strings.get(result['tag'], '')
+
+        # Set the bitmap if it exists
+        if 'bitmap' in self.props:
+            result['bitmap'] = self.props['bitmap']
 
         # Let the UtilityParser parse all the common properties:
         util = UtilityParser(self.dbr, self.props, self.strings)

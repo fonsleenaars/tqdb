@@ -31,6 +31,10 @@ class ArtifactParser():
         result['classification'] = self.props['artifactClassification']
         result['dropsIn'] = DIFFICULTIES[file_name[0]]
 
+        # Set the bitmap if it exists
+        if 'artifactBitmap' in self.props:
+            result['bitmap'] = self.props['artifactBitmap']
+
         # Let the UtilityParser parse all the common properties:
         util = UtilityParser(self.dbr, self.props, self.strings)
         util.parse_character()
@@ -80,6 +84,10 @@ class CharmRelicParser():
         result['description'] = self.strings[shared['itemText']]
         result['classification'] = DIFF_LIST[int(file_name[0][1:]) - 1]
         result['act'] = file_name[1]
+
+        # Set the bitmap if it exists
+        if 'relicBitmap' in shared:
+            result['bitmap'] = shared['relicBitmap']
 
         result['properties'] = []
         for props in self.props:
@@ -137,6 +145,10 @@ class FormulaParser():
         result['name'] = artifact['name']
         result['classification'] = artifact['classification']
 
+        # Set the bitmap if it exists
+        if 'artifactFormulaBitmapName' in self.props:
+            result['bitmap'] = self.props['artifactFormulaBitmapName']
+
         # Parse the requirements
         result.update(util.parse_requirements())
 
@@ -185,6 +197,10 @@ class ScrollParser():
         result['name'] = self.strings[result['tag']]
         result['classification'] = DIFF_LIST[int(difficulty_index) - 1]
         result['description'] = self.strings[self.props['itemText']]
+
+        # Set the bitmap if it exists
+        if 'bitmap' in self.props:
+            result['bitmap'] = self.props['bitmap']
 
         util = UtilityParser(self.dbr, self.props, self.strings)
 
