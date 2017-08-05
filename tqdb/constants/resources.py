@@ -4,8 +4,8 @@ All resource constants.
 """
 
 # Input files and directories
-DB = 'data\\database-beta\\'
-RES = 'data\\resources-beta\\'
+DB = 'data\\database-v144\\'
+RES = 'data\\resources-v144\\'
 
 AFFIXES = [
     'records\\item\\\lootmagicalaffixes\\*ix\\default\\*.dbr',
@@ -178,13 +178,16 @@ CREATURES = [
     'records\\creature\\monster\\questbosses\\*.dbr',
     'records\\xpack\\creatures\\monster\\bosses\\**\\*.dbr']
 
-EQUIPMENT = [
+EQUIPMENT_BASE = [
     'records\\item\\equipment*\\**\\*.dbr',
     'records\\xpack\\item\\equipment*\\**\\*.dbr',
+    'records\\xpack\\item\\le_new\\*.dbr',
+]
+
+EQUIPMENT_EXT = [
     'records\\item\\relics\\*.dbr',
     'records\\item\\animalrelics\\*.dbr',
     'records\\xpack\\item\\relics\\*.dbr',
-    'records\\xpack\\item\\le_new\\*.dbr',
     'records\\xpack\\item\\charms\\*.dbr',
     'records\\xpack\\item\\scrolls\\*.dbr',
     'records\\xpack\\item\\artifacts\\*.dbr',

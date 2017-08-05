@@ -126,8 +126,8 @@ class LootMasterParser:
                      if k.startswith('lootWeight'))
 
         # Run through all the loot chances and parse them:
-        for i in range(1, 30):
-            weight = int(self.props.get('lootWeight' + str(i), '0'))
+        for i in range(1, 31):
+            weight = int(self.props.get(f'lootWeight{i}', '0'))
 
             # Skip items with no chance:
             if not weight:
@@ -136,12 +136,9 @@ class LootMasterParser:
             chance = float('{0:.5f}'.format(weight / summed))
 
             # Parse the table and multiply the values by the chance:
-            new_items = dict(
-                (k, v * chance) for k, v in
-                parser.parse(util.get_reference_dbr(
-                    self.props.get('lootName' + str(i)))
-                ).items()
-            )
+            table = parser.parse(util.get_reference_dbr(
+                self.props.get(f'lootName{i}'))).items()
+            new_items = dict((k, v * chance) for k, v in table)
 
             for k, v in new_items.items():
                 if k in items:
@@ -197,8 +194,8 @@ class LootFixedItemParser:
         items = {}
 
         # There are 6 loot slots:
-        for slot in range(1, 6):
-            slot_key = 'loot' + str(slot)
+        for slot in range(1, 7):
+            slot_key = f'loot{slot}'
             slot_chance = float(self.props.get(slot_key + 'Chance', '0'))
 
             # Skip slots that have 0 chance to drop
@@ -210,15 +207,15 @@ class LootFixedItemParser:
                          if k.startswith(slot_key + 'Weight'))
 
             # Run through all the loot chances and parse them:
-            for i in range(1, 6):
-                weight = int(self.props.get(slot_key + 'Weight' + str(i), '0'))
+            for i in range(1, 7):
+                weight = int(self.props.get(f'{slot_key}Weight{i}', '0'))
 
                 # Skip items with no chance:
                 if not weight:
                     continue
 
                 loot_dbr = util.get_reference_dbr(
-                    self.props.get(slot_key + 'Name' + str(i)))
+                    self.props.get(f'{slot_key}Name{i}'))
 
                 if not os.path.exists(loot_dbr):
                     continue
@@ -298,7 +295,7 @@ class LootTableFWParser:
                      if k.startswith('lootWeight'))
 
         # Run through all the loot chances and parse them:
-        for i in range(1, 30):
+        for i in range(1, 31):
             weight = int(self.props.get('lootWeight' + str(i), '0'))
 
             # Skip items with no chance:

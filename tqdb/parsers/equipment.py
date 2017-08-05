@@ -154,13 +154,20 @@ class SetParser():
 
         # Set some of the shared properties:
         set_props = props[0]
-        result = {}
+        set_result = {
+            'tag': set_props['setName'],
+            'set': None,
+        }
 
-        tag = set_props['setName']
-        result['name'] = strings[tag]
+        # Skip all sets that have no corresponding tag:
+        if set_result['tag'] not in strings:
+            return set_result
 
-        result['properties'] = []
-        result['items'] = []
+        result = {
+            'name': strings[set_result['tag']],
+            'properties': [],
+            'items': [],
+        }
         for prop in props:
             util = UtilityParser(self.dbr, prop, strings)
             util.parse_character()
@@ -171,7 +178,10 @@ class SetParser():
             result['properties'].append(util.result)
 
             # Add the set member:
-            set_item = equipment[format_path(prop['setMembers'])]
+            set_member = format_path(prop['setMembers'])
+
+            # If the equipment is available; load the item tag
+            set_item = equipment[set_member]
             result['items'].append(set_item['tag'])
 
         # Pop off the first element of the properties (1 set item)
@@ -179,4 +189,7 @@ class SetParser():
             if not result['properties'][0]:
                 result['properties'].pop(0)
 
-        return tag, result
+        # Store the full set result & return it
+        set_result['set'] = result
+
+        return set_result

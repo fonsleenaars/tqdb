@@ -50,7 +50,7 @@ class SummonParser():
         result['skills'] = []
 
         # Parse all the normal skills (17 max):
-        for i in range(1, 17):
+        for i in range(1, 18):
             name = self.props.get('skillName' + str(i), '')
             level = self.props.get('skillLevel' + str(i), '0')
 

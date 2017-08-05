@@ -14,7 +14,6 @@ class DBRReader:
     Reader class to prepare a DBR file for parsing.
 
     """
-
     def read(self, dbr):
         dbr_file = open(dbr)
 
@@ -134,7 +133,11 @@ class DBRParser:
 
         # Determine whether or not to return the type as well:
         if include_type:
-            return parsed, dbr_class
+            return {
+                'parsed': parsed,
+                'class': dbr_class,
+            }
+
         return parsed
 
 
