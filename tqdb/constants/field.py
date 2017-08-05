@@ -68,6 +68,7 @@ DAMAGE = {
     'offensiveFire': fields.OffensiveAbsolute,
     'offensiveFreeze': fields.OffensiveEOT,
     'offensiveFumble': fields.OffensiveEOT,
+    'offensiveManaBurn': fields.OffensiveMana,
     'offensiveLife': fields.OffensiveAbsolute,
     'offensiveLifeLeech': fields.OffensiveAbsolute,
     'offensiveLightning': fields.OffensiveAbsolute,
@@ -183,6 +184,21 @@ GLOBAL_XOR_PCT = 'GlobalPercentChanceOfOneTag'
 ITEM_SKILL = 'Grants skill: Level {0:d} {1:s}'
 ITEM_SKILL_LVL1 = 'Grants skill: {0:s}'
 
+# Equipable loot for monsters:
+EQUIPABLE_LOOT = [
+    'Head',
+    'Torso',
+    'LowerBody',
+    'Forearm',
+    'Finger1',
+    'Finger2',
+    'RightHand',
+    'LeftHand',
+    'Misc1',
+    'Misc2',
+    'Misc3']
+
+# Skills to ignore when parsing pet buffs/skills:
 PET_IGNORE_SKILLS = [
     'records\\skills\\monster skills\\passive_totaldamageabsorption01.dbr',
     'records\\skills\\monster skills\\defense\\armor_passive.dbr',

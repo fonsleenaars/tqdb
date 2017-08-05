@@ -1,6 +1,8 @@
 import os
 import re
+from tqdb.parsers.util import format_path
 from tqdb.parsers.util import UtilityParser
+from tqdb.storage import equipment
 
 
 class ArmorWeaponParser():
@@ -63,6 +65,10 @@ class ArmorWeaponParser():
             # Fix for {} appearing in MI names:
             result['name'] = re.sub(r'\{[^)]*\}', '', result['name'])
 
+        # Set the bitmap if it exists
+        if 'bitmap' in self.props:
+            result['bitmap'] = self.props['bitmap']
+
         # Let the UtilityParser parse all the common properties:
         util = UtilityParser(self.dbr, self.props, self.strings)
         util.parse_character()
@@ -115,6 +121,10 @@ class JewelryParser():
             return {}
         result['name'] = self.strings.get(result['tag'], '')
 
+        # Set the bitmap if it exists
+        if 'bitmap' in self.props:
+            result['bitmap'] = self.props['bitmap']
+
         # Let the UtilityParser parse all the common properties:
         util = UtilityParser(self.dbr, self.props, self.strings)
         util.parse_character()
@@ -131,3 +141,63 @@ class JewelryParser():
         result.update(util.parse_requirements())
 
         return result
+
+
+class SetParser():
+    """
+    Parser for set bonuses.
+
+    """
+    def __init__(self, dbr):
+        self.dbr = dbr
+
+    def parse(self):
+        from tqdb.parsers.main import parser
+
+        reader = parser.reader
+        strings = parser.strings
+
+        # Read the properties:
+        props = reader.read(self.dbr)
+
+        # Set some of the shared properties:
+        set_props = props[0]
+        set_result = {
+            'tag': set_props['setName'],
+            'set': None,
+        }
+
+        # Skip all sets that have no corresponding tag:
+        if set_result['tag'] not in strings:
+            return set_result
+
+        result = {
+            'name': strings[set_result['tag']],
+            'properties': [],
+            'items': [],
+        }
+        for prop in props:
+            util = UtilityParser(self.dbr, prop, strings)
+            util.parse_character()
+            util.parse_damage()
+            util.parse_defense()
+            util.parse_skill_properties()
+
+            result['properties'].append(util.result)
+
+            # Add the set member:
+            set_member = format_path(prop['setMembers'])
+
+            # If the equipment is available; load the item tag
+            set_item = equipment[set_member]
+            result['items'].append(set_item['tag'])
+
+        # Pop off the first element of the properties (1 set item)
+        if len(result['properties']) > 1:
+            if not result['properties'][0]:
+                result['properties'].pop(0)
+
+        # Store the full set result & return it
+        set_result['set'] = result
+
+        return set_result

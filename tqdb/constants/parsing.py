@@ -2,19 +2,29 @@
 All constants required for parsing.
 
 """
-from tqdb.parsers import equipment
+from tqdb.parsers import boss
 from tqdb.parsers import crafts
+from tqdb.parsers import equipment
+from tqdb.parsers import loot
 from tqdb.parsers import skills
 from tqdb.parsers import summons
 
 # Dictionary to map keys to specialized parsers:
 PARSERS = {
-    equipment.ArmorWeaponParser: equipment.ArmorWeaponParser.keys(),
-    equipment.JewelryParser: equipment.JewelryParser.keys(),
+    boss.BossLootParser: boss.BossLootParser.keys(),
     crafts.ArtifactParser: crafts.ArtifactParser.keys(),
     crafts.CharmRelicParser: crafts.CharmRelicParser.keys(),
     crafts.FormulaParser: crafts.FormulaParser.keys(),
     crafts.ScrollParser: crafts.ScrollParser.keys(),
+    equipment.ArmorWeaponParser: equipment.ArmorWeaponParser.keys(),
+    equipment.JewelryParser: equipment.JewelryParser.keys(),
+    loot.LootFixedContainerParser: loot.LootFixedContainerParser.keys(),
+    loot.LootFixedItemParser: loot.LootFixedItemParser.keys(),
+    loot.LootMasterParser: loot.LootMasterParser.keys(),
+    loot.LootRandomizerParser: loot.LootRandomizerParser.keys(),
+    loot.LootRandomizerTableParser: loot.LootRandomizerTableParser.keys(),
+    loot.LootTableDWParser: loot.LootTableDWParser.keys(),
+    loot.LootTableFWParser: loot.LootTableFWParser.keys(),
     skills.SkillBuffParser: skills.SkillBuffParser.keys(),
     skills.SkillParser: skills.SkillParser.keys(),
     skills.SkillSpawnParser: skills.SkillSpawnParser.keys(),
@@ -61,6 +71,8 @@ PT_ADD_CUSTOM_FROM_PROPS = [
     ['GlobalPercentChanceOfOneTag', 'GlobalPercentChanceOfOneTag'],
     ['ImprovedTimeFormat', 'ImprovedTimeFormat'],
     ['ItemAllSkillIncrement', 'ItemAllSkillIncrement'],
+    ['ItemMasteryIncrement', 'ItemMasteryIncrement'],
+    ['ItemSkillIncrement', 'ItemSkillIncrement'],
     ['lifeMonitorPercent', 'LifeMonitorPercent'],
     ['offensiveBaseLife', 'tagDamageBaseVitality'],
     ['offensiveSlowDefensiveReductionModifier',

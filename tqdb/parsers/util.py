@@ -2,7 +2,6 @@ import math
 import re
 from tqdb.constants import field as fc
 from tqdb.parsers import fields
-from tqdb.storage import missing
 from tqdb.storage import skills
 
 
@@ -40,7 +39,7 @@ class UtilityParser:
             self.result.update(field(props, key, self.strings).parse())
 
         # Separately check the 'characterBaseAttackSpeedTag' for weapons:
-        if (props['Class'].startswith('Weapon') and
+        if (props.get('Class', '').startswith('Weapon') and
                 'Shield' not in props['Class']):
             self.result['characterAttackSpeed'] = self.strings[(
                 props['characterBaseAttackSpeedTag'][:1].lower() +
@@ -150,19 +149,21 @@ class UtilityParser:
         props = self.props
 
         if 'itemSkillName' in props and 'itemSkillLevel' in props:
-            skill = self.parser.parse(self.get_reference_dbr(
-                props['itemSkillName']))
             level = int(props['itemSkillLevel'])
 
             skill_path = format_path(props['itemSkillName'])
-            if skill_path not in skills:
-                missing.add(skill_path)
+            if format_path(skill_path) not in skills:
+                skill = self.parser.parse(
+                    self.get_reference_dbr(props['itemSkillName']))
+            else:
+                skill = skills[skill_path]
 
             self.result['itemSkillName'] = {
                 'tag': skill['tag'],
                 'name': (fc.ITEM_SKILL.format(level, skill['name'])
                          if level > 1
-                         else fc.ITEM_SKILL_LVL1.format(skill['name']))
+                         else fc.ITEM_SKILL_LVL1.format(skill['name'])),
+                'level': level,
             }
 
         # Parse skills that are augmented:
@@ -172,11 +173,19 @@ class UtilityParser:
 
             skill_path = format_path(props[name])
             if skill_path not in skills:
-                missing.add(skill_path)
+                skill = self.parser.parse(self.get_reference_dbr(props[name]))
+            else:
+                skill = skills[skill_path]
+
+            # Skill format is either ItemSkillIncrement or ItemMasteryIncrement
+            skill_format = ('ItemSkillIncrement'
+                            if 'Mastery' not in skill['name']
+                            else 'ItemMasteryIncrement')
 
             self.result[name] = {
-                'path': format_path(props[name]),
-                'level': int(props[level])
+                'tag': skill['tag'],
+                'name': self.strings[skill_format].format(
+                    int(props[level]), skill['name'])
             }
 
         # Parse augment to all skills:
@@ -185,14 +194,19 @@ class UtilityParser:
                 self.strings['ItemAllSkillIncrement'].format(
                     int(props['augmentAllLevel'])))
 
-    def parse_pet_bonus(self):
+    def parse_pet_bonus(self, tier=-1):
         """
         Parse properties that grant pet bonuses.
 
         """
         props = self.props
         if 'petBonusName' in props:
-            self.result['petBonusName'] = format_path(props['petBonusName'])
+            bonus = self.parser.parse(
+                self.get_reference_dbr(props['petBonusName']),
+                allow_generic=True
+            )['properties']
+
+            self.result['petBonus'] = bonus if tier == -1 else bonus[tier]
 
     def parse_racial(self):
         """

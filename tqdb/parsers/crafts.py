@@ -31,6 +31,10 @@ class ArtifactParser():
         result['classification'] = self.props['artifactClassification']
         result['dropsIn'] = DIFFICULTIES[file_name[0]]
 
+        # Set the bitmap if it exists
+        if 'artifactBitmap' in self.props:
+            result['bitmap'] = self.props['artifactBitmap']
+
         # Let the UtilityParser parse all the common properties:
         util = UtilityParser(self.dbr, self.props, self.strings)
         util.parse_character()
@@ -78,8 +82,12 @@ class CharmRelicParser():
         result['tag'] = shared['description']
         result['name'] = self.strings[result['tag']]
         result['description'] = self.strings[shared['itemText']]
-        result['difficulty'] = DIFF_LIST[int(file_name[0][1:]) - 1]
+        result['classification'] = DIFF_LIST[int(file_name[0][1:]) - 1]
         result['act'] = file_name[1]
+
+        # Set the bitmap if it exists
+        if 'relicBitmap' in shared:
+            result['bitmap'] = shared['relicBitmap']
 
         result['properties'] = []
         for props in self.props:
@@ -137,6 +145,10 @@ class FormulaParser():
         result['name'] = artifact['name']
         result['classification'] = artifact['classification']
 
+        # Set the bitmap if it exists
+        if 'artifactFormulaBitmapName' in self.props:
+            result['bitmap'] = self.props['artifactFormulaBitmapName']
+
         # Parse the requirements
         result.update(util.parse_requirements())
 
@@ -147,10 +159,6 @@ class FormulaParser():
 
             # Add the reagent (relic, scroll or artifact)
             result[reagent_number] = reagent['tag']
-
-            # Add the name, from the tags list:
-            result[reagent_number + 'Name'] = (
-                self.strings[result[reagent_number]])
 
         # Add the potential completion bonuses
         bonus = parser.parse(util.get_reference_dbr(
@@ -176,12 +184,23 @@ class ScrollParser():
         return ['OneShot_Scroll']
 
     def parse(self):
+        from tqdb.constants.parsing import DIFF_LIST
         from tqdb.parsers.main import parser
+
+        # Use the file name to determine the difficulty and act it drops in:
+        file_name = os.path.basename(self.dbr).split('_')[0][1:]
+        # Strip all but digits from the string, then cast to int:
+        difficulty_index = ''.join(filter(lambda x: x.isdigit(), file_name))
 
         result = {}
         result['tag'] = self.props['description']
         result['name'] = self.strings[result['tag']]
+        result['classification'] = DIFF_LIST[int(difficulty_index) - 1]
         result['description'] = self.strings[self.props['itemText']]
+
+        # Set the bitmap if it exists
+        if 'bitmap' in self.props:
+            result['bitmap'] = self.props['bitmap']
 
         util = UtilityParser(self.dbr, self.props, self.strings)
 
@@ -189,7 +208,13 @@ class ScrollParser():
         result.update(util.parse_requirements())
 
         # Grab the skill file:
-        result['scrollSkill'] = parser.parse(util.get_reference_dbr(
-            self.props['skillName']))
+        skill = parser.parse(util.get_reference_dbr(self.props['skillName']))
+
+        # Add properties and summons from the scrolls, whichever is applicable:
+        if 'properties' in skill:
+            result['properties'] = skill['properties']
+
+        if 'summons' in skill:
+            result['summons'] = skill['summons']
 
         return result
