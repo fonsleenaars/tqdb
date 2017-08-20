@@ -95,7 +95,7 @@ if 'affixes' in categories:
         del(affix['tag'])
 
         # Either add the affix or add its properties as an alternative
-        if affixTag in affixes:
+        if affixTag in affixes[affixType]:
             affixes[affixType][affixTag]['options'].extend(affix['options'])
         else:
             affixes[affixType][affixTag] = affix
