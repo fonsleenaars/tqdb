@@ -43,8 +43,10 @@ class SpriteCreator:
         # Maximum width of the sprite is 768px
         sprite_width = 768
         sprite_height = 0
-        sprite_css = ('.{0} {{ background-position: {1}px {2}px; '
-                      ' width: {3}px; height: {4}px; }}')
+        sprite_css = ('.{0} {{\n'
+                      '  background-position: {1} {2};\n'
+                      '  width: {3};\n'
+                      '  height: {4};\n}}\n')
 
         # Keep track of the canvases (per size) and css (per image)
         css = []
@@ -64,14 +66,30 @@ class SpriteCreator:
                 image_width, image_height = image.size
                 if x + image_width < sprite_width:
                     canvas.paste(image, (x, 0))
-                    css.append(sprite_css.format(image.filename, 0 - x,
-                               0 - sprite_height, image_width, image_height))
+                    css.append(sprite_css.format(
+                        image.filename,
+                        f'{0 - x}px' if 0 - x != 0 else 0 - x,
+                        (f'{0 - sprite_height}px'
+                         if 0 - sprite_height != 0
+                         else 0 - sprite_height),
+                        f'{image_width}px' if image_width != 0 else image_width,
+                        (f'{image_height}px'
+                         if image_height != 0
+                         else image_height)))
                     x += image_width
 
                 elif x + image_width == sprite_width:
                     canvas.paste(image, (x, 0))
-                    css.append(sprite_css.format(image.filename, 0 - x,
-                               0 - sprite_height, image_width, image_height))
+                    css.append(sprite_css.format(
+                        image.filename,
+                        f'{0 - x}px' if 0 - x != 0 else 0 - x,
+                        (f'{0 - sprite_height}px'
+                         if 0 - sprite_height != 0
+                         else 0 - sprite_height),
+                        f'{image_width}px' if image_width != 0 else image_width,
+                        (f'{image_height}px'
+                         if image_height != 0
+                         else image_height)))
 
                     if index == len(images_map[key]) - 1:
                         # Last image, append canvas:
@@ -88,8 +106,17 @@ class SpriteCreator:
                     canvas.paste(image, (0, 0))
                     x = image_width
                     sprite_height += canvas_height
-                    css.append(sprite_css.format(image.filename, 0,
-                               0 - sprite_height, image_width, image_height))
+
+                    css.append(sprite_css.format(
+                        image.filename,
+                        0,
+                        (f'{0 - sprite_height}px'
+                         if 0 - sprite_height != 0
+                         else 0 - sprite_height),
+                        f'{image_width}px' if image_width != 0 else image_width,
+                        (f'{image_height}px'
+                         if image_height != 0
+                         else image_height)))
 
             # Append last row
             if x < sprite_width:
