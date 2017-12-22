@@ -152,12 +152,19 @@ class TextParser:
         # Open the file with UTF16 encoding
         fp = open(text_file, encoding='utf16', errors='ignore')
 
-        # DBR file into a list of lines
-        lines = [str(line.rstrip('\n')) for line in fp]
+        try:
+            # DBR file into a list of lines
+            lines = [str(line.rstrip('\n')) for line in fp]
+        except UnicodeError:
+            # Not all files are UTF-16 encoded anymore, reopen without encoding
+            fp = open(text_file)
+            lines = [str(line.rstrip('\n')) for line in fp]
 
         # Parse line into a dictionary of key, value properties:
-        return dict(properties.split('=') for properties in lines
-                    if(properties != '' and properties[0] != '/'))
+        return dict(
+            properties.split('=', 1)
+            for properties in lines
+            if '=' in properties)
 
 
 class PropertyTable:

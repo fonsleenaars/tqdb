@@ -153,7 +153,9 @@ if 'bosses' in categories:
 
         # Add new bosses:
         if (bossTag and bossTag not in bosses) or (
-                bossTag in bosses and not bosses[bossTag]['chest']):
+                bossTag in bosses and
+                'chest' in bosses[bossTag] and
+                not bosses[bossTag]['chest']):
             bosses[bossTag] = boss
 
     data['bosses'] = bosses

@@ -10,12 +10,12 @@ TEX = 'data\\textures\\'
 
 AFFIXES = [
     'records\\item\\\lootmagicalaffixes\\*ix\\default\\*.dbr',
-    'records\\xpack\\item\\\lootmagicalaffixes\\*ix\\default\\*.dbr',
-    'records\\xpack\\item\\\lootmagicalaffixes\\*ix\\*.dbr']
+    'records\\xpack*\\item\\\lootmagicalaffixes\\*ix\\default\\*.dbr',
+    'records\\xpack*\\item\\\lootmagicalaffixes\\*ix\\*.dbr']
 
 AFFIX_TABLES = [
     'records\\item\\\lootmagicalaffixes\\*ix\\**\\*.dbr',
-    'records\\xpack\\item\\\lootmagicalaffixes\\*ix\\**\\*.dbr']
+    'records\\xpack*\\item\\\lootmagicalaffixes\\*ix\\**\\*.dbr']
 
 CHESTS = {
     'chimaera': [
@@ -177,26 +177,26 @@ CHESTS = {
 
 CREATURES = [
     'records\\creature\\monster\\questbosses\\*.dbr',
-    'records\\xpack\\creatures\\monster\\bosses\\**\\*.dbr']
+    'records\\xpack*\\creatures\\monster\\bosses\\**\\*.dbr']
 
 EQUIPMENT_BASE = [
-    'records\\item\\equipment*\\**\\*.dbr',
-    'records\\xpack\\item\\equipment*\\**\\*.dbr',
+    'records\\xpack*\\item\\equipment*\\**\\*.dbr',
     'records\\xpack\\item\\le_new\\*.dbr',
+    'records\\item\\equipment*\\**\\*.dbr',
 ]
 
 EQUIPMENT_EXT = [
     'records\\item\\relics\\*.dbr',
     'records\\item\\animalrelics\\*.dbr',
-    'records\\xpack\\item\\relics\\*.dbr',
-    'records\\xpack\\item\\charms\\*.dbr',
-    'records\\xpack\\item\\scrolls\\*.dbr',
-    'records\\xpack\\item\\artifacts\\*.dbr',
-    'records\\xpack\\item\\artifacts\\arcaneformulae\\*.dbr']
+    'records\\xpack*\\item\\relics\\*.dbr',
+    'records\\xpack*\\item\\charms\\*.dbr',
+    'records\\xpack*\\item\\scrolls\\*.dbr',
+    'records\\xpack*\\item\\artifacts\\*.dbr',
+    'records\\xpack*\\item\\artifacts\\arcaneformulae\\*.dbr']
 
 SETS = [
     'records\\item\\sets\\*.dbr',
-    'records\\xpack\\item\\sets\\*.dbr']
+    'records\\xpack*\\item\\sets\\*.dbr']
 
 SKILLS = [
     'records\\skills\\defensive\\defensiveskilltree.dbr',
@@ -207,22 +207,29 @@ SKILLS = [
     'records\\skills\\stealth\\stealthskilltree.dbr',
     'records\\skills\\storm\\stormskilltree.dbr',
     'records\\skills\\warfare\\warfareskilltree.dbr',
-    'records\\xpack\\skills\\dream\\dreamskilltree.dbr']
+    'records\\xpack\\skills\\dream\\dreamskilltree.dbr',
+    'records\\xpack2\\skills\\runemaster\\runemaster_skilltree.dbr']
 
 STRINGS_TAGS = [
     'commonequipment.txt',
     'xcommonequipment.txt',
+    'x2commonequipment.txt',
     'monsters.txt',
     'xmonsters.txt',
+    'x2monsters.txt',
     'quest.txt',
     'xquest.txt',
+    'x2quest.txt',
     'skills.txt',
     'xskills.txt',
+    'x2skills.txt',
     'uniqueequipment.txt',
     'xuniqueequipment.txt',
+    'x2uniqueequipment.txt',
 ]
 
 STRINGS_UI = [
     'ui.txt',
-    'xui.txt'
+    'xui.txt',
+    'x2ui.txt',
 ]

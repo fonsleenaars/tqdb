@@ -206,7 +206,10 @@ class UtilityParser:
                 allow_generic=True
             )['properties']
 
-            self.result['petBonus'] = bonus if tier == -1 else bonus[tier]
+            self.result['petBonus'] = (
+                bonus
+                if tier == -1 or not isinstance(bonus, list)
+                else bonus[tier])
 
     def parse_racial(self):
         """
