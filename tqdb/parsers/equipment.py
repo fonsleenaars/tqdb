@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 from tqdb.parsers.util import format_path
@@ -163,12 +164,13 @@ class SetParser():
         # Set some of the shared properties:
         set_props = props[0]
         set_result = {
-            'tag': set_props['setName'],
+            'tag': set_props.get('setName', None),
             'set': None,
         }
 
         # Skip all sets that have no corresponding tag:
-        if set_result['tag'] not in strings:
+        if not set_result['tag'] or set_result['tag'] not in strings:
+            logging.warning(f'No tag or name for set in {self.dbr}')
             return set_result
 
         result = {
@@ -189,6 +191,10 @@ class SetParser():
             set_member = format_path(prop['setMembers'])
 
             # If the equipment is available; load the item tag
+            if set_member not in equipment:
+                logging.warning(f'Missing {set_member} in {result["name"]}')
+                continue
+
             set_item = equipment[set_member]
             result['items'].append(set_item['tag'])
 

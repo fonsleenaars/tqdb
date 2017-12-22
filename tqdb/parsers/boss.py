@@ -1,6 +1,7 @@
+import logging
 import os
 import re
-from tqdb.constants import field
+from tqdb.constants.field import EQUIPABLE_LOOT
 from tqdb.constants.resources import CHESTS
 from tqdb.parsers.util import UtilityParser
 
@@ -69,7 +70,7 @@ class BossLootParser():
             difficulties[difficulty] = {}
 
             # Parse all equipable loot:
-            for equipment in field.EQUIPABLE_LOOT:
+            for equipment in EQUIPABLE_LOOT:
                 equip_key = f'chanceToEquip{equipment}'
                 equip_chance = float(loot.get(equip_key, '0'))
 
@@ -92,11 +93,20 @@ class BossLootParser():
                     chance = float('{0:.5f}'.format(weight / summed))
 
                     # Parse the table and multiply the values by the chance:
-                    table = parser.parse(util.get_reference_dbr(
-                        loot.get(f'loot{equipment}Item{i}')))
+                    loot_ref = loot.get(f'loot{equipment}Item{i}')
+                    if not loot_ref:
+                        logging.warning(
+                            f'Empty loot{equipment}Item{i} in {self.dbr}')
+                        continue
+                    table = parser.parse(util.get_reference_dbr(loot_ref))
 
-                    items = dict((k, v * chance * equip_chance)
-                                 for k, v in table.items())
+                    if 'tag' in table:
+                        # Individual item:
+                        items = {table['tag']: chance * equip_chance}
+                    else:
+                        # Dictionary of items:
+                        items = dict((k, v * chance * equip_chance)
+                                     for k, v in table.items())
 
                     for k, v in items.items():
                         if k in difficulties[difficulty]:

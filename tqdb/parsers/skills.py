@@ -1,3 +1,5 @@
+import logging
+
 from tqdb.constants import resources
 from tqdb.parsers.util import format_path
 from tqdb.parsers.util import UtilityParser
@@ -68,12 +70,20 @@ class SkillParser():
     def parse(self):
         # Grab generic skill data from the first list of properties
         skill = self.props[0]
+        path = format_path(self.dbr.replace(resources.DB, ''))
+        result = {'path': path}
 
-        result = {}
         if 'skillDisplayName' in skill:
             result['tag'] = skill['skillDisplayName']
             if result['tag'] in self.strings:
                 result['name'] = self.strings[result['tag']]
+            else:
+                logging.warning(
+                    f'No skill name found for {result["tag"]} '
+                    f'in {self.dbr}')
+                result['name'] = result['tag']
+        else:
+            logging.debug('No skillDisplayName found')
 
         if ('skillBaseDescription' in skill and
                 skill['skillBaseDescription'] in self.strings):
@@ -83,7 +93,6 @@ class SkillParser():
             result['description'] = skill['FileDescription']
 
         # Remove the database prefix and format the path:
-        path = format_path(self.dbr.replace(resources.DB, ''))
         result['path'] = path
 
         if len(self.props) > 1:

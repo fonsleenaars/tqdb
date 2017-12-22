@@ -1,3 +1,4 @@
+import logging
 import math
 import re
 from tqdb.constants import field as fc
@@ -152,23 +153,26 @@ class UtilityParser:
             level = int(props['itemSkillLevel'])
 
             skill_path = format_path(props['itemSkillName'])
-            if format_path(skill_path) not in skills:
+            if skill_path not in skills:
                 skill = self.parser.parse(
                     self.get_reference_dbr(props['itemSkillName']))
             else:
                 skill = skills[skill_path]
 
-            self.result['itemSkillName'] = {
-                'tag': skill['tag'],
-                'name': (fc.ITEM_SKILL.format(level, skill['name'])
-                         if level > 1
-                         else fc.ITEM_SKILL_LVL1.format(skill['name'])),
-                'level': level,
-            }
+            if 'tag' not in skill:
+                logging.warning(f'No tag found in {skill_path}')
+            else:
+                self.result['itemSkillName'] = {
+                    'tag': skill['tag'],
+                    'name': (fc.ITEM_SKILL.format(level, skill['name'])
+                             if level > 1
+                             else fc.ITEM_SKILL_LVL1.format(skill['name'])),
+                    'level': level,
+                }
 
         # Parse skills that are augmented:
         for name, level in fc.SKILL_AUGMENTS.items():
-            if name not in props:
+            if name not in props or level not in props:
                 continue
 
             skill_path = format_path(props[name])

@@ -1,7 +1,9 @@
 import argparse
-import json
 import glob
+import json
+import logging
 import os
+from datetime import datetime
 from tqdb.constants import resources as res
 from tqdb.parsers.equipment import SetParser
 from tqdb.parsers.main import parser
@@ -12,6 +14,16 @@ from tqdb.utils.core import is_dir
 from tqdb.utils.core import pluck
 from tqdb.utils.core import print_progress
 from tqdb.utils.images import SpriteCreator
+
+# Configure logging:
+LOG_FILENAME = os.path.join(
+    'logs',
+    datetime.now().strftime('tqdb_%Y%m%d-%H%M%S.log'))
+logging.basicConfig(
+    filename=LOG_FILENAME,
+    level=logging.WARNING,
+    format='%(asctime)s %(message)s',
+    datefmt='%H:%M')
 
 # Directory preparations:
 if not os.path.exists('output/graphics'):

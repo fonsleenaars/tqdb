@@ -1,3 +1,4 @@
+import logging
 import os
 import re
 from tqdb.parsers.util import format_path
@@ -136,8 +137,12 @@ class LootMasterParser:
             chance = float('{0:.5f}'.format(weight / summed))
 
             # Parse the table and multiply the values by the chance:
-            table = parser.parse(util.get_reference_dbr(
-                self.props.get(f'lootName{i}'))).items()
+            loot_file = self.props.get(f'lootName{i}')
+            if not loot_file:
+                logging.warning(f'lootName{i} not found in {self.dbr}')
+                continue
+
+            table = parser.parse(util.get_reference_dbr(loot_file)).items()
             new_items = dict((k, v * chance) for k, v in table)
 
             for k, v in new_items.items():

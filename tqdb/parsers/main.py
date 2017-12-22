@@ -6,7 +6,9 @@ import re
 
 from tqdb.constants import parsing as pc
 from tqdb.constants import resources
+from tqdb.parsers.util import format_path
 from tqdb.parsers.generic import GenericParser
+from tqdb.storage import records
 
 
 class DBRReader:
@@ -15,7 +17,10 @@ class DBRReader:
 
     """
     def read(self, dbr):
-        dbr_file = open(dbr)
+        try:
+            dbr_file = open(dbr)
+        except FileNotFoundError:
+            return [{}]
 
         # Split DBR file into a list of lines, delimited by a comma + newline:
         lines = [line.rstrip(',\n') for line in dbr_file]
@@ -87,7 +92,7 @@ class DBRReader:
         try:
             float(property)
             return float(property) != 0
-        except:
+        except ValueError:
             return True
 
 
@@ -120,6 +125,11 @@ class DBRParser:
             dict - Dictionary with all defined and parsed properties.
 
         """
+        # See if this DBR has been parsed before:
+        dbr_key = format_path(dbr)
+        if dbr_key in records:
+            return records[dbr_key]
+
         # Grab the type from this file:
         props = self.reader.read(dbr)
         parsed = {}
@@ -138,6 +148,8 @@ class DBRParser:
                 'class': dbr_class,
             }
 
+        # Store this DBR entry to prevent double parsing:
+        records[dbr_key] = parsed
         return parsed
 
 

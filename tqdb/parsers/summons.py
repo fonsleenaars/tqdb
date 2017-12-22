@@ -1,4 +1,4 @@
-from tqdb.constants import field
+from tqdb.constants.field import PET_IGNORE_SKILLS
 
 
 class SummonParser():
@@ -58,7 +58,7 @@ class SummonParser():
             level = int(level) if ';' not in level else 0
 
             # Skip some of the passive skills pets get:
-            if name.lower() in field.PET_IGNORE_SKILLS:
+            if name.lower() in PET_IGNORE_SKILLS:
                 continue
 
             if name and level:
