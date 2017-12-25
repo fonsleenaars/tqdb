@@ -24,8 +24,11 @@ logging.basicConfig(
     level=logging.WARNING,
     format='%(asctime)s %(message)s',
     datefmt='%H:%M')
+# Directory preparations for logging
+if not os.path.exists('logs'):
+    os.makedirs('logs')
 
-# Directory preparations:
+# Directory preparations for bitmap
 if not os.path.exists('output/graphics'):
     os.makedirs('output/graphics')
 
