@@ -15,6 +15,9 @@ from tqdb.utils.core import pluck
 from tqdb.utils.core import print_progress
 from tqdb.utils.images import SpriteCreator
 
+# Directory preparations for logging
+if not os.path.exists('logs'):
+    os.makedirs('logs')
 # Configure logging:
 LOG_FILENAME = os.path.join(
     'logs',
@@ -24,9 +27,6 @@ logging.basicConfig(
     level=logging.WARNING,
     format='%(asctime)s %(message)s',
     datefmt='%H:%M')
-# Directory preparations for logging
-if not os.path.exists('logs'):
-    os.makedirs('logs')
 
 # Directory preparations for bitmap
 if not os.path.exists('output/graphics'):
