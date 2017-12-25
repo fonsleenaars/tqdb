@@ -33,11 +33,11 @@ During this section we're going to assume the following paths for your repositor
 **Textures**  
 
 1. Make sure the following folders exist in your data directory:  
-  1. data/textures/Items
-  2. data/textures/XPack/Items
-  3. data/textures/XPack2/Items
+  - data/textures/Items
+  - data/textures/XPack/Items
+  - data/textures/XPack2/Items
 2. Open up a prompt, change directory to your TQ install.
-3. Run the following commands:
+3. Run the following commands:  
 `ArchiveTool.exe Resources\Items.arc -extract C:\tqdb\data\textures\Items`  
 `ArchiveTool.exe Resources\XPack\Items.arc -extract  
 C:\tqdb\data\textures\XPack\Items`  
