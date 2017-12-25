@@ -1,6 +1,4 @@
 import logging
-import os
-import re
 from tqdb.constants.field import EQUIPABLE_LOOT
 from tqdb.constants.resources import CHESTS
 from tqdb.parsers.util import UtilityParser
@@ -41,8 +39,8 @@ class BossLootParser():
 
         # Grab the first set of properties:
         boss_props = props[0]
-        bossClass = boss_props.get('monsterClassification', None)
-        bossTag = boss_props.get('description', None)
+        boss_class = boss_props.get('monsterClassification', None)
+        boss_tag = boss_props.get('description', None)
 
         boss = {
             'tag': None,
@@ -50,20 +48,22 @@ class BossLootParser():
         }
 
         # Skip tagless, existing, classless or Common bosses:
-        if (not bossTag or (
-                bossClass != 'Boss' and
-                bossClass != 'Quest')):
+        if (not boss_tag or (
+                boss_class != 'Boss' and
+                boss_class != 'Quest')):
             return boss
 
         # Keep track of all of the result data:
         result = {
-            'name': strings.get(bossTag, None)
+            'name': strings.get(boss_tag, None)
         }
 
         # The Ragnarok DLC bosses don't all have names yet in the txt resources
-        if not result['name'] and bossTag.startswith('x2tag'):
-            logging.warning(f'Found a nameless boss with {bossTag}')
-            result['name'] = bossTag.split('_')[-1].title()
+        if not result['name'] and boss_tag.startswith('x2tag'):
+            result['name'] = boss_tag.split('_')[-1].title()
+            logging.warning(
+                f'Found a nameless boss with {boss_tag}, '
+                f'using {result["name"]}')
 
         # Iterate over normal, epic & legendary version of the boss:
         difficulties = {}
@@ -130,29 +130,25 @@ class BossLootParser():
         if difficulties:
             result['loot'] = difficulties
 
-        # Now find the chest for this boss:
-        m = re.match(r'boss_(.*)_([0-9]{2})\.dbr', os.path.basename(self.dbr))
-        if m:
-            boss_name = m.group(1)
-            chests = {}
+        chests = {}
 
-            # Find the chest for each difficulty:
-            for index, difficulty in enumerate(DIFF_LIST):
-                difficulty = difficulty.lower()
+        # Find the chest for each difficulty:
+        for index, difficulty in enumerate(DIFF_LIST):
+            difficulty = difficulty.lower()
 
-                # Grab the chest to parse:
-                if boss_name in CHESTS and CHESTS[boss_name][index]:
-                    chests[difficulty] = parser.parse(
-                        util.get_reference_dbr(CHESTS[boss_name][index]))
+            # Grab the chest to parse:
+            if boss_tag in CHESTS and CHESTS[boss_tag][index]:
+                chests[difficulty] = parser.parse(
+                    util.get_reference_dbr(CHESTS[boss_tag][index]))
 
-                    # Convert all item chances to 4 point precision max:
-                    chests[difficulty] = dict(
-                        (k, float('{0:.4f}'.format(v))) for k, v
-                        in chests[difficulty].items())
+                # Convert all item chances to 4 point precision max:
+                chests[difficulty] = dict(
+                    (k, float('{0:.4f}'.format(v))) for k, v
+                    in chests[difficulty].items())
 
-            result['chest'] = chests
+        result['chest'] = chests
 
         return {
-            'tag': bossTag,
+            'tag': boss_tag,
             'result': result
         }

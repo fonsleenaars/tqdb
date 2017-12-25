@@ -268,7 +268,8 @@ class LootTableDWParser:
 
             # Check that this item is in the equipment list:
             item_path = format_path(prop['itemNames'])
-            if item_path not in equipment:
+            if not item_path or item_path not in equipment:
+                logging.warning(f'Could not find {item_path} in equipment')
                 continue
 
             weight = float(prop['bellSlope'])

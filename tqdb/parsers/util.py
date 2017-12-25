@@ -7,7 +7,11 @@ from tqdb.storage import skills
 
 
 def format_path(path):
-    return re.sub(r'[\ \\]', '_', path).lower()
+    try:
+        return re.sub(r'[\ \\]', '_', path).lower()
+    except TypeError:
+        logging.warning(f'Error formatting {path}')
+        return None
 
 
 class UtilityParser:

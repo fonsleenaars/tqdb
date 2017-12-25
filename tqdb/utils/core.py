@@ -72,7 +72,7 @@ def index_equipment(files, parser, label):
                                  'class')
 
         # The equipment files have some unwanted files, check classification:
-        if not parsed or 'classification' not in parsed:
+        if not parsed or 'classification' not in parsed or not parsed['name']:
             continue
 
         # Save the bitmap and remove the bitmap key
