@@ -60,6 +60,11 @@ class BossLootParser():
             'name': strings.get(bossTag, None)
         }
 
+        # The Ragnarok DLC bosses don't all have names yet in the txt resources
+        if not result['name'] and bossTag.startswith('x2tag'):
+            logging.warning(f'Found a nameless boss with {bossTag}')
+            result['name'] = bossTag.split('_')[-1].title()
+
         # Iterate over normal, epic & legendary version of the boss:
         difficulties = {}
         for index, difficulty in enumerate(DIFF_LIST):
