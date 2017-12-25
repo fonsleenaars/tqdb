@@ -143,6 +143,8 @@ if 'equipment' in categories:
     equipment.update(equipment2)
 
 if 'equipment-basic' in categories or 'equipment' in categories:
+    # Also re-add skills because it might have been expanded during parsing:
+    data['skills'] = skills
     data['equipment'] = items
 
 ###############################################################################

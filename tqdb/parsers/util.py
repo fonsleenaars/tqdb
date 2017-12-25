@@ -156,6 +156,8 @@ class UtilityParser:
             if skill_path not in skills:
                 skill = self.parser.parse(
                     self.get_reference_dbr(props['itemSkillName']))
+                # Add skill the the collection
+                skills[skill_path] = skill
             else:
                 skill = skills[skill_path]
 
