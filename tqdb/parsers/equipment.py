@@ -30,6 +30,7 @@ class ArmorWeaponParser():
             'WeaponMelee_Mace',
             'WeaponMelee_Sword',
             'WeaponHunting_Bow',
+            'WeaponHunting_RangedOneHand',
             'WeaponHunting_Spear',
             'WeaponMagical_Staff',
             'WeaponArmor_Shield',
