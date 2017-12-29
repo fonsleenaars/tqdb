@@ -49,6 +49,7 @@ class BossLootParser():
 
         # Skip tagless, existing, classless or Common bosses:
         if (not boss_tag or (
+                boss_class != 'Hero' and
                 boss_class != 'Boss' and
                 boss_class != 'Quest')):
             return boss

@@ -99,6 +99,10 @@ CHESTS = {
         'bosschest09_pharaohshonorguard_epic.dbr',
         'records\\item\\containers\\boss\\'
         'bosschest09_pharaohshonorguard_legendary.dbr'],
+    'tagMonsterName1129': [
+        'records\\item\\containers\\boss\\bosschest08x_masika_normal.dbr',
+        'records\\item\\containers\\boss\\bosschest08x_masika_epic.dbr',
+        'records\\item\\containers\\boss\\bosschest08x_masika_legendary.dbr'],
     'tagMonsterName060': [
         'records\\item\\containers\\boss\\'
         'bosschest12_sandwraithlord_normal.dbr',
@@ -300,8 +304,8 @@ CHESTS = {
     }
 
 CREATURES = [
-    'records\\creature\\monster\\questbosses\\*.dbr',
-    'records\\xpack*\\creatures\\monster\\bosses\\**\\*.dbr']
+    'records\\creature\\monster\\**\\*.dbr',
+    'records\\xpack*\\creatures\\monster\\**\\*.dbr']
 
 EQUIPMENT_BASE = [
     'records\\xpack*\\item\\equipment*\\**\\*.dbr',
