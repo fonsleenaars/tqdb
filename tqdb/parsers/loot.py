@@ -172,6 +172,10 @@ class LootFixedContainerParser:
         from tqdb.parsers.main import parser
 
         util = UtilityParser(self.dbr, self.props, self.strings)
+
+        if 'tables' not in self.props:
+            logging.warning(f'No table found in {self.dbr}')
+            return {}
         loot_dbr = util.get_reference_dbr(self.props['tables'])
         loot_props = parser.reader.read(loot_dbr)
 

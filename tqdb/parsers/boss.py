@@ -101,9 +101,9 @@ class BossLootParser():
                     # Parse the table and multiply the values by the chance:
                     loot_ref = loot.get(f'loot{equipment}Item{i}')
 
-                    # There are some hero/boss files that have a '#' as
-                    # placeholder for a difficulty without loot, skip those:
-                    if not loot_ref or loot_ref == '#':
+                    # There are some hero/boss files that have an invalid
+                    # path as the property for the loot reference:
+                    if not loot_ref or not util.get_reference_dbr(loot_ref):
                         logging.warning(
                             f'Empty loot{equipment}Item{i} in {self.dbr}')
                         continue
