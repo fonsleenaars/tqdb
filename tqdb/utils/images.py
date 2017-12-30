@@ -1,4 +1,5 @@
 import glob
+import logging
 import os
 import subprocess
 
@@ -158,6 +159,7 @@ class SpriteCreator:
 ###############################################################################
 def save_bitmap(item, item_type, graphics, textures):
     if 'bitmap' not in item:
+        logging.warning(f'Missing bitmap for {item["tag"]}')
         return
 
     bitmap = item['bitmap']
@@ -185,3 +187,5 @@ def save_bitmap(item, item_type, graphics, textures):
                    f'{textures}{bitmap}',
                    f'{graphics}{tag}.png']
         subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    else:
+        logging.warning(f'Missing tag or bitmap for {item["tag"]}: {bitmap}')
