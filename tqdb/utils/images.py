@@ -72,7 +72,9 @@ class SpriteCreator:
                         (f'{0 - sprite_height}px'
                          if 0 - sprite_height != 0
                          else 0 - sprite_height),
-                        f'{image_width}px' if image_width != 0 else image_width,
+                        (f'{image_width}px'
+                         if image_width != 0
+                         else image_width),
                         (f'{image_height}px'
                          if image_height != 0
                          else image_height)))
@@ -86,7 +88,9 @@ class SpriteCreator:
                         (f'{0 - sprite_height}px'
                          if 0 - sprite_height != 0
                          else 0 - sprite_height),
-                        f'{image_width}px' if image_width != 0 else image_width,
+                        (f'{image_width}px'
+                            if image_width != 0
+                            else image_width),
                         (f'{image_height}px'
                          if image_height != 0
                          else image_height)))
@@ -113,7 +117,9 @@ class SpriteCreator:
                         (f'{0 - sprite_height}px'
                          if 0 - sprite_height != 0
                          else 0 - sprite_height),
-                        f'{image_width}px' if image_width != 0 else image_width,
+                        (f'{image_width}px'
+                         if image_width != 0
+                         else image_width),
                         (f'{image_height}px'
                          if image_height != 0
                          else image_height)))
