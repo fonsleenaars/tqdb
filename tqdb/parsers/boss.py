@@ -49,6 +49,7 @@ class BossLootParser():
 
         # Skip tagless, existing, classless or Common bosses:
         if (not boss_tag or (
+                boss_class != 'Hero' and
                 boss_class != 'Boss' and
                 boss_class != 'Quest')):
             return boss
@@ -99,7 +100,10 @@ class BossLootParser():
 
                     # Parse the table and multiply the values by the chance:
                     loot_ref = loot.get(f'loot{equipment}Item{i}')
-                    if not loot_ref:
+
+                    # There are some hero/boss files that have an invalid
+                    # path as the property for the loot reference:
+                    if not loot_ref or not util.get_reference_dbr(loot_ref):
                         logging.warning(
                             f'Empty loot{equipment}Item{i} in {self.dbr}')
                         continue

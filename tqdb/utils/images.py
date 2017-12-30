@@ -1,4 +1,5 @@
 import glob
+import logging
 import os
 import subprocess
 
@@ -72,7 +73,9 @@ class SpriteCreator:
                         (f'{0 - sprite_height}px'
                          if 0 - sprite_height != 0
                          else 0 - sprite_height),
-                        f'{image_width}px' if image_width != 0 else image_width,
+                        (f'{image_width}px'
+                         if image_width != 0
+                         else image_width),
                         (f'{image_height}px'
                          if image_height != 0
                          else image_height)))
@@ -86,7 +89,9 @@ class SpriteCreator:
                         (f'{0 - sprite_height}px'
                          if 0 - sprite_height != 0
                          else 0 - sprite_height),
-                        f'{image_width}px' if image_width != 0 else image_width,
+                        (f'{image_width}px'
+                            if image_width != 0
+                            else image_width),
                         (f'{image_height}px'
                          if image_height != 0
                          else image_height)))
@@ -113,7 +118,9 @@ class SpriteCreator:
                         (f'{0 - sprite_height}px'
                          if 0 - sprite_height != 0
                          else 0 - sprite_height),
-                        f'{image_width}px' if image_width != 0 else image_width,
+                        (f'{image_width}px'
+                         if image_width != 0
+                         else image_width),
                         (f'{image_height}px'
                          if image_height != 0
                          else image_height)))
@@ -152,6 +159,7 @@ class SpriteCreator:
 ###############################################################################
 def save_bitmap(item, item_type, graphics, textures):
     if 'bitmap' not in item:
+        logging.warning(f'Missing bitmap for {item["tag"]}')
         return
 
     bitmap = item['bitmap']
@@ -179,3 +187,5 @@ def save_bitmap(item, item_type, graphics, textures):
                    f'{textures}{bitmap}',
                    f'{graphics}{tag}.png']
         subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    else:
+        logging.warning(f'Missing tag or bitmap for {item["tag"]}: {bitmap}')

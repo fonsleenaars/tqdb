@@ -163,7 +163,7 @@ if 'bosses' in categories:
         print_progress("Parsing boss loot", index, len(files))
 
         parsed = parser.parse(dbr)
-        if not parsed:
+        if not parsed or 'tag' not in parsed:
             continue
 
         bossTag, boss = pluck(parsed, 'tag', 'result')

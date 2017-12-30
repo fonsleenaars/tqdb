@@ -335,7 +335,12 @@ class UtilityParser:
         new_dbr = new_dbr.lower()
 
         # Create the reference
-        dbr_ref = self.dbr[:self.dbr.index(new_dbr.split('\\')[0])] + (new_dbr)
+        try:
+            dbr_ref = (self.dbr[:self.dbr.index(new_dbr.split('\\')[0])] +
+                       new_dbr)
+        except ValueError:
+            logging.warning(f'Value error parsing {new_dbr} in {self.dbr}')
+            return None
 
         # Quick check to avoid infinite recursion (new reference = self)
         return dbr_ref if self.dbr != dbr_ref else None
