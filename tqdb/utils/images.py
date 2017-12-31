@@ -169,20 +169,13 @@ def save_bitmap(item, item_type, graphics, textures):
     tag = item['tag']
     del(item['bitmap'])
 
+    # Tags for formula's are all the same (lesser, greater, divine)
     if item_type == 'ItemArtifactFormula':
         tag = item['classification'].lower()
-    elif 'classification' in item:
-        # If the file already exists, append a counter:
-        if (item['classification'] != 'Rare' and
-           os.path.isfile(f'{graphics}{tag}.png')):
-            # Append the type:
-            counter = 1
-            images = glob.glob(graphics)
-            for image in enumerate(images):
-                if tag in images:
-                    counter += 1
-
-            tag += f'-{counter}'
+    # Skip all non-MI duplicates
+    elif (item.get('classification', None) != 'Rare' and
+          os.path.isfile(f'{graphics}{tag}.png')):
+            return
 
     # Run the texture viewer if a bitmap and tag are set:
     if tag and os.path.isfile(f'{textures}{bitmap}'):
