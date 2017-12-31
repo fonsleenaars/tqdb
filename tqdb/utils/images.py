@@ -26,6 +26,9 @@ class SpriteCreator:
             image.filename = os.path.basename(file).split('.')[0]
             images.append(image)
 
+        # Sort images so output is consistent (useful for diffs)
+        images.sort()
+
         # Iterate through all the image objects and organize them by size
         for image in images:
             width, height = image.size
