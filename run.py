@@ -240,4 +240,4 @@ print('Writing output to files...')
 SpriteCreator('output/graphics/', 'output')
 
 with open('output/data.json', 'w') as data_file:
-    json.dump(data, data_file)
+    json.dump(data, data_file, sort_keys=True)
