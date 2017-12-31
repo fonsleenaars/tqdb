@@ -128,7 +128,14 @@ items = {}
 if 'equipment-basic' in categories:
     files = []
     for equipment_file in res.EQUIPMENT_BASE:
-        files.extend(glob.glob(res.DB + equipment_file, recursive=True))
+        # Exclude the /default and /old directories from equipment:
+        equipment_files = glob.glob(res.DB + equipment_file, recursive=True)
+        files.extend([
+            equipment_file
+            for equipment_file
+            in equipment_files
+            if not ('/old' in equipment_file or '/default' in equipment_file)
+        ])
 
     items2, equipment2 = index_equipment(
         files, parser, 'weapons, jewelry, armor')
