@@ -27,7 +27,7 @@ class SpriteCreator:
             images.append(image)
 
         # Sort images so output is consistent (useful for diffs)
-        images.sort()
+        images.sort(key=lambda x: x.filename)
 
         # Iterate through all the image objects and organize them by size
         for image in images:
