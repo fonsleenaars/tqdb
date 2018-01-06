@@ -126,29 +126,14 @@ if 'affixes' in categories:
 ###############################################################################
 items = {}
 if 'equipment-basic' in categories:
-    files = []
-    for equipment_file in res.EQUIPMENT_BASE:
-        # Exclude the /default and /old directories from equipment:
-        equipment_files = glob.glob(res.DB + equipment_file, recursive=True)
-        files.extend([
-            equipment_file
-            for equipment_file
-            in equipment_files
-            if not ('/old' in equipment_file or '/default' in equipment_file)
-        ])
-
     items2, equipment2 = index_equipment(
-        files, parser, 'weapons, jewelry, armor')
+        res.EQUIPMENT_BASE, parser, 'weapons, jewelry, armor')
     items.update(items2)
     equipment.update(equipment2)
 
 if 'equipment' in categories:
-    files = []
-    for equipment_file in res.EQUIPMENT_EXT:
-        files.extend(glob.glob(res.DB + equipment_file, recursive=True))
-
     items2, equipment2 = index_equipment(
-        files, parser, 'charms, relics, scrolls, artifacts')
+        res.EQUIPMENT_EXT, parser, 'charms, relics, scrolls, artifacts')
     items.update(items2)
     equipment.update(equipment2)
 

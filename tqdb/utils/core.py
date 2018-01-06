@@ -3,6 +3,7 @@ Utility functions.
 
 """
 import argparse
+import glob
 import os
 import sys
 
@@ -61,7 +62,18 @@ def print_progress(label,  i, end_val, bar_length=20):
 ###########################################################################
 #                              PARSE UTILITY                              #
 ###########################################################################
-def index_equipment(files, parser, label):
+def index_equipment(resource, parser, label):
+    files = []
+    for equipment_file in resource:
+        # Exclude the /default and /old directories from equipment:
+        equipment_files = glob.glob(DB + equipment_file, recursive=True)
+        files.extend([
+            equipment_file
+            for equipment_file
+            in equipment_files
+            if not ('\\old' in equipment_file or '\\default' in equipment_file)
+        ])
+
     equipment = {}
     items = {}
 
