@@ -1,6 +1,9 @@
 import logging
 import os
 import re
+
+import numexpr
+
 from tqdb.parsers.util import format_path
 from tqdb.parsers.util import UtilityParser
 from tqdb.storage import equipment
@@ -202,6 +205,14 @@ class LootFixedItemParser:
         util = UtilityParser(self.dbr, self.props, self.strings)
         items = {}
 
+        # This camelCased variable is required for the spawn equations:
+        numberOfPlayers = 1  # noqa
+
+        # Grab min/max equation for items that will spawn:
+        max_spawn = numexpr.evaluate(self.props['numSpawnMaxEquation']).item()
+        min_spawn = numexpr.evaluate(self.props['numSpawnMinEquation']).item()
+        spawn_number = (min_spawn + max_spawn) / 2
+
         # There are 6 loot slots:
         for slot in range(1, 7):
             slot_key = f'loot{slot}'
@@ -232,8 +243,8 @@ class LootFixedItemParser:
                 # Parse the table and multiply the values by the chance:
                 loot_chance = float('{0:.5f}'.format(weight / summed))
                 new_items = dict(
-                    (k, v * loot_chance * slot_chance) for k, v in
-                    parser.parse(loot_dbr).items()
+                    (k, v * loot_chance * slot_chance * spawn_number)
+                    for k, v in parser.parse(loot_dbr).items()
                 )
 
                 for k, v in new_items.items():
