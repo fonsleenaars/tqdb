@@ -168,7 +168,8 @@ def parse_text_resource(text_file):
     # Parse line into a dictionary of key, value properties:
     return dict(
         properties.split('=', 1)
-        for properties in lines
+        # Reverse the list to make sure duplicate keys are corrected for
+        for properties in list(reversed(lines))
         if '=' in properties and not properties.startswith('//'))
 
 
