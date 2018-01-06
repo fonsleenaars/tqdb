@@ -65,6 +65,8 @@ PT_ADD_CUSTOM = [
 
 PT_ADD_CUSTOM_FROM_PROPS = [
     ['ChanceOfTag', 'ChanceOfTag'],
+    # The misspelling of CharacterItemGlobalReduction is "correct", that's how
+    # the files list it.
     ['characterGlobalReqReduction', 'CharcterItemGlobalReduction'],
     ['defensiveTotalSpeed', 'TotalSpeedResistance'],
     ['GlobalPercentChanceOfAllTag', 'GlobalPercentChanceOfAllTag'],
