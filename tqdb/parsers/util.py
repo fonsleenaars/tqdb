@@ -1,6 +1,9 @@
 import logging
 import math
 import re
+
+import numexpr
+
 from tqdb.constants import field as fc
 from tqdb.parsers import fields
 from tqdb.storage import skills
@@ -288,13 +291,11 @@ class UtilityParser:
                     equation = cost_properties[equation_key]
 
                     # Set the possible parameters in the equation:
-                    variables = {
-                        'itemLevel': int(props.get('itemLevel', 0)),
-                        'totalAttCount': len(self.result),
-                    }
+                    itemLevel = int(props.get('itemLevel', 0))  # noqa
+                    totalAttCount = len(self.result)  # noqa
 
                     # Eval the equation:
-                    reqs[req] = math.ceil(eval(equation, {}, variables))
+                    reqs[req] = math.ceil(numexpr.evaluate(equation).item())
 
         return reqs
 
