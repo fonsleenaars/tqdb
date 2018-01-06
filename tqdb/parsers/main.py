@@ -185,11 +185,13 @@ class PropertyTable:
         """
         self.table = {}
 
-        # Remove all the (x)tag prefixes:
+        # Remove all the (x/x2)tag prefixes:
         tags = dict((k[3:], v) for (k, v) in props.items()
                     if k.startswith('tag'))
         tags.update(dict((k[4:], v) for (k, v) in props.items()
                     if k.startswith('xtag')))
+        tags.update(dict((k[5:], v) for (k, v) in props.items()
+                    if k.startswith('x2tag')))
         props.update(tags)
 
         for key, val in props.items():
