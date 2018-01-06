@@ -153,30 +153,23 @@ class DBRParser:
         return parsed
 
 
-class TextParser:
+def parse_text_resource(text_file):
     """
-    Main TQDB parser for the raw txt files.
+    Parse a text resource, extracted from the Text_**.arc files.
 
     """
+    try:
+        # Most files have UTF-16 or RAW encoding
+        lines = [l.rstrip('\n') for l in open(text_file, encoding='utf16')]
+    except UnicodeError:
+        # Some files have ??? encoding (literally)
+        lines = [l.rstrip('\n') for l in open(text_file)]
 
-    @staticmethod
-    def parse(text_file):
-        # Open the file with UTF16 encoding
-        fp = open(text_file, encoding='utf16', errors='ignore')
-
-        try:
-            # DBR file into a list of lines
-            lines = [str(line.rstrip('\n')) for line in fp]
-        except UnicodeError:
-            # Not all files are UTF-16 encoded anymore, reopen without encoding
-            fp = open(text_file)
-            lines = [str(line.rstrip('\n')) for line in fp]
-
-        # Parse line into a dictionary of key, value properties:
-        return dict(
-            properties.split('=', 1)
-            for properties in lines
-            if '=' in properties)
+    # Parse line into a dictionary of key, value properties:
+    return dict(
+        properties.split('=', 1)
+        for properties in lines
+        if '=' in properties and not properties.startswith('//'))
 
 
 class PropertyTable:
@@ -259,11 +252,11 @@ def create_parser():
     # Prepare the formatted strings
     strings_tags = {}
     for tags in resources.STRINGS_TAGS:
-        strings_tags.update(TextParser.parse(resources.RES + tags))
+        strings_tags.update(parse_text_resource(resources.RES + tags))
 
     strings_ui = {}
     for tags in resources.STRINGS_UI:
-        strings_ui.update(TextParser.parse(resources.RES + tags))
+        strings_ui.update(parse_text_resource(resources.RES + tags))
 
     # Merge all formatted strings together
     strings = {**PropertyTable(strings_ui).table, **strings_tags}
