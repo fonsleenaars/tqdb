@@ -202,6 +202,8 @@ class ParametersOffensive(TQDBParser):
                 cls.parse_absolute(field, dbr, result)
             elif parsing_type == cls.EOT:
                 cls.parse_eot(field, dbr, result)
+            elif parsing_type == cls.MANA:
+                cls.parse_mana(field, dbr, result)
 
     @classmethod
     def parse_absolute(cls, field, dbr, result):
@@ -230,11 +232,11 @@ class ParametersOffensive(TQDBParser):
             for index, min_value in enumerate(min_values):
                 max_value = max_values[index]
 
-                if max_value > min_value:
+                if max_value > min_value and texts.has(ranged):
                     # Add the range of damage
                     value = texts.get(ranged).format(min_value, max_value)
                 else:
-                    # Add the flat daamge
+                    # Add the flat damage
                     value = texts.get(field).format(min_value)
 
                 if chance in dbr:
@@ -307,7 +309,7 @@ class ParametersOffensive(TQDBParser):
                     # Add the range of damage
                     value = texts.get(ranged).format(min_value, max_value)
                 else:
-                    # Add the flat daamge
+                    # Add the flat damage
                     value = texts.get(field).format(min_value)
 
                 # Check again if duration is set, this time to add a suffix:
@@ -381,7 +383,7 @@ class ParametersOffensive(TQDBParser):
                     # Add the range of damage
                     value = texts.get(ranged).format(min_value, max_value)
                 else:
-                    # Add the flat daamge
+                    # Add the flat damage
                     value = texts.get(field).format(min_value)
 
                 # Check again if duration is set, this time to add a suffix:
@@ -416,4 +418,49 @@ class ParametersOffensive(TQDBParser):
                 values.append(value)
 
             result['properties'][mod] = (
+                values[0] if len(values) == 1 else values)
+
+    @classmethod
+    def parse_mana(cls, field, dbr, result):
+        """
+        Parse the unique mana damage type.
+
+        """
+        # Prepare some keys based on the field:
+        chance = f'{field}Chance'
+        max = f'{field}DrainMax'
+        min = f'{field}DrainMin'
+        ratio = f'{field}DamageRatio'
+        is_global = f'{field}Global'
+
+        if min in dbr:
+            min_values = dbr[min]
+            max_values = dbr[max] if max in dbr else min_values
+            values = []
+
+            # Because we need to track two values (min and max dmg) we need
+            # to iterate over all the values and track the index:
+            for index, min_value in enumerate(min_values):
+                max_value = max_values[index]
+
+                if max_value > min_value:
+                    # Add the range of damage
+                    value = (texts.get('offensiveManaDrainRanged')
+                             .format(min_value, max_value))
+                else:
+                    # Add the flat damamge
+                    value = texts.get('offensiveManaDrain').format(min_value)
+
+                if ratio in dbr:
+                    value += (texts.get('offensiveManaBurnRatio')
+                              .format(dbr[ratio][index]))
+
+                if chance in dbr and is_global not in dbr:
+                    # Prefix the value with the chance text:
+                    chance_value = dbr[chance][index]
+                    value = texts.get(CHANCE).format(chance_value) + value
+
+                values.append(value)
+
+            result['properties'][field] = (
                 values[0] if len(values) == 1 else values)
