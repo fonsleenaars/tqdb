@@ -44,6 +44,44 @@ class Texts:
         ['spawnobjectstimetolive', 'skillpettimetolive'],
     ]
 
+    # These resources need a replace or regex replace to have the right names:
+    REPLACEMENTS = [{
+        'type': 'regex',
+        'find': r'damagemodifier(.*)',
+        'replace': r'offensive\1modifier',
+    }, {
+        'type': 'regex',
+        'find': r'damagedurationmodifier(.*)',
+        'replace': r'offensiveslow\1modifier',
+    },  {
+        # DamageDuration prefix
+        'type': 'replace',
+        'find': 'damageduration',
+        'replace': 'offensiveslow',
+    }, {
+        # Damage prefix
+        'type': 'replace',
+        'find': 'damage',
+        'replace': 'offensive',
+    }, {
+        # Defense prefix
+        'type': 'replace',
+        'find': 'defense',
+        'replace': 'defensive',
+    }, {
+        'type': 'regex',
+        'find': r'retaliationmodifier(.*)',
+        'replace': r'retaliation\1modifier',
+    }, {
+        'type': 'regex',
+        'find': r'retaliationdurationmodifier(.*)',
+        'replace': r'retaliationslow\1modifier',
+    },  {
+        'type': 'replace',
+        'find': 'retaliationduration',
+        'replace': 'retaliationslow',
+    }]
+
     # These resource files hold strings that map a tag to a name.
     TAG_RESOURCES = [
         'commonequipment.txt',
@@ -111,6 +149,32 @@ class Texts:
             (new_key, self.strings[old_key])
             for new_key, old_key in self.COPY_RESOURCES))
 
+        # Now replace words that are different in DBR files such as
+        # 'damage' becoming 'offensive':
+        replacements = {}
+        for key, value in self.strings.items():
+            for repl in self.REPLACEMENTS:
+                if repl['type'] == 'regex':
+                    # Replace all regex matches:
+                    pattern = re.compile(repl['find'])
+                    if re.match(pattern, key):
+                        new_key = re.sub(pattern, repl['replace'], key)
+                        replacements[new_key] = value
+                        break
+                else:
+                    # Simply replace (if it's a prefix)
+                    prefix = repl['find']
+                    if key.startswith(prefix):
+                        new_key = key.replace(prefix, repl['replace'], 1)
+                        replacements[new_key] = value
+                        break
+
+        # Now merge the replacement strings:
+        self.strings.update(replacements)
+
+        # Track ranged separately, we can't update a dict while iterating:
+        ranged = dict()
+
         # Iterate over all known strings now
         for key, value in self.strings.items():
             # Update the regex structure for all strings that have regex:
@@ -123,15 +187,18 @@ class Texts:
             # Add a decimal ranged variant for values that have seconds:
             elif 'second' in value:
                 # Also add a ranged formatter:
-                self.strings[key + 'Ranged'] = '{0:.1f} ~ {1:.1f}' + value
+                ranged[key + 'ranged'] = '{0:.1f} ~ {1:.1f}' + value
                 value = '{0:.1f}' + value
             # All other regular get a non-decimal ranged variant:
             elif 'characterAttackSpeed' not in key:
                 # Also add a ranged formatter:
-                self.strings[key + 'Ranged'] = '{0:.0f} ~ {1:.0f}' + value
+                ranged[key + 'ranged'] = '{0:.0f} ~ {1:.0f}' + value
                 value = '{0:.0f}' + value
 
             self.strings[key] = value
+
+        # Now that iteration is done, merge the ranged formats:
+        self.strings.update(ranged)
 
     def tag(self, tag):
         """

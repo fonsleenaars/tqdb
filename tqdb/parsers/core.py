@@ -7,6 +7,9 @@ from tqdb.utils.text import texts
 
 # Some shared core constants:
 CHANCE = 'ChanceOfTag'
+DOT_SINGLE = 'offensiveSingleFormatTime'
+EOT_SINGLE = 'offensiveFixedSingleFormatTime'
+IMPRV_TIME = 'ImprovedTimeFormat'
 
 
 class ParametersCharacter(TQDBParser):
@@ -96,89 +99,95 @@ class ParametersOffensive(TQDBParser):
     Parser for `templatebase/parameters_offensive.tpl`.
 
     """
-    FIELDS = [
-        'offensiveBaseCold',
-        'offensiveBaseFire',
-        'offensiveBaseLife',
-        'offensiveBaseLightning',
-        'offensiveBasePoison',
-        'offensiveBonusPhysical',
-        'offensiveCold',
-        'offensiveConfusion',
-        'offensiveConvert',
-        'offensiveDisruption',
-        'offensiveElemental',
-        'offensiveFear',
-        'offensiveFire',
-        'offensiveFreeze',
-        'offensiveFumble',
-        'offensiveManaBurn',
-        'offensiveLife',
-        'offensiveLifeLeech',
-        'offensiveLightning',
-        'offensivePercentCurrentLife',
-        'offensivePhysical',
-        'offensivePierce',
-        'offensivePierceRatio',
-        'offensivePoison',
-        'offensivePetrify',
-        'offensiveProjectileFumble',
-        'offensiveSleep',
-        'offensiveSlowAttackSpeed',
-        'offensiveSlowBleeding',
-        'offensiveSlowCold',
-        'offensiveSlowDefensiveAbility',
-        'offensiveSlowDefensiveReduction',
-        'offensiveSlowFire',
-        'offensiveSlowLife',
-        'offensiveSlowLifeLeach',
-        'offensiveSlowLightning',
-        'offensiveSlowManaLeach',
-        'offensiveSlowOffensiveAbility',
-        'offensiveSlowOffensiveReduction',
-        'offensiveSlowPhysical',
-        'offensiveSlowPoison',
-        'offensiveSlowRunSpeed',
-        'offensiveSlowSpellCastSpeed',
-        'offensiveSlowTotalSpeed',
-        'offensiveStun',
-        'offensiveTotalDamage',
-        'offensiveTotalDamageReductionAbsolute',
-        'offensiveTotalDamageReductionPercent',
-        'offensiveTotalResistanceReductionAbsolute',
-        'offensiveTotalResistanceReductionPercent',
-        'offensiveTrap',
-        'retaliationCold',
-        'retaliationElemental',
-        'retaliationFire',
-        'retaliationLife',
-        'retaliationLightning',
-        'retaliationPercentCurrentLife',
-        'retaliationPhysical',
-        'retaliationPierce',
-        'retaliationPierceRatio',
-        'retaliationPoison',
-        'retaliationSlowAttackSpeed',
-        'retaliationSlowBleeding',
-        'retaliationSlowCold',
-        'retaliationSlowDefensiveAbility',
-        'retaliationSlowFire',
-        'retaliationSlowLife',
-        'retaliationSlowLifeLeach',
-        'retaliationSlowLightning',
-        'retaliationSlowManaLeach',
-        'retaliationSlowOffensiveAbility',
-        'retaliationSlowOffensiveReduction',
-        'retaliationSlowPhysical',
-        'retaliationSlowRunSpeed',
-        'retaliationSlowPoison',
-        'retaliationSlowSpellCastSpeed',
-        'retaliationStun',
-    ]
+    # A few constants to indicate the type of parsing needed
+    ABSOLUTE = 'absolute'
+    DOT = 'damageOverTime'
+    EOT = 'effectOverTime'
+    MANA = 'mana'
+
+    FIELDS = {
+        'offensiveBaseCold': ABSOLUTE,
+        'offensiveBaseFire': ABSOLUTE,
+        'offensiveBaseLife': ABSOLUTE,
+        'offensiveBaseLightning': ABSOLUTE,
+        'offensiveBasePoison': ABSOLUTE,
+        'offensiveBonusPhysical': ABSOLUTE,
+        'offensiveCold': ABSOLUTE,
+        'offensiveConfusion': EOT,
+        'offensiveConvert': EOT,
+        'offensiveDisruption': EOT,
+        'offensiveElemental': ABSOLUTE,
+        'offensiveFear': EOT,
+        'offensiveFire': ABSOLUTE,
+        'offensiveFreeze': EOT,
+        'offensiveFumble': EOT,
+        'offensiveManaBurn': MANA,
+        'offensiveLife': ABSOLUTE,
+        'offensiveLifeLeech': ABSOLUTE,
+        'offensiveLightning': ABSOLUTE,
+        'offensivePercentCurrentLife': ABSOLUTE,
+        'offensivePhysical': ABSOLUTE,
+        'offensivePierce': ABSOLUTE,
+        'offensivePierceRatio': ABSOLUTE,
+        'offensivePoison': ABSOLUTE,
+        'offensivePetrify': EOT,
+        'offensiveProjectileFumble': EOT,
+        'offensiveSleep': EOT,
+        'offensiveSlowAttackSpeed': EOT,
+        'offensiveSlowBleeding': DOT,
+        'offensiveSlowCold': DOT,
+        'offensiveSlowDefensiveAbility': EOT,
+        'offensiveSlowDefensiveReduction': EOT,
+        'offensiveSlowFire': DOT,
+        'offensiveSlowLife': DOT,
+        'offensiveSlowLifeLeach': DOT,
+        'offensiveSlowLightning': DOT,
+        'offensiveSlowManaLeach': DOT,
+        'offensiveSlowOffensiveAbility': EOT,
+        'offensiveSlowOffensiveReduction': EOT,
+        'offensiveSlowPhysical': DOT,
+        'offensiveSlowPoison': DOT,
+        'offensiveSlowRunSpeed': EOT,
+        'offensiveSlowSpellCastSpeed': EOT,
+        'offensiveSlowTotalSpeed': EOT,
+        'offensiveStun': EOT,
+        'offensiveTotalDamage': ABSOLUTE,
+        'offensiveTotalDamageReductionAbsolute': EOT,
+        'offensiveTotalDamageReductionPercent': EOT,
+        'offensiveTotalResistanceReductionAbsolute': EOT,
+        'offensiveTotalResistanceReductionPercent': EOT,
+        'offensiveTrap': EOT,
+        'retaliationCold': ABSOLUTE,
+        'retaliationElemental': ABSOLUTE,
+        'retaliationFire': ABSOLUTE,
+        'retaliationLife': ABSOLUTE,
+        'retaliationLightning': ABSOLUTE,
+        'retaliationPercentCurrentLife': ABSOLUTE,
+        'retaliationPhysical': ABSOLUTE,
+        'retaliationPierce': ABSOLUTE,
+        'retaliationPierceRatio': ABSOLUTE,
+        'retaliationPoison': ABSOLUTE,
+        'retaliationSlowAttackSpeed': EOT,
+        'retaliationSlowBleeding': DOT,
+        'retaliationSlowCold': DOT,
+        'retaliationSlowDefensiveAbility': EOT,
+        'retaliationSlowFire': DOT,
+        'retaliationSlowLife': DOT,
+        'retaliationSlowLifeLeach': DOT,
+        'retaliationSlowLightning': DOT,
+        'retaliationSlowManaLeach': DOT,
+        'retaliationSlowOffensiveAbility': EOT,
+        'retaliationSlowOffensiveReduction': EOT,
+        'retaliationSlowPhysical': DOT,
+        'retaliationSlowRunSpeed': EOT,
+        'retaliationSlowPoison': DOT,
+        'retaliationSlowSpellCastSpeed': EOT,
+        'retaliationStun': ABSOLUTE,
+    }
 
     @staticmethod
     def get_template_path():
-        return f'{TQDBParser.base}\\templatebase\\parameters_character.tpl'
+        return f'{TQDBParser.base}\\templatebase\\parameters_offensive.tpl'
 
     @classmethod
     def parse(cls, dbr, result):
@@ -186,53 +195,225 @@ class ParametersOffensive(TQDBParser):
         Parse the character properties.
 
         """
-        for field in cls.FIELDS:
-            # Ranged key is used to format a range of damage - ie. 16 ~ 24
-            ranged = f'{field}Ranged'
+        for field, parsing_type in cls.FIELDS.items():
+            if parsing_type == cls.ABSOLUTE:
+                cls.parse_absolute(field, dbr, result)
+            elif parsing_type == cls.DOT:
+                cls.parse_absolute(field, dbr, result)
+            elif parsing_type == cls.EOT:
+                cls.parse_eot(field, dbr, result)
 
-            # Prepare some keys based on the field:
-            chance = f'{field}Chance'
-            max = f'{field}Max'
-            min = f'{field}Min'
-            mod = f'{field}Modifier'
-            mod_chance = f'{mod}Chance'
-            xor = f'{mod}XOR'
+    @classmethod
+    def parse_absolute(cls, field, dbr, result):
+        """
+        Parse the regular, absolute variant of a damage type.
 
-            if min in dbr:
-                min_values = dbr[min]
-                max_values = dbr[max]
-                values = []
+        """
+        # Ranged key is used to format a range of damage - ie. 16 ~ 24
+        ranged = f'{field}Ranged'
 
-                # Because we need to track two values (min and max dmg) we need
-                # to iterate over all the values and track the index:
-                for index, min_value in enumerate(min_values):
-                    max_value = max_values[index]
+        # Prepare some keys based on the field:
+        chance = f'{field}Chance'
+        max = f'{field}Max'
+        min = f'{field}Min'
+        mod = f'{field}Modifier'
+        mod_chance = f'{mod}Chance'
+        xor = f'{field}XOR'
 
-                    if max_value > min_value:
-                        # Add the range of damage
-                        values.append(texts.get(ranged).format(
-                            min_value, max_value))
-                    else:
-                        # Add the flat daamge
-                        values.append(texts.get(field).format(min_value))
+        if min in dbr:
+            min_values = dbr[min]
+            max_values = dbr[max] if max in dbr else min_values
+            values = []
+
+            # Because we need to track two values (min and max dmg) we need
+            # to iterate over all the values and track the index:
+            for index, min_value in enumerate(min_values):
+                max_value = max_values[index]
+
+                if max_value > min_value:
+                    # Add the range of damage
+                    value = texts.get(ranged).format(min_value, max_value)
+                else:
+                    # Add the flat daamge
+                    value = texts.get(field).format(min_value)
 
                 if chance in dbr:
-                    # Prefix all the values with the chance text:
-                    values = [
-                        texts.get(CHANCE).format(chance) + value
-                        for value in values]
+                    # Prefix the value with the chance text:
+                    chance_value = dbr[chance][index]
+                    value = texts.get(CHANCE).format(chance_value) + value
 
-                result['properties'][field] = (
-                    values[0] if len(values) == 1 else values)
+                values.append(value)
 
-            if mod in dbr:
-                values = [texts.get(mod).format(value) for value in dbr[mod]]
+            result['properties'][field] = (
+                values[0] if len(values) == 1 else values)
 
-                if mod_chance in dbr and not dbr[xor]:
-                    # Prefix all the values with the chance text:
-                    values = [
-                        texts.get(CHANCE).format(dbr[mod_chance]) + value
-                        for value in values]
+        if mod in dbr:
+            values = []
 
-                result['properties'][mod] = (
-                    values[0] if len(values) == 1 else values)
+            for index, mod_value in enumerate(dbr[mod]):
+                # Set the modifier (+%) value
+                value = texts.get(mod).format(mod_value)
+
+                if mod_chance in dbr and xor not in dbr:
+                    # Prefix  the value with the chance text:
+                    chance_value = dbr[mod_chance][index]
+                    value = texts.get(CHANCE).format(chance_value) + value
+
+                values.append(value)
+
+            result['properties'][mod] = (
+                values[0] if len(values) == 1 else values)
+
+    @classmethod
+    def parse_dot(cls, field, dbr, result):
+        """
+        Parse the damage over time variant of a damage type.
+
+        """
+        # Ranged key is used to format a range of damage - ie. 16 ~ 24
+        ranged = f'{field}Ranged'
+
+        # Prepare some keys based on the field:
+        chance = f'{field}Chance'
+        dur_max = f'{field}DurationMax'
+        dur_min = f'{field}DurationMin'
+        dur_mod = f'{field}DurationModifier'
+        max = f'{field}Max'
+        min = f'{field}Min'
+        mod = f'{field}Modifier'
+        mod_chance = f'{mod}Chance'
+        xor = f'{field}XOR'
+
+        if min in dbr:
+            min_values = dbr[min]
+            max_values = dbr[max] if max in dbr else min_values
+            values = []
+
+            # Because we need to track two values (min and max dmg) we need
+            # to iterate over all the values and track the index:
+            for index, min_value in enumerate(min_values):
+                max_value = max_values[index]
+
+                # Recalculate min/max damage if a duration is set:
+                if dur_min in dbr:
+                    min_value *= dbr[dur_min][index]
+
+                    if dur_max in dbr and max not in dbr:
+                        max_value *= dbr[dur_max][index]
+                    elif max in dbr:
+                        max_value *= dbr[dur_min][index]
+
+                if max_value > min_value:
+                    # Add the range of damage
+                    value = texts.get(ranged).format(min_value, max_value)
+                else:
+                    # Add the flat daamge
+                    value = texts.get(field).format(min_value)
+
+                # Check again if duration is set, this time to add a suffix:
+                if dur_min in dbr:
+                    value += texts.get(DOT_SINGLE).format(dbr[dur_min][index])
+
+                if chance in dbr:
+                    # Prefix the value with the chance text:
+                    chance_value = dbr[chance][index]
+                    value = texts.get(CHANCE).format(chance_value) + value
+
+                values.append(value)
+
+            result['properties'][field] = (
+                values[0] if len(values) == 1 else values)
+
+        if mod in dbr or dur_mod in dbr:
+            values = []
+
+            for index, mod_value in enumerate(dbr[mod]):
+                # Set the modifier (+%) value
+                value = texts.get(mod).format(mod_value)
+
+                if dur_mod in dbr:
+                    value += texts.get(IMPRV_TIME).format(dbr[dur_mod][index])
+
+                if mod_chance in dbr and xor not in dbr:
+                    # Prefix  the value with the chance text:
+                    chance_value = dbr[mod_chance][index]
+                    value = texts.get(CHANCE).format(chance_value) + value
+
+                values.append(value)
+
+            result['properties'][mod] = (
+                values[0] if len(values) == 1 else values)
+
+    @classmethod
+    def parse_eot(cls, field, dbr, result):
+        """
+        Parse the effect over time variant of a damage type.
+
+        Note: this method is almost identical to parse_dot, with the exception
+        of a different suffix, and the min and max values are not multiplied by
+        the durations.
+
+        """
+        # Ranged key is used to format a range of damage - ie. 16 ~ 24
+        ranged = f'{field}Ranged'
+
+        # Prepare some keys based on the field:
+        chance = f'{field}Chance'
+        dur_min = f'{field}DurationMin'
+        dur_mod = f'{field}DurationModifier'
+        max = f'{field}Max'
+        min = f'{field}Min'
+        mod = f'{field}Modifier'
+        mod_chance = f'{mod}Chance'
+        xor = f'{field}XOR'
+
+        if min in dbr:
+            min_values = dbr[min]
+            max_values = dbr[max] if max in dbr else min_values
+            values = []
+
+            # Because we need to track two values (min and max dmg) we need
+            # to iterate over all the values and track the index:
+            for index, min_value in enumerate(min_values):
+                max_value = max_values[index]
+
+                if max_value > min_value:
+                    # Add the range of damage
+                    value = texts.get(ranged).format(min_value, max_value)
+                else:
+                    # Add the flat daamge
+                    value = texts.get(field).format(min_value)
+
+                # Check again if duration is set, this time to add a suffix:
+                if dur_min in dbr:
+                    value += texts.get(EOT_SINGLE).format(dbr[dur_min][index])
+
+                if chance in dbr:
+                    # Prefix the value with the chance text:
+                    chance_value = dbr[chance][index]
+                    value = texts.get(CHANCE).format(chance_value) + value
+
+                values.append(value)
+
+            result['properties'][field] = (
+                values[0] if len(values) == 1 else values)
+
+        if mod in dbr or dur_mod in dbr:
+            values = []
+
+            for index, mod_value in enumerate(dbr[mod]):
+                # Set the modifier (+%) value
+                value = texts.get(mod).format(mod_value)
+
+                if dur_mod in dbr:
+                    value += texts.get(IMPRV_TIME).format(dbr[dur_mod][index])
+
+                if mod_chance in dbr and xor not in dbr:
+                    # Prefix  the value with the chance text:
+                    chance_value = dbr[mod_chance][index]
+                    value = texts.get(CHANCE).format(chance_value) + value
+
+                values.append(value)
+
+            result['properties'][mod] = (
+                values[0] if len(values) == 1 else values)

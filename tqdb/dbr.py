@@ -8,6 +8,8 @@ Upon receiving a file to parse it will grab the template associated with
 the DBR and then parse it according to all properties in that template.
 
 """
+import logging
+
 from tqdb.parsers.main import parsers
 from tqdb.templates import templates, templates_by_path
 
@@ -86,7 +88,7 @@ def parse(dbr_file):
     # Now update the result by parsing all the included templates:
     for t in template.templates:
         if t not in parsers:
-            print(f'Skipping {t}, no parser found.')
+            logging.warning(f'Skipping {t}, no parser found.')
             continue
 
         parsers[t].parse(dbr, result)

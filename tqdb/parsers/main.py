@@ -6,7 +6,7 @@ from importlib import import_module
 from pathlib import Path
 
 
-class TQDBParser(metaclass=abc.ABCMeta):
+class TQDBParser:
     """
     Abstract parser class.
 
@@ -14,14 +14,19 @@ class TQDBParser(metaclass=abc.ABCMeta):
     and will ensure that the necessary methods are implemented.
 
     """
-    @staticmethod
+    __metaclass__ = abc.ABCMeta
+
+    # Base that all subclasses use for their template names.
+    base = 'database\\templates'
+
+    @abc.abstractstaticmethod
     def get_template_name():
         """
         Returns the template that this parser implements.
 
         """
 
-    @classmethod
+    @abc.abstractclassmethod
     def parse(cls, dbr, result):
         """
         Parses a specific DBR file and updates the result.
@@ -46,12 +51,11 @@ def load_parsers():
 
             # Any subclass of TQDBParser is one that needs to be mapped:
             if inspect.isclass(parser) and issubclass(parser, TQDBParser):
-                # Grab the name of the template this parser implements
-                template_name = parser.get_template_name()
-
-                if not template_name:
+                try:
+                    # Grab the path of the template this parser implements
+                    parser_map[parser.get_template_path()] = parser
+                except AttributeError:
                     continue
-                parser_map[template_name]: parser
 
     return parser_map
 
