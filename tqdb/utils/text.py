@@ -190,7 +190,7 @@ class Texts:
                 ranged[key + 'ranged'] = '{0:.1f} ~ {1:.1f}' + value
                 value = '{0:.1f}' + value
             # All other regular get a non-decimal ranged variant:
-            elif 'characterAttackSpeed' not in key:
+            elif 'characterattackspeed' not in key:
                 # Also add a ranged formatter:
                 ranged[key + 'ranged'] = '{0:.0f} ~ {1:.0f}' + value
                 value = '{0:.0f}' + value
@@ -208,6 +208,13 @@ class Texts:
 
         """
         return self.tags.get(tag.lower(), tag)
+
+    def has(self, string):
+        """
+        Returns a boolean indicating whether or not this string is known.
+
+        """
+        return string in self.strings
 
     def get(self, string):
         """

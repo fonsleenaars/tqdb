@@ -88,7 +88,7 @@ def parse(dbr_file):
     # Now update the result by parsing all the included templates:
     for t in template.templates:
         if t not in parsers:
-            logging.warning(f'Skipping {t}, no parser found.')
+            logging.debug(f'Skipping {t}, no parser found.')
             continue
 
         parsers[t].parse(dbr, result)

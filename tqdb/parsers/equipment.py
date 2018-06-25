@@ -1,4 +1,3 @@
-import ast
 import logging
 import math
 import os
@@ -31,9 +30,12 @@ class ItemEquipmentParser(TQDBParser):
 
     @classmethod
     def parse(cls, dbr, result):
-        tag = dbr['itemNameTag']
+        # If no tag exists, skip parsing:
+        if 'itemNameTag' not in dbr:
+            return
 
         # Set the known item properties:
+        tag = dbr['itemNameTag']
         result.update({
             'bitmap': dbr.get('bitmap', None),
             'itemLevel': dbr['itemLevel'],
@@ -92,16 +94,16 @@ class WeaponParser(TQDBParser):
         return f'{TQDBParser.base}\\templatebase\\weapon.tpl'
 
     @classmethod
-    def parse(cls, dbr):
+    def parse(cls, dbr, result):
         dbr_class = dbr['Class']
 
         # Skip shields:
         if (dbr_class.startswith('Weapon') and 'Shield' in dbr_class):
             return None
 
-        return {
-            'characterAttackSpeed': texts.get('characterBaseAttackSpeedTag'),
-        }
+        # Set the attack speed
+        result['characterAttackSpeed'] = texts.get(
+            dbr['characterBaseAttackSpeedTag'])
 
 
 class ArmorWeaponParser():
