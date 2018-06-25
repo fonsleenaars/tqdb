@@ -1,9 +1,107 @@
+import ast
 import logging
+import math
 import os
 import re
+
+from tqdb import dbr as DBRParser
+from tqdb.parsers.main import TQDBParser
 from tqdb.parsers.util import format_path
 from tqdb.parsers.util import UtilityParser
 from tqdb.storage import equipment
+from tqdb.utils.text import texts
+
+
+class ItemEquipmentParser(TQDBParser):
+    """
+    Parser for `templatebase/itemequipment.tpl`.
+
+    """
+    # The prefixes for the types of requirements for items:
+    REQUIREMENTS = [
+        'Dexterity',
+        'Intelligence',
+        'Level',
+        'Strength',
+    ]
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\templatebase\\itemequipment.tpl'
+
+    @classmethod
+    def parse(cls, dbr, result):
+        tag = dbr['itemNameTag']
+
+        # Set the known item properties:
+        result.update({
+            'bitmap': dbr.get('bitmap', None),
+            'itemLevel': dbr['itemLevel'],
+            'name': texts.tag(tag),
+            'tag': tag,
+        })
+
+        # Although Requirements themselves are a part of ItemBase.tpl, the
+        # itemCostName property (equation based requirements) are a part of
+        # this parser, so they're added on here instead.
+        requirements = {}
+        for requirement in cls.REQUIREMENTS:
+            key = requirement.lower() + 'Requirement'
+            if key in dbr:
+                requirements[key] = dbr[key]
+
+        if 'itemCostName' in dbr:
+            # Cost prefix of this props is determined by its class
+            cost_prefix = dbr['Class'].split('_')[1]
+            cost_prefix = cost_prefix[:1].lower() + cost_prefix[1:]
+
+            # Read cost file
+            cost_properties = DBRParser.read(dbr['itemCostName'])
+
+            # Grab the props level (it's a variable in the equations)
+            for requirement in cls.REQUIREMENTS:
+                # Create the equation key
+                equation_key = cost_prefix + requirement + 'Equation'
+                req = requirement.lower() + 'Requirement'
+
+                if equation_key in cost_properties and req not in requirements:
+                    equation = cost_properties[equation_key]
+
+                    # Set the possible parameters in the equation:
+                    variables = {
+                        'itemLevel': dbr['itemLevel'],
+                        'totalAttCount': len(result['properties']),
+                    }
+
+                    # Eval the equation:
+                    requirements[req] = math.ceil(
+                        # XXX - Find safe eval solution.
+                        eval(equation, {}, variables))
+
+        # Now merge the finalized requirements:
+        result.update(requirements)
+
+
+class WeaponParser(TQDBParser):
+    """
+    Parser for `templatebase/weapon.tpl`.
+
+    """
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\templatebase\\weapon.tpl'
+
+    @classmethod
+    def parse(cls, dbr):
+        dbr_class = dbr['Class']
+
+        # Skip shields:
+        if (dbr_class.startswith('Weapon') and 'Shield' in dbr_class):
+            return None
+
+        return {
+            'characterAttackSpeed': texts.get('characterBaseAttackSpeedTag'),
+        }
 
 
 class ArmorWeaponParser():

@@ -45,7 +45,7 @@ argparser.add_argument(
     '--categories',
     nargs='+',
     help=('Specify the categories to parse. You can choose from: affixes, '
-          'bosses, equipment, sets, skills'))
+          'equipment, loot, sets, skills'))
 
 # Grab the arguments:
 args = argparser.parse_args()
@@ -61,13 +61,13 @@ if args.categories:
 elif not args.dir:
     categories.update([
         'affixes',
-        'bosses',
+        'loot',
         'equipment-basic',
         'equipment',
         'sets',
         'skills',
     ])
-if args.dir or 'bosses' in categories or 'sets' in categories:
+if args.dir or {'loot', 'sets'} & set(categories):
     categories.add('equipment-basic')
 if args.dir or 'equipment' in categories:
     categories.update(['equipment-basic', 'skills'])
@@ -143,9 +143,9 @@ if 'equipment-basic' in categories or 'equipment' in categories:
     data['equipment'] = items
 
 ###############################################################################
-#                                    BOSSES                                   #
+#                                    LOOT                                     #
 ###############################################################################
-if 'bosses' in categories:
+if 'loot' in categories:
     files = []
     for boss_file in res.CREATURES:
         files.extend(glob.glob(res.DB + boss_file, recursive=True))
@@ -168,6 +168,8 @@ if 'bosses' in categories:
             bosses[bossTag] = boss
 
     data['bosses'] = bosses
+
+    quests = {}
 
 ###############################################################################
 #                                      SETS                                   #
