@@ -13,9 +13,9 @@ CHANCE = 'ChanceOfTag'
 DOT_SINGLE = 'offensiveSingleFormatTime'
 EOT_SINGLE = 'offensiveFixedSingleFormatTime'
 IMPRV_TIME = 'ImprovedTimeFormat'
-GLOBAL_ALL = 'Chance of: '
+GLOBAL_ALL = 'GlobalChanceOfAllTag'
 GLOBAL_PCT = 'GlobalPercentChanceOfAllTag'
-GLOBAL_XOR_ALL = 'Chance for one of the following: '
+GLOBAL_XOR_ALL = 'GlobalChanceOfOneTag'
 GLOBAL_XOR_PCT = 'GlobalPercentChanceOfOneTag'
 
 
@@ -470,14 +470,16 @@ class ParametersOffensive(TQDBParser):
         if xor:
             self.result['properties'][key] = {
                 'chance': (
-                    GLOBAL_XOR_ALL if chance == 100
+                    texts.get_og(GLOBAL_XOR_ALL)
+                    if chance == 100
                     else texts.get(GLOBAL_XOR_PCT).format(chance)),
                 'properties': fields,
             }
         else:
             self.result['properties'][key] = {
                 'chance': (
-                    GLOBAL_ALL if chance == 100
+                    texts.get_og(GLOBAL_ALL).format('')
+                    if chance == 100
                     else texts.get(GLOBAL_PCT).format(chance)),
                 'properties': self.offensive,
             }

@@ -128,6 +128,9 @@ class Texts:
         for resource in self.STRING_RESOURCES:
             self.strings.update(self.parse_text_resource(resource))
 
+        # Maintain a dictionary of the original strings for some edge cases:
+        self.original_strings = self.strings.copy()
+
         # Some strings require formatting to replace their TQ regex structure
         # with a python friendly one, others need some replacements in their
         # property names, and some fields are missing from the text database.
@@ -222,6 +225,13 @@ class Texts:
 
         """
         return self.strings[string.lower()]
+
+    def get_og(self, string):
+        """
+        Return a string from the original set of unchanged text resources.
+
+        """
+        return self.original_strings[string.lower()]
 
     def parse_text_resource(self, text_file):
         """
