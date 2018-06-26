@@ -214,7 +214,7 @@ class Texts:
         Returns a boolean indicating whether or not this string is known.
 
         """
-        return string in self.strings
+        return string.lower() in self.strings
 
     def get(self, string):
         """

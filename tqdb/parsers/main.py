@@ -5,8 +5,10 @@ import pkgutil
 from importlib import import_module
 from pathlib import Path
 
+from tqdb.templates import templates_by_path
 
-class TQDBParser:
+
+class TQDBParser(metaclass=abc.ABCMeta):
     """
     Abstract parser class.
 
@@ -14,24 +16,31 @@ class TQDBParser:
     and will ensure that the necessary methods are implemented.
 
     """
-    __metaclass__ = abc.ABCMeta
-
     # Base that all subclasses use for their template names.
     base = 'database\\templates'
 
+    def __init__(self):
+        """
+        Initialize by setting the template based on its path.
+
+        """
+        self.template = templates_by_path[self.get_template_path()]
+
     @abc.abstractstaticmethod
-    def get_template_name():
+    def get_template_path():
         """
         Returns the template that this parser implements.
 
         """
+        raise NotImplementedError
 
-    @abc.abstractclassmethod
-    def parse(cls, dbr, result):
+    @abc.abstractmethod
+    def parse(self, dbr, result):
         """
         Parses a specific DBR file and updates the result.
 
         """
+        raise NotImplementedError
 
 
 def load_parsers():
@@ -52,9 +61,9 @@ def load_parsers():
             # Any subclass of TQDBParser is one that needs to be mapped:
             if inspect.isclass(parser) and issubclass(parser, TQDBParser):
                 try:
-                    # Grab the path of the template this parser implements
-                    parser_map[parser.get_template_path()] = parser
-                except AttributeError:
+                    parser_map[parser.get_template_path()] = parser()
+                except TypeError:
+                    # Skip TQDBParser itself (TypeError because of abstracts)
                     continue
 
     return parser_map

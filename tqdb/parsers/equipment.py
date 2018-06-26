@@ -24,12 +24,14 @@ class ItemEquipmentParser(TQDBParser):
         'Strength',
     ]
 
+    def __init__(self):
+        super().__init__()
+
     @staticmethod
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\itemequipment.tpl'
 
-    @classmethod
-    def parse(cls, dbr, result):
+    def parse(self, dbr, result):
         # If no tag exists, skip parsing:
         if 'itemNameTag' not in dbr:
             return
@@ -47,7 +49,7 @@ class ItemEquipmentParser(TQDBParser):
         # itemCostName property (equation based requirements) are a part of
         # this parser, so they're added on here instead.
         requirements = {}
-        for requirement in cls.REQUIREMENTS:
+        for requirement in self.REQUIREMENTS:
             key = requirement.lower() + 'Requirement'
             if key in dbr:
                 requirements[key] = dbr[key]
@@ -61,7 +63,7 @@ class ItemEquipmentParser(TQDBParser):
             cost_properties = DBRParser.read(dbr['itemCostName'])
 
             # Grab the props level (it's a variable in the equations)
-            for requirement in cls.REQUIREMENTS:
+            for requirement in self.REQUIREMENTS:
                 # Create the equation key
                 equation_key = cost_prefix + requirement + 'Equation'
                 req = requirement.lower() + 'Requirement'
@@ -89,12 +91,14 @@ class WeaponParser(TQDBParser):
     Parser for `templatebase/weapon.tpl`.
 
     """
+    def __init__(self):
+        super().__init__()
+
     @staticmethod
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\weapon.tpl'
 
-    @classmethod
-    def parse(cls, dbr, result):
+    def parse(self, dbr, result):
         dbr_class = dbr['Class']
 
         # Skip shields:
