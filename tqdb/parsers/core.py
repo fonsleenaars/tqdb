@@ -707,13 +707,14 @@ class RacialBonusParser(TQDBParser):
                 continue
 
             # Bonuses can be applied to multiple races, so keep a list:
-            result[field] = []
+            result['properties'][field] = []
             values = dbr[field]
 
             for i in range(0, len(races)):
                 # Either append unique value or same if none is available:
-                result[field].append(texts.get(field).format(
-                    # Damage number
-                    values[0] if len(races) else values[i],
-                    # Name of the race
-                    races[i]))
+                result['properties'][field].append(
+                    texts.get(field).format(
+                        # Damage number
+                        values[0] if len(races) else values[i],
+                        # Name of the race
+                        races[i]))
