@@ -25,7 +25,6 @@ PARSERS = {
     loot.LootRandomizerTableParser: loot.LootRandomizerTableParser.keys(),
     loot.LootTableDWParser: loot.LootTableDWParser.keys(),
     loot.LootTableFWParser: loot.LootTableFWParser.keys(),
-    skills.SkillBuffParser: skills.SkillBuffParser.keys(),
     skills.SkillParser: skills.SkillParser.keys(),
     skills.SkillSpawnParser: skills.SkillSpawnParser.keys(),
     skills.SkillTreeParser: skills.SkillTreeParser.keys(),

@@ -1,8 +1,153 @@
 import logging
 
+from tqdb import dbr as DBRParser
 from tqdb.constants import resources
+from tqdb.parsers.main import TQDBParser
 from tqdb.parsers.util import format_path
 from tqdb.parsers.util import UtilityParser
+from tqdb.utils.text import texts
+
+
+class SkillBaseParser(TQDBParser):
+    """
+    Parser for `templatebase/skill_base.tpl`.
+
+    """
+    FILE = 'FileDescription'
+    DESC = 'skillBaseDescription'
+    NAME = 'skillDisplayName'
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\templatebase\\skill_base.tpl'
+
+    def parse(self, dbr, result):
+        """
+        Parse the base properties of a skill.
+
+        These properties include the skillDisplayName, its friendly display
+        name (the property returns a tag), and the maximum level of a skill.
+
+        """
+        if self.NAME in dbr:
+            # The tag is the skillDisplayName property
+            result['tag'] = dbr[self.NAME]
+
+            # Now try to find a friendly name for the tag:
+            result['name'] = texts.tag(result['tag'])
+
+            if result['name'] == result['tag']:
+                # If the tag wasn't returned, a friendly name weas found:
+                logging.warning(f'No skill name found for {result["tag"]}')
+        else:
+            logging.debug('No skillDisplayName found')
+
+        # Also load the description, if it's known:
+        if self.DESC in dbr:
+            description = texts.tag(dbr[self.DESC])
+            # If no tag was found, the tag is returned
+            if dbr[self.DESC] == description and self.FILE in dbr:
+                # Use the FileDescription instead:
+                description = dbr['FileDescription']
+            result['description'] = description
+
+
+class SkillBuffParser(TQDBParser):
+    """
+    Parser for all templates that just reference a buff.
+
+    """
+    BUFF = 'buffSkillName'
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        return [
+            f'{TQDBParser.base}\\skill_attackbuffradius.tpl',
+            f'{TQDBParser.base}\\skill_attackbuff.tpl',
+            f'{TQDBParser.base}\\skill_attackprojectiledebuf.tpl',
+            f'{TQDBParser.base}\\skill_buffradius.tpl',
+            f'{TQDBParser.base}\\skill_buffradiustoggled.tpl',
+            f'{TQDBParser.base}\\skill_buffother.tpl',
+            f'{TQDBParser.base}\\skillsecondary_buffradius.tpl',
+        ]
+
+    def parse(self, dbr, result):
+        """
+        Parse the referenced buff skill, and pass that back as this result.
+
+        """
+        if self.BUFF in dbr:
+            # Now set our result as the result of the buff being parsed:
+            result.update(DBRParser.parse(dbr[self.BUFF]))
+
+
+class SkillPetModifier(TQDBParser):
+    """
+    Parser for all templates that just reference a pet buff.
+
+    """
+    PET_SKILL = 'petSkillName'
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\skillsecondary_petmodifier.tpl'
+
+    def parse(self, dbr, result):
+        """
+        Parse the referenced pet skill, and pass that back as this result.
+
+        """
+        if self.PET_SKILL in dbr:
+            # Now set our result as the result of the pet skill being parsed:
+            result.update(DBRParser.parse(dbr[self.PET_SKILL]))
+
+# class SkillBuffParser:
+#     """
+#     Parser for buffs that reference their skills.
+
+#     """
+#     def __init__(self, dbr, props, strings):
+#         self.dbr = dbr
+#         self.strings = strings
+#         # Buffs are never tiered, grab first item from list:
+#         self.props = props[0]
+
+#     @classmethod
+#     def keys(cls):
+#         return [
+#             'Skill_AttackBuff',
+#             'Skill_AttackBuffRadius',
+#             'Skill_AttackProjectileDebuf',
+#             'Skill_BuffRadius',
+#             'Skill_BuffRadiusToggled',
+#             'Skill_BuffOther',
+#             'SkillSecondary_BuffRadius',
+#             'SkillSecondary_PetModifier']
+
+#     def parse(self):
+#         from tqdb.parsers.main import parser
+
+#         skill_ref = (self.props['buffSkillName']
+#                      if 'buffSkillName' in self.props
+#                      else self.props['petSkillName'])
+
+#         # Parse the referenced skill:
+#         util = UtilityParser(self.dbr, self.props, self.strings)
+#         result = parser.parse(util.get_reference_dbr(skill_ref))
+
+#         # Remove the database prefix and format the path:
+#         result['path'] = format_path(self.dbr.replace(resources.DB, ''))
+
+#         return result
 
 
 class SkillParser():
@@ -126,46 +271,6 @@ class SkillParser():
 
         # Now parse the requirements:
         result.update(util.parse_requirements())
-
-        return result
-
-
-class SkillBuffParser():
-    """
-    Parser for buffs that reference their skills.
-
-    """
-    def __init__(self, dbr, props, strings):
-        self.dbr = dbr
-        self.strings = strings
-        # Buffs are never tiered, grab first item from list:
-        self.props = props[0]
-
-    @classmethod
-    def keys(cls):
-        return [
-            'Skill_AttackBuff',
-            'Skill_AttackBuffRadius',
-            'Skill_AttackProjectileDebuf',
-            'Skill_BuffRadius',
-            'Skill_BuffRadiusToggled',
-            'Skill_BuffOther',
-            'SkillSecondary_BuffRadius',
-            'SkillSecondary_PetModifier']
-
-    def parse(self):
-        from tqdb.parsers.main import parser
-
-        skill_ref = (self.props['buffSkillName']
-                     if 'buffSkillName' in self.props
-                     else self.props['petSkillName'])
-
-        # Parse the referenced skill:
-        util = UtilityParser(self.dbr, self.props, self.strings)
-        result = parser.parse(util.get_reference_dbr(skill_ref))
-
-        # Remove the database prefix and format the path:
-        result['path'] = format_path(self.dbr.replace(resources.DB, ''))
 
         return result
 

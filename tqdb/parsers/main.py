@@ -24,7 +24,14 @@ class TQDBParser(metaclass=abc.ABCMeta):
         Initialize by setting the template based on its path.
 
         """
-        self.template = templates_by_path[self.get_template_path()]
+        templates = self.get_template_path()
+
+        if isinstance(templates, list):
+            # Load all templates
+            self.template = [templates_by_path[t] for t in templates]
+        else:
+            # Just load the one template
+            self.template = templates_by_path[templates]
 
     @abc.abstractstaticmethod
     def get_template_path():
@@ -41,6 +48,41 @@ class TQDBParser(metaclass=abc.ABCMeta):
 
         """
         raise NotImplementedError
+
+    @staticmethod
+    def extract_values(dbr, field, index):
+        """
+        Extract values for a specific field within a DBR.
+
+        Some TQDBParser subclasses will need to iterate over an array of
+        variables, all starting with a field name. However, some of these
+        variables won't be repeated as many times as others.
+
+        For example:
+            offensiveSlowColdMin: [3.0, 6.0, 9.0, 12.0, 15.0]
+            offensiveSlowColdDurationMin: [1.0]
+
+        In this case, this index for the iteration should just clone the value
+        until it matches the same length.
+
+        """
+        result = dbr.copy()
+
+        # First grab all the fields that start with the field prefix:
+        fields = dict(
+            (k, v) for k, v in dbr.items()
+            if k.startswith(field) and isinstance(v, list))
+
+        # Now replace all the field values for this index
+        for k, v in fields.items():
+            result[k] = (
+                # Grab the last possible value for v and repeat it:
+                v[len(v) - 1]
+                if index >= len(v)
+                # Otherwise grab the value at this index:
+                else v[index])
+
+        return result
 
 
 def load_parsers():
@@ -61,10 +103,22 @@ def load_parsers():
             # Any subclass of TQDBParser is one that needs to be mapped:
             if inspect.isclass(parser) and issubclass(parser, TQDBParser):
                 try:
-                    parser_map[parser.get_template_path()] = parser()
+                    instanced = parser()
                 except TypeError:
                     # Skip TQDBParser itself (TypeError because of abstracts)
                     continue
+
+                # Grab all the templates (can also be just one):
+                templates = parser.get_template_path()
+
+                if isinstance(templates, list):
+                    # Insert all the templates this parser handles
+                    parser_map.update(dict(
+                        (template, instanced) for template in templates
+                    ))
+                else:
+                    # Insert just the single template the parser handles:
+                    parser_map[templates] = instanced
 
     return parser_map
 

@@ -1,4 +1,37 @@
+from tqdb import dbr as DBRParser
+from tqdb.parsers.main import TQDBParser
 from tqdb.constants.field import PET_IGNORE_SKILLS
+
+
+class PetBonusParser(TQDBParser):
+    """
+    Parser for `templatebase/petbonusinc.tpl`.
+
+    """
+    NAME = 'petBonusName'
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\templatebase\\petbonusinc.tpl'
+
+    def parse(self, dbr, result):
+        """
+        Parse a possible skill bonus for a pet.
+
+        These bonuses are things like:
+            - 15 Vitality Damage
+            - +5% Vitality Damage
+
+        """
+        if self.NAME in dbr:
+            # Parse the pet bonus and add it:
+            pet_bonus = DBRParser.parse(dbr[self.NAME])
+
+            # Set the properties of the bonus as the value for this field:
+            result['petBonus'] = pet_bonus['properties']
 
 
 class SummonParser():

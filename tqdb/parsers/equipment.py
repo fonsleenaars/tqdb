@@ -24,6 +24,9 @@ class ItemEquipmentParser(TQDBParser):
         'Strength',
     ]
 
+    # Regex to remove the {} prefixes in Monster Infrequents:
+    MI_NAME_PREFIX = re.compile(r'\{[^)]*\}')
+
     def __init__(self):
         super().__init__()
 
@@ -41,7 +44,7 @@ class ItemEquipmentParser(TQDBParser):
         result.update({
             'bitmap': dbr.get('bitmap', None),
             'itemLevel': dbr['itemLevel'],
-            'name': texts.tag(tag),
+            'name': self.MI_NAME_PREFIX.sub('', texts.tag(tag)),
             'tag': tag,
         })
 
@@ -84,6 +87,31 @@ class ItemEquipmentParser(TQDBParser):
 
         # Now merge the finalized requirements:
         result.update(requirements)
+
+
+class ShieldParser(TQDBParser):
+    """
+    Parser for `weaponarmor_shield.tpl`.
+
+    """
+    # The tag of the resource text that will show block chance & values:
+    TEXT = 'tagShieldBlockInfo'
+    BLOCK = 'defensiveBlock'
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\weaponarmor_shield.tpl'
+
+    def parse(self, dbr, result):
+        # Set the block chance and value:
+        result['properties'][self.BLOCK] = texts.get(self.TEXT).format(
+            # Block chance
+            dbr[f'{self.BLOCK}Chance'],
+            # Blocked damage
+            dbr[self.BLOCK])
 
 
 class WeaponParser(TQDBParser):
