@@ -19,6 +19,11 @@ class TQDBParser(metaclass=abc.ABCMeta):
     # Base that all subclasses use for their template names.
     base = 'database\\templates'
 
+    # Priority constants:
+    HIGHEST_PRIORITY = 3
+    DEFAULT_PRIORITY = 2
+    LOWEST_PRIORITY = 1
+
     def __init__(self):
         """
         Initialize by setting the template based on its path.
@@ -32,6 +37,20 @@ class TQDBParser(metaclass=abc.ABCMeta):
         else:
             # Just load the one template
             self.template = templates_by_path[templates]
+
+    def get_priority(self):
+        """
+        Return the priority for this parser.
+
+        A higher priority value means it will parse the contents earlier in the
+        parser loop. If there are 3 parsers found for the template hierarchy,
+        the first parser to run will be the one with the highest priority.
+
+        This method is overriden by any subclass that needs to change their
+        priority from the default DEFAULT_PRIORITY.
+
+        """
+        return self.DEFAULT_PRIORITY
 
     @abc.abstractstaticmethod
     def get_template_path():
@@ -82,7 +101,40 @@ class TQDBParser(metaclass=abc.ABCMeta):
                 # Otherwise grab the value at this index:
                 else v[index])
 
+            # If this value turned out to be 0 or False, pop it:
+            if not result[k]:
+                result.pop(k)
+
         return result
+
+    @staticmethod
+    def insert_value(field, value, is_singular, result):
+        """
+        Insert a value for a parsed field in a DBR.
+
+        The extract_values function in this class allows subclasses to parse
+        over an array of values and this function inserts them into the result.
+
+        If the extracted values only have one entry, the result can be inserted
+        as text for the property. If the extracted value has more than one
+        entry, the results will also be a list.
+
+        For example:
+            Input: offensiveSlowColdMin: [3.0]
+            Parsed: offensiveSlowCold: 3 Cold Damage
+            Output: offensiveSlowCold: 3 Cold Damage
+
+            Input: offensiveSlowColdMin: [3.0, 6.0]
+            Parsed: offensiveSlowCold: 6 Cold Damage
+            Output: offensiveSlowCold: ['3 Cold Damage', '6 Cold Damage']
+
+        """
+        if is_singular:
+            result['properties'][field] = value
+        elif field in result['properties']:
+            result['properties'][field].append(value)
+        else:
+            result['properties'][field] = [value]
 
 
 def load_parsers():

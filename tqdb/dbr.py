@@ -79,15 +79,22 @@ def parse(dbr_file):
         'properties': {}
     }
 
+    # Construct a list of parsers to organize by priority:
+    prioritized = []
+
     # Begin updating the result by the first template parser, if available:
     if template.key in parsers:
-        parsers[template.key].parse(dbr, result)
+        prioritized.append(parsers[template.key])
 
-    # Now update the result by parsing all the included templates:
+    # Add any inherited template parsers:
     for t in template.templates:
         if t not in parsers:
             continue
+        prioritized.append(parsers[t])
 
-        parsers[t].parse(dbr, result)
+    # Prioritize the list and then run through the parsers:
+    prioritized.sort(key=lambda p: p.get_priority(), reverse=True)
+    for prioritized_parser in prioritized:
+        prioritized_parser.parse(dbr, result)
 
     return result

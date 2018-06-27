@@ -78,22 +78,33 @@ class Variable:
         """
         if self['class'] == 'array':
             # Return a list of parsed values
-            return [self._parse(v) for v in value.split(';')
-                    if self._parse(v)]
+            values = value.split(';')
+
+            if len(values) == 1:
+                return [self._parse(v) for v in values if self._parse(v)]
+
+            # If more than one value was present, keep all values:
+            return [self._parse(v, always_return=True) for v in values]
 
         # Return the singular parsed value:
         return self._parse(value)
 
-    def _parse(self, value):
+    def _parse(self, value, always_return=False):
         """
         Internal parse function used in list comprehension.
 
         """
         if self['type'] == 'real':
+            if always_return:
+                return float(value)
             return float(value) if float(value) > 0 else None
         elif self['type'] == 'int':
+            if always_return:
+                return int(value)
             return int(value) if int(value) > 0 else None
         elif self['type'] == 'bool':
+            if always_return:
+                return bool(int(value))
             return bool(int(value)) if bool(int(value)) else None
         elif self['type'] in ['file_dbr', 'file_tex']:
             return DATABASE_DIR / value.lower()

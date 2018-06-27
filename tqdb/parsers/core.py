@@ -19,7 +19,7 @@ GLOBAL_XOR_ALL = 'GlobalChanceOfOneTag'
 GLOBAL_XOR_PCT = 'GlobalPercentChanceOfOneTag'
 
 
-class ParametersCharacter(TQDBParser):
+class ParametersCharacterParser(TQDBParser):
     """
     Parser for `templatebase/parameters_character.tpl`.
 
@@ -73,6 +73,13 @@ class ParametersCharacter(TQDBParser):
     def __init__(self):
         super().__init__()
 
+    def get_priority(self):
+        """
+        Override this parsers priority to set as highest.
+
+        """
+        return TQDBParser.HIGHEST_PRIORITY
+
     @staticmethod
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\parameters_character.tpl'
@@ -91,21 +98,27 @@ class ParametersCharacter(TQDBParser):
                 len(dbr[mod]) if mod in dbr else 0,
                 0)
 
+            # Boolean to indicate if a single value is being inserted:
+            is_singular = iterations == 1
+
             # Now iterate as many times as is necessary for this field:
             for index in range(iterations):
                 # Create a new copy of the DBR with the values for this index:
                 itr_dbr = TQDBParser.extract_values(dbr, field, index)
 
-                if field in dbr:
-                    # Parse the flat (+...) version:
-                    result['properties'][field] = (
-                        texts.get(field).format(itr_dbr[field]))
-                if mod in dbr:
-                    result['properties'][mod] = (
-                        texts.get(mod).format(itr_dbr[mod]))
+                if field in itr_dbr:
+                    # Insert the flat (+...) version:
+                    TQDBParser.insert_value(
+                        field, texts.get(field).format(itr_dbr[field]),
+                        is_singular, result)
+                if mod in itr_dbr:
+                    # Insert the modifier (+...%) version:
+                    TQDBParser.insert_value(
+                        mod, texts.get(mod).format(itr_dbr[mod]),
+                        is_singular, result)
 
 
-class ParmatersDefensive(TQDBParser):
+class ParmatersDefensiveParser(TQDBParser):
     """
     Parser for `templatebase/parameters_defensive.tpl`.
 
@@ -154,6 +167,13 @@ class ParmatersDefensive(TQDBParser):
     def __init__(self):
         super().__init__()
 
+    def get_priority(self):
+        """
+        Override this parsers priority to set as highest.
+
+        """
+        return TQDBParser.HIGHEST_PRIORITY
+
     @staticmethod
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\parameters_defensive.tpl'
@@ -171,6 +191,9 @@ class ParmatersDefensive(TQDBParser):
                 len(dbr[field]) if field in dbr else 0,
                 len(dbr[mod]) if mod in dbr else 0,
                 1)
+
+            # Boolean to indicate if a single value is being inserted:
+            is_singular = iterations == 1
 
             # Now iterate as many times as is necessary for this field:
             for index in range(iterations):
@@ -192,20 +215,20 @@ class ParmatersDefensive(TQDBParser):
                         # Prefix the
                         value = texts.get(CHANCE).format(chance) + value
 
-                    result['properties'][field] = value
-                if mod in dbr:
+                    TQDBParser.insert_value(field, value, is_singular, result)
+                if mod in itr_dbr:
                     # Add the modifier (%) version of the field:
                     chance = itr_dbr.get(f'{mod}Chance', 0)
-                    value = texts.get(field).format(itr_dbr[mod])
+                    value = texts.get(mod).format(itr_dbr[mod])
 
                     if chance:
                         # Prefix the
                         value = texts.get(CHANCE).format(chance) + value
 
-                    result['properties'][field] = value
+                    TQDBParser.insert_value(mod, value, is_singular, result)
 
 
-class ItemSkillAugment(TQDBParser):
+class ItemSkillAugmentParser(TQDBParser):
     """
     Parser for `templatebase/itemskillaugments.tpl`.
 
@@ -233,6 +256,13 @@ class ItemSkillAugment(TQDBParser):
     def __init__(self):
             super().__init__()
 
+    def get_priority(self):
+        """
+        Override this parsers priority to set as highest.
+
+        """
+        return TQDBParser.HIGHEST_PRIORITY
+
     @staticmethod
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\itemskillaugment.tpl'
@@ -248,7 +278,7 @@ class ItemSkillAugment(TQDBParser):
             skill = DBRParser.parse(dbr[self.SKILL_NAME])
 
             if 'tag' in skill:
-                result['itemSkillName'] = {
+                result['properties']['itemSkillName'] = {
                     'tag': skill['tag'],
                     'name': (
                         self.TXT_GRANT.format(level, skill['name'])
@@ -274,7 +304,7 @@ class ItemSkillAugment(TQDBParser):
                             if 'Mastery' not in skill['name']
                             else self.TXT_MASTERY_INC)
 
-            result[name] = {
+            result['properties'][name] = {
                 'tag': skill['tag'],
                 'name': texts.get(skill_format).format(level, skill['name']),
             }
@@ -286,7 +316,7 @@ class ItemSkillAugment(TQDBParser):
                 texts.get(self.TXT_ALL_INC).format(level))
 
 
-class ParametersOffensive(TQDBParser):
+class ParametersOffensiveParser(TQDBParser):
     """
     Parser for `templatebase/parameters_offensive.tpl`.
 
@@ -380,6 +410,13 @@ class ParametersOffensive(TQDBParser):
     def __init__(self):
         super().__init__()
 
+    def get_priority(self):
+        """
+        Override this parsers priority to set as highest.
+
+        """
+        return TQDBParser.HIGHEST_PRIORITY
+
     @staticmethod
     def get_template_path():
         # Note: technically this parser is also handling:
@@ -419,22 +456,27 @@ class ParametersOffensive(TQDBParser):
                 len(dbr[mod]) if mod in dbr else 0,
                 0)
 
+            self.is_singular = iterations == 1
+
             # Now iterate as many times as is necessary for this field:
             for index in range(iterations):
                 # Create a new copy of the DBR with the values for this index:
                 itr_dbr = TQDBParser.extract_values(dbr, field, index)
 
-                if min in dbr:
+                if min in itr_dbr:
                     # Parse the flat (+...) version:
                     self.parse_flat(field, field_type, itr_dbr)
-                if mod in dbr:
+                if mod in itr_dbr:
                     # Parse the modifier (+...%) version
                     self.parse_modifier(field, field_type, itr_dbr)
 
         # Now add the global chance tags if they're set:
         offensive_key = 'offensiveGlobalChance'
         if offensive_key in dbr and self.offensive:
-            for chance in dbr[offensive_key]:
+            # Skip 0 chance globals altogether
+            chances = [chance for chance in dbr[offensive_key] if chance]
+
+            for index, chance in enumerate(chances):
                 self.parse_global(
                     offensive_key,
                     # The global chance for the offensive properties
@@ -442,11 +484,16 @@ class ParametersOffensive(TQDBParser):
                     # If any global offensive properties are XOR-ed:
                     self.offensiveXOR,
                     # The dictionary of global offensive properties
-                    self.offensive)
+                    self.offensive,
+                    # Index of this global chance
+                    index)
 
         retaliation_key = 'retaliationGlobalChance'
         if retaliation_key in dbr and self.retaliation:
-            for chance in dbr[retaliation_key]:
+            # Skip 0 chance globals altogether
+            chances = [chance for chance in dbr[retaliation_key] if chance]
+
+            for index, chance in enumerate(chances):
                 self.parse_global(
                     retaliation_key,
                     # The global chance for the offensive properties
@@ -454,9 +501,11 @@ class ParametersOffensive(TQDBParser):
                     # If any global offensive properties are XOR-ed:
                     self.retaliationXOR,
                     # The dictionary of global offensive properties
-                    self.retaliation)
+                    self.retaliation,
+                    # Index of this global chance
+                    index)
 
-    def parse_global(self, key, chance, xor, fields):
+    def parse_global(self, key, chance, xor, all_fields, index):
         """
         Add a global chance for properties.
 
@@ -466,9 +515,12 @@ class ParametersOffensive(TQDBParser):
             - ...
             - ...
         """
+        # Grab the value for this index from the global stores:
+        fields = dict((k, v[index]) for k, v in all_fields.items())
+
         # Check if the XOR was set for any field:
         if xor:
-            self.result['properties'][key] = {
+            value = {
                 'chance': (
                     texts.get_og(GLOBAL_XOR_ALL)
                     if chance == 100
@@ -476,13 +528,16 @@ class ParametersOffensive(TQDBParser):
                 'properties': fields,
             }
         else:
-            self.result['properties'][key] = {
+            value = {
                 'chance': (
                     texts.get_og(GLOBAL_ALL).format('')
                     if chance == 100
                     else texts.get(GLOBAL_PCT).format(chance)),
                 'properties': self.offensive,
             }
+
+        # Insert the value normally
+        TQDBParser.insert_value(key, value, self.is_singular, self.result)
 
     def parse_flat(self, field, field_type, dbr):
         """
@@ -545,13 +600,26 @@ class ParametersOffensive(TQDBParser):
             prefix = texts.get(CHANCE).format(chance)
 
         if not is_global:
-            self.result['properties'][field] = f'{prefix}{value}{suffix}'
+            # Insert the value normally
+            TQDBParser.insert_value(
+                field,
+                f'{prefix}{value}{suffix}',
+                self.is_singular,
+                self.result)
         elif field.startswith('offensive'):
-            self.offensive[field] = f'{prefix}{value}{suffix}'
+            # Add this field to the global offensive list
+            self.offensive[field] = (
+                [f'{prefix}{value}{suffix}']
+                if field not in self.offensive
+                else self.offensive[field] + [f'{prefix}{value}{suffix}'])
             if is_xor:
                 self.offensiveXOR = True
         elif field.startswith('retaliation'):
-            self.retaliation[field] = f'{prefix}{value}{suffix}'
+            # Add this field to the global retaliation list
+            self.retaliation[field] = (
+                [f'{prefix}{value}{suffix}']
+                if field not in self.retaliation
+                else self.retaliation[field] + [f'{prefix}{value}{suffix}'])
             if is_xor:
                 self.retaliationXOR = True
 
@@ -578,31 +646,41 @@ class ParametersOffensive(TQDBParser):
             if duration_mod:
                 suffix = texts.get(IMPRV_TIME).format(duration_mod)
 
-        if mod:
-            value = texts.get(field_mod).format(mod)
+        value = texts.get(field_mod).format(mod)
         if chance and not is_xor:
             prefix = texts.get(CHANCE).format(chance)
 
         if not is_global:
-            self.result['properties'][field_mod] = f'{prefix}{value}{suffix}'
+            # Insert the value normally
+            TQDBParser.insert_value(
+                field_mod,
+                f'{prefix}{value}{suffix}',
+                self.is_singular,
+                self.result)
         elif field.startswith('offensive'):
-            self.offensive[field_mod] = f'{prefix}{value}{suffix}'
+            # Add this field to the global offensive list
+            self.offensive[field_mod] = (
+                [f'{prefix}{value}{suffix}']
+                if field_mod not in self.offensive
+                else self.offensive[field_mod] + [f'{prefix}{value}{suffix}']
+            )
         elif field.startswith('retaliation'):
-            self.retaliation[field_mod] = f'{prefix}{value}{suffix}'
+            # Add this field to the global retaliation list
+            self.retaliation[field_mod] = (
+                [f'{prefix}{value}{suffix}']
+                if field_mod not in self.retaliation
+                else self.retaliation[field_mod] + [f'{prefix}{value}{suffix}']
+            )
 
 
-class ParmatersSkill(TQDBParser):
+class ParametersSkillParser(TQDBParser):
     """
-    parser for `templatebase/parameters_skill.tpl`.
+    Parser for `templatebase/parameters_skill.tpl`.
 
     """
     FIELDS = [
         # 'lifeMonitorPercent',
-        # 'projectileExplosionRadius',
-        # 'projectileFragmentsLaunchNumber',
-        # 'projectileLaunchNumber',
-        # 'projectilePiercing',
-        # 'projectilePiercingChance',
+
         # 'refreshTime',
         # 'skillActiveDuration',
         # 'skillActiveLifeCost',
@@ -623,6 +701,13 @@ class ParmatersSkill(TQDBParser):
     def __init__(self):
         super().__init__()
 
+    def get_priority(self):
+        """
+        Override this parsers priority to set as highest.
+
+        """
+        return TQDBParser.HIGHEST_PRIORITY
+
     @staticmethod
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\parameters_skill.tpl'
@@ -635,6 +720,8 @@ class ParmatersSkill(TQDBParser):
         for field in self.FIELDS:
             if field not in dbr:
                 continue
+
+            is_singular = len(dbr[field]) == 1
 
             # Now iterate as many times as is necessary for this field:
             for index, val in enumerate(dbr[field]):
@@ -661,7 +748,30 @@ class ParmatersSkill(TQDBParser):
                 if chance:
                     prefix = texts.get(CHANCE).format(chance)
 
-                result['properties'][field] = f'{prefix}{value}'
+                TQDBParser.insert_value(
+                    field, f'{prefix}{value}', is_singular, result)
+
+    # Check the damage absorption skill properties:
+    # if 'damageAbsorption' in props or 'damageAbsorptionPercent' in props:
+    #     field = ('damageAbsorption'
+    #              if 'damageAbsorption' in props
+    #              else 'damageAbsorptionPercent')
+    #     value = int(float(props[field]))
+
+    #     # Add 'skill' prefix and capitalize first letter:
+    #     field_prefixed = 'skill' + field[:1].upper() + field[1:]
+
+    #     # Find qualifier damage type:
+    #     for prop, damage in fc.QUALIFIERS.items():
+    #         if prop in props and props[prop]:
+    #             # Add the damage absorption value and dmg type:
+    #             self.result[field_prefixed] = (
+    #                 self.strings[field].format(value, damage))
+
+    #     # If there is no qualifier, it's all damage:
+    #     if field_prefixed not in self.result:
+    #         self.result[field_prefixed] = (
+    #             self.strings[field].format(value, 'All'))
 
 
 class RacialBonusParser(TQDBParser):
@@ -680,6 +790,13 @@ class RacialBonusParser(TQDBParser):
 
     def __init__(self):
         super().__init__()
+
+    def get_priority(self):
+        """
+        Override this parsers priority to set as highest.
+
+        """
+        return TQDBParser.HIGHEST_PRIORITY
 
     @staticmethod
     def get_template_path():

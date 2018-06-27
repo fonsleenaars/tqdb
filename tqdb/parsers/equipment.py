@@ -5,10 +5,43 @@ import re
 
 from tqdb import dbr as DBRParser
 from tqdb.parsers.main import TQDBParser
-from tqdb.parsers.util import format_path
-from tqdb.parsers.util import UtilityParser
-from tqdb.storage import equipment
 from tqdb.utils.text import texts
+
+
+class ItemBaseParser(TQDBParser):
+    """
+    Parser for `templatebase/itembase.tpl`.
+
+    """
+    # TQ difficulties, the keys are used in file names and values in texts.
+    DIFFICULTIES = {
+        'n': 'Normal',
+        'e': 'Epic',
+        'l': 'Legendary',
+    }
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\templatebase\\itembase.tpl'
+
+    def parse(self, dbr, result):
+        # Only parse special/unique equipment:
+        classification = dbr.get('itemClassification', None)
+        if classification not in ['Rare', 'Epic', 'Legendary', 'Magical']:
+            return
+
+        result['classification'] = classification
+
+        # For Monster Infrequents, make sure a drop difficulty exists:
+        if classification == 'Rare':
+            file_name = os.path.basename(self.dbr).split('_')
+            if len(file_name) < 2 or file_name[1] not in self.DIFFICULTIES:
+                return {}
+
+            result['dropsIn'] = self.DIFFICULTIES[file_name[1]]
 
 
 class ItemEquipmentParser(TQDBParser):
@@ -36,17 +69,24 @@ class ItemEquipmentParser(TQDBParser):
 
     def parse(self, dbr, result):
         # If no tag exists, skip parsing:
-        if 'itemNameTag' not in dbr:
+        tag = dbr.get('itemNameTag', None)
+        if not tag:
             return
 
         # Set the known item properties:
-        tag = dbr['itemNameTag']
         result.update({
             'bitmap': dbr.get('bitmap', None),
-            'itemLevel': dbr['itemLevel'],
+            'itemLevel': dbr.get('itemLevel', None),
             'name': self.MI_NAME_PREFIX.sub('', texts.tag(tag)),
             'tag': tag,
         })
+
+        # Check if this item is part of a set:
+        item_set_path = dbr.get('itemSetName', None)
+        if item_set_path:
+            # Read (don't parse to avoid recursion) the set to get the tag:
+            item_set = DBRParser.read(item_set_path)
+            result['set'] = item_set[ItemSetParser.NAME]
 
         # Although Requirements themselves are a part of ItemBase.tpl, the
         # itemCostName property (equation based requirements) are a part of
@@ -89,6 +129,76 @@ class ItemEquipmentParser(TQDBParser):
         result.update(requirements)
 
 
+class ItemSetParser(TQDBParser):
+    """
+    Parser for `itemset.tpl`
+
+    """
+    NAME = 'setName'
+
+    def __init__(self):
+        super().__init__()
+
+    def get_priority(self):
+        """
+        Override this parsers priority to set as lowest.
+
+        """
+        return TQDBParser.LOWEST_PRIORITY
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\itemset.tpl'
+
+    def parse(self, dbr, result):
+        tag = dbr.get(self.NAME, None)
+
+        if not tag or texts.tag(tag) == tag:
+            logging.warning(f'No tag or name for set found.')
+            return
+
+        result.update({
+            # Prepare the list of set items
+            'items': [],
+            'name': texts.tag(tag),
+            'tag': tag,
+        })
+
+        # Add the set members:
+        for set_member_path in dbr['setMembers']:
+            # Parse the set member:
+            set_member = DBRParser.parse(set_member_path)
+
+            # Add the tag to the items list:
+            result['items'].append(set_member['tag'])
+
+        # Find the property that has the most tiers
+        highest_tier = max([len(v) for v in result['properties'].values()])
+
+        # Because this parser has the lowest priority, all properties will
+        # already have been parsed, so they can now be reconstructed to match
+        # the set bonuses. Begin by initializing the properties for each set
+        # bonus tier to an empty dict:
+        properties = [{} for i in range(highest_tier)]
+
+        # Insert the existing properties by adding them to the correct tier:
+        for field, values in result['properties'].items():
+            # The starting tier is determined by the highest tier
+            starting_index = highest_tier - len(values)
+
+            # Now just iterate and add the properties to each tier:
+            for index, value in enumerate(values):
+                properties[starting_index + index][field] = value
+
+        # Now set the tiered set bonuses:
+        result['properties'] = properties
+
+        # Pop off the first element of the properties, if it's empty:
+        if len(result['properties']) > 1:
+            if not result['properties'][0]:
+                result['properties'].pop(0)
+
+
 class ShieldParser(TQDBParser):
     """
     Parser for `weaponarmor_shield.tpl`.
@@ -109,9 +219,9 @@ class ShieldParser(TQDBParser):
         # Set the block chance and value:
         result['properties'][self.BLOCK] = texts.get(self.TEXT).format(
             # Block chance
-            dbr[f'{self.BLOCK}Chance'],
+            dbr.get(f'{self.BLOCK}Chance', 0),
             # Blocked damage
-            dbr[self.BLOCK])
+            dbr.get(self.BLOCK, 0))
 
 
 class WeaponParser(TQDBParser):
@@ -134,209 +244,5 @@ class WeaponParser(TQDBParser):
             return None
 
         # Set the attack speed
-        result['characterAttackSpeed'] = texts.get(
+        result['properties']['characterAttackSpeed'] = texts.get(
             dbr['characterBaseAttackSpeedTag'])
-
-
-class ArmorWeaponParser():
-    """
-    Parser for Weapon files.
-
-    """
-    def __init__(self, dbr, props, strings):
-        self.dbr = dbr
-        self.strings = strings
-        # Jewelry is never tiered, grab first item from list:
-        self.props = props[0]
-
-    @classmethod
-    def keys(cls):
-        return [
-            'ArmorJewelry_Ring',
-            'ArmorJewelry_Amulet',
-            'ArmorProtective_Head',
-            'ArmorProtective_Forearm',
-            'ArmorProtective_UpperBody',
-            'ArmorProtective_LowerBody',
-            'WeaponMelee_Axe',
-            'WeaponMelee_Mace',
-            'WeaponMelee_Sword',
-            'WeaponHunting_Bow',
-            'WeaponHunting_RangedOneHand',
-            'WeaponHunting_Spear',
-            'WeaponMagical_Staff',
-            'WeaponArmor_Shield',
-        ]
-
-    def parse(self):
-        from tqdb.constants.parsing import DIFFICULTIES
-
-        result = {}
-
-        # Only parse special/unique equipment:
-        classification = self.props.get('itemClassification', None)
-        if classification not in ['Rare', 'Epic', 'Legendary', 'Magical']:
-            return {}
-
-        result['classification'] = classification
-
-        # For Monster Infrequents, make sure a drop difficulty exists:
-        if classification == 'Rare':
-            file_name = os.path.basename(self.dbr).split('_')
-            if len(file_name) < 2 or file_name[1] not in DIFFICULTIES:
-                return {}
-
-            result['dropsIn'] = DIFFICULTIES[file_name[1]]
-
-        # Set item level, tag & name
-        result['itemLevel'] = int(self.props.get('itemLevel', 0))
-        result['tag'] = self.props.get('itemNameTag', None)
-        if not result['tag']:
-            return {}
-
-        result['name'] = self.strings.get(result['tag'], '')
-        if result['name']:
-            # Fix for {} appearing in MI names:
-            result['name'] = re.sub(r'\{[^)]*\}', '', result['name'])
-
-        # Set the bitmap if it exists
-        if 'bitmap' in self.props:
-            result['bitmap'] = self.props['bitmap']
-
-        # Let the UtilityParser parse all the common properties:
-        util = UtilityParser(self.dbr, self.props, self.strings)
-        util.parse_character()
-        util.parse_damage()
-        util.parse_defense()
-        util.parse_item_skill_augment()
-        util.parse_pet_bonus()
-        util.parse_racial()
-        util.parse_skill_properties()
-
-        result['properties'] = util.result
-
-        # Now parse the requirements:
-        result.update(util.parse_requirements())
-
-        return result
-
-
-class JewelryParser():
-    """
-    Parser for Weapon files.
-
-    """
-    def __init__(self, dbr, props, strings):
-        self.dbr = dbr
-        self.strings = strings
-        # Jewelry is never tiered, grab first item from list:
-        self.props = props[0]
-
-    @classmethod
-    def keys(cls):
-        return [
-            'ArmorJewelry_Ring',
-            'ArmorJewelry_Amulet',
-        ]
-
-    def parse(self):
-        result = {}
-
-        # Only parse special/unique equipment:
-        classification = self.props.get('itemClassification', None)
-        if classification not in ['Rare', 'Epic', 'Legendary', 'Magical']:
-            return {}
-        result['classification'] = classification
-
-        # Set item level, tag & name
-        result['itemLevel'] = int(self.props.get('itemLevel', 0))
-        result['tag'] = self.props.get('itemNameTag', None)
-        if not result['tag']:
-            return {}
-        result['name'] = self.strings.get(result['tag'], '')
-
-        # Set the bitmap if it exists
-        if 'bitmap' in self.props:
-            result['bitmap'] = self.props['bitmap']
-
-        # Let the UtilityParser parse all the common properties:
-        util = UtilityParser(self.dbr, self.props, self.strings)
-        util.parse_character()
-        util.parse_damage()
-        util.parse_defense()
-        util.parse_item_skill_augment()
-        util.parse_pet_bonus()
-        util.parse_racial()
-        util.parse_skill_properties()
-
-        result['properties'] = util.result
-
-        # Now parse the requirements:
-        result.update(util.parse_requirements())
-
-        return result
-
-
-class SetParser():
-    """
-    Parser for set bonuses.
-
-    """
-    def __init__(self, dbr):
-        self.dbr = dbr
-
-    def parse(self):
-        from tqdb.parsers.main import parser
-
-        reader = parser.reader
-        strings = parser.strings
-
-        # Read the properties:
-        props = reader.read(self.dbr)
-
-        # Set some of the shared properties:
-        set_props = props[0]
-        set_result = {
-            'tag': set_props.get('setName', None),
-            'set': None,
-        }
-
-        # Skip all sets that have no corresponding tag:
-        if not set_result['tag'] or set_result['tag'] not in strings:
-            logging.warning(f'No tag or name for set in {self.dbr}')
-            return set_result
-
-        result = {
-            'name': strings[set_result['tag']],
-            'properties': [],
-            'items': [],
-        }
-        for prop in props:
-            util = UtilityParser(self.dbr, prop, strings)
-            util.parse_character()
-            util.parse_damage()
-            util.parse_defense()
-            util.parse_skill_properties()
-
-            result['properties'].append(util.result)
-
-            # Add the set member:
-            set_member = format_path(prop['setMembers'])
-
-            # If the equipment is available; load the item tag
-            if set_member not in equipment:
-                logging.warning(f'Missing {set_member} in {result["name"]}')
-                continue
-
-            set_item = equipment[set_member]
-            result['items'].append(set_item['tag'])
-
-        # Pop off the first element of the properties (1 set item)
-        if len(result['properties']) > 1:
-            if not result['properties'][0]:
-                result['properties'].pop(0)
-
-        # Store the full set result & return it
-        set_result['set'] = result
-
-        return set_result
