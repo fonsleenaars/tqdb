@@ -84,7 +84,7 @@ class ParametersCharacterParser(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\parameters_character.tpl'
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         """
         Parse the character properties.
 
@@ -178,7 +178,7 @@ class ParmatersDefensiveParser(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\parameters_defensive.tpl'
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         """
         Parse the defensive properties.
 
@@ -267,7 +267,7 @@ class ItemSkillAugmentParser(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\itemskillaugment.tpl'
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         """
         Parse skill augments, mastery augments, and item granted skills.
 
@@ -312,7 +312,7 @@ class ItemSkillAugmentParser(TQDBParser):
         # Parse augment to all skills:
         if self.AUGMENT_ALL in dbr:
             level = dbr[self.AUGMENT_ALL]
-            result[self.AUGMENT_ALL] = (
+            result['properties'][self.AUGMENT_ALL] = (
                 texts.get(self.TXT_ALL_INC).format(level))
 
 
@@ -424,7 +424,7 @@ class ParametersOffensiveParser(TQDBParser):
         # - parameters_weaponsbonusoffensive.tpl
         return f'{TQDBParser.base}\\templatebase\\parameters_offensive.tpl'
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         """
         Parse an offensive/retaliation field.
 
@@ -516,7 +516,12 @@ class ParametersOffensiveParser(TQDBParser):
             - ...
         """
         # Grab the value for this index from the global stores:
-        fields = dict((k, v[index]) for k, v in all_fields.items())
+        fields = dict(
+            (k, v[index])
+            if index < len(v)
+            # If this value isn't repeated, grab the last value
+            else (k, v[len(v) - 1])
+            for k, v in all_fields.items())
 
         # Check if the XOR was set for any field:
         if xor:
@@ -712,7 +717,7 @@ class ParametersSkillParser(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\parameters_skill.tpl'
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         """
         Parse skill properties.
 
@@ -802,7 +807,7 @@ class RacialBonusParser(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\racialbonus.tpl'
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         """
         Parse the possible racial damage bonuses.TQDBParser
 

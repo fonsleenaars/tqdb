@@ -8,6 +8,96 @@ from tqdb.parsers.main import TQDBParser
 from tqdb.utils.text import texts
 
 
+# Regex to remove the {} prefixes in texts:
+BRACKETS = re.compile(r'\{[^)]*\}')
+
+
+class ItemArtifactParser(TQDBParser):
+    """
+    Parser for `itemartifact.tpl`.
+
+    """
+    DIFFICULTIES = {
+        'n': 'Normal',
+        'e': 'Epic',
+        'l': 'Legendary'
+    }
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\itemartifact.tpl'
+
+    def parse(self, dbr, dbr_file, result):
+        file_name = os.path.basename(dbr_file).split('_')
+
+        # Skip artifacts with unknown difficulties in which they drop:
+        if file_name[0] not in self.DIFFICULTIES:
+            return
+
+        result.update({
+            # Bitmap has a different key name than items here.
+            'bitmap': dbr.get('artifactBitmap', None),
+            # Classification is either Lesser, Greater or Divine
+            'classification': dbr.get('artifactClassification', None),
+            # Act it starts dropping is based on the file name
+            'dropsIn': self.DIFFICULTIES[file_name[0]],
+            # For relics the tag is in the Actor.tpl variable 'description'
+            'name': texts.tag(dbr['description']),
+            'tag': dbr['description'],
+        })
+
+
+class ItemArtifactFormulaParser(TQDBParser):
+    """
+    Parser for `itemartifactformula.tpl`.
+
+    """
+    ARTIFACT = 'artifactName'
+    BITMAP = 'artifactFormulaBitmapName'
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\itemartifactformula.tpl'
+
+    def parse(self, dbr, dbr_file, result):
+        # Skip formula without artifacts
+        if self.ARTIFACT not in dbr:
+            return
+
+        artifact = DBRParser.parse(dbr[self.ARTIFACT])
+
+        # Update the result with the artifact:
+        result['tag'] = artifact['tag']
+        result['name'] = artifact['name']
+        result['classification'] = artifact['classification']
+
+        if self.BITMAP in dbr:
+            result['bitmap'] = dbr[self.BITMAP]
+
+        # Grab the reagents (ingredients):
+        for reagent_key in ['reagent1', 'reagent2', 'reagent3']:
+            # For some reason reagent DBRs are of type array, so grab [0]:
+            reagent = DBRParser.parse(dbr[reagent_key + 'BaseName'][0])
+
+            # Add the reagent (relic, scroll or artifact)
+            result[reagent_key] = reagent['tag']
+
+        # Add the potential completion bonuses
+        bonuses = DBRParser.parse(dbr['artifactBonusTableName'])
+        result['bonus'] = bonuses.get('table', [])
+
+        # Last but not least, pop the 'properties' from this result, since
+        # formula don't have the properties themselves, but their respective
+        # artifacts do.
+        result.pop('properties')
+
+
 class ItemBaseParser(TQDBParser):
     """
     Parser for `templatebase/itembase.tpl`.
@@ -27,17 +117,19 @@ class ItemBaseParser(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\itembase.tpl'
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
+        # Always set the category:
+        result['category'] = dbr.get('Class', None)
+
         # Only parse special/unique equipment:
         classification = dbr.get('itemClassification', None)
         if classification not in ['Rare', 'Epic', 'Legendary', 'Magical']:
             return
-
         result['classification'] = classification
 
         # For Monster Infrequents, make sure a drop difficulty exists:
         if classification == 'Rare':
-            file_name = os.path.basename(self.dbr).split('_')
+            file_name = os.path.basename(dbr_file).split('_')
             if len(file_name) < 2 or file_name[1] not in self.DIFFICULTIES:
                 return {}
 
@@ -57,9 +149,6 @@ class ItemEquipmentParser(TQDBParser):
         'Strength',
     ]
 
-    # Regex to remove the {} prefixes in Monster Infrequents:
-    MI_NAME_PREFIX = re.compile(r'\{[^)]*\}')
-
     def __init__(self):
         super().__init__()
 
@@ -67,7 +156,7 @@ class ItemEquipmentParser(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\itemequipment.tpl'
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         # If no tag exists, skip parsing:
         tag = dbr.get('itemNameTag', None)
         if not tag:
@@ -77,7 +166,7 @@ class ItemEquipmentParser(TQDBParser):
         result.update({
             'bitmap': dbr.get('bitmap', None),
             'itemLevel': dbr.get('itemLevel', None),
-            'name': self.MI_NAME_PREFIX.sub('', texts.tag(tag)),
+            'name': BRACKETS.sub('', texts.tag(tag)),
             'tag': tag,
         })
 
@@ -86,7 +175,9 @@ class ItemEquipmentParser(TQDBParser):
         if item_set_path:
             # Read (don't parse to avoid recursion) the set to get the tag:
             item_set = DBRParser.read(item_set_path)
-            result['set'] = item_set[ItemSetParser.NAME]
+
+            # Only add the set if it has a tag:
+            result['set'] = item_set.get(ItemSetParser.NAME, None)
 
         # Although Requirements themselves are a part of ItemBase.tpl, the
         # itemCostName property (equation based requirements) are a part of
@@ -129,6 +220,43 @@ class ItemEquipmentParser(TQDBParser):
         result.update(requirements)
 
 
+class ItemRelicParser(TQDBParser):
+    """
+    Parser for `itemrelic.tpl`.
+
+    """
+    DIFFICULTIES = ['Normal', 'Epic', 'Legendary']
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\itemrelic.tpl'
+
+    def parse(self, dbr, dbr_file, result):
+        file_name = os.path.basename(dbr_file).split('_')
+        difficulty_index = int(file_name[0][1:]) - 1
+
+        result.update({
+            # The act it starts dropping in is also listed in the file name
+            'act': file_name[1],
+            # Bitmap has a different key name than items here.
+            'bitmap': dbr.get('relicBitmap', None),
+            # Difficulty classification is based on the file name
+            'classification': self.DIFFICULTIES[difficulty_index],
+            # Ironically the itemText holds the actual description tag
+            'description': BRACKETS.sub('', texts.tag(dbr['itemText'])),
+            # For relics the tag is in the Actor.tpl variable 'description'
+            'name': texts.tag(dbr['description']),
+            'tag': dbr['description'],
+        })
+
+        # The possible completion bonuses are in bonusTableName:
+        bonuses = DBRParser.parse(dbr['bonusTableName'])
+        result['bonus'] = bonuses.get('table', [])
+
+
 class ItemSetParser(TQDBParser):
     """
     Parser for `itemset.tpl`
@@ -150,11 +278,11 @@ class ItemSetParser(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\itemset.tpl'
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         tag = dbr.get(self.NAME, None)
 
         if not tag or texts.tag(tag) == tag:
-            logging.warning(f'No tag or name for set found.')
+            logging.warning(f'No tag or name for set found in {dbr_file}.')
             return
 
         result.update({
@@ -199,6 +327,51 @@ class ItemSetParser(TQDBParser):
                 result['properties'].pop(0)
 
 
+class OneShotScrollParser(TQDBParser):
+    """
+    Parser for `oneshot_scroll.tpl`.
+
+    """
+    DIFFICULTIES = ['Normal', 'Epic', 'Legendary']
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        # Note: this technically handles parameters from oneshot.tpl too.
+        return f'{TQDBParser.base}\\oneshot_scroll.tpl'
+
+    def parse(self, dbr, dbr_file, result):
+        """
+        Parse the scroll.
+
+        """
+        # Use the file name to determine the difficulty:
+        file_name = os.path.basename(dbr_file).split('_')[0][1:]
+        # Strip all but digits from the string, then cast to int:
+        difficulty_index = int(
+            ''.join(filter(lambda x: x.isdigit(), file_name))) - 1
+
+        result.update({
+            'tag': dbr['description'],
+            'name': texts.tag(dbr['description']),
+            'classification': self.DIFFICULTIES[difficulty_index],
+            'description': texts.tag(dbr['itemText']),
+        })
+
+        # Set the bitmap if it exists
+        if 'bitmap' in dbr:
+            result['bitmap'] = dbr['bitmap']
+
+        # Grab the skill file:
+        skill = DBRParser.parse(dbr['skillName'])
+
+        # Add properties and summons from the scrolls, whichever is applicable:
+        if 'properties' in skill:
+            result['properties'] = skill['properties']
+
+
 class ShieldParser(TQDBParser):
     """
     Parser for `weaponarmor_shield.tpl`.
@@ -215,7 +388,7 @@ class ShieldParser(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\weaponarmor_shield.tpl'
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         # Set the block chance and value:
         result['properties'][self.BLOCK] = texts.get(self.TEXT).format(
             # Block chance
@@ -236,7 +409,7 @@ class WeaponParser(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\weapon.tpl'
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         dbr_class = dbr['Class']
 
         # Skip shields:

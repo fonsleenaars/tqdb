@@ -36,7 +36,7 @@ def read(dbr):
     try:
         dbr_file = open(dbr)
     except FileNotFoundError:
-        return [{}]
+        return {}
 
     result = {}
 
@@ -95,6 +95,6 @@ def parse(dbr_file):
     # Prioritize the list and then run through the parsers:
     prioritized.sort(key=lambda p: p.get_priority(), reverse=True)
     for prioritized_parser in prioritized:
-        prioritized_parser.parse(dbr, result)
+        prioritized_parser.parse(dbr, dbr_file, result)
 
     return result

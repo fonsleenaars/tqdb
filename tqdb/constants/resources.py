@@ -7,7 +7,6 @@ from pathlib import Path
 # Input files and directories
 DB = Path('data/database/')
 RES = Path('data/resources/')
-TEX = Path('data/textures/')
 
 AFFIXES = [
     'records/item/\lootmagicalaffixes/*ix/default/*.dbr',
@@ -302,30 +301,29 @@ CHESTS = {
         '',
         'records/xpack2/item/containers/boss containers/'
         'bosschest17_fafnir_03.dbr'],
-    }
+}
 
 CREATURES = [
     'records/creature/monster/**/*.dbr',
     'records/xpack*/creatures/monster/**/*.dbr']
 
-EQUIPMENT_BASE = [
-    'records/xpack*/item/equipment*/**/*.dbr',
-    'records/xpack/item/le_new/*.dbr',
-    'records/item/equipment*/**/*.dbr',
-]
-
-EQUIPMENT_EXT = [
-    'records/item/relics/*.dbr',
-    'records/item/animalrelics/*.dbr',
-    'records/xpack*/item/relics/*.dbr',
-    'records/xpack*/item/charms/*.dbr',
-    'records/xpack*/item/scrolls/*.dbr',
+EQUIPMENT = [
+    # 'records/xpack*/item/equipment*/**/*.dbr',
+    # 'records/xpack/item/le_new/*.dbr',
+    # 'records/item/equipment*/**/*.dbr',
+    # 'records/item/relics/*.dbr',
+    # 'records/item/animalrelics/*.dbr',
+    # 'records/xpack*/item/relics/*.dbr',
+    # 'records/xpack*/item/charms/*.dbr',
+    # 'records/xpack*/item/scrolls/*.dbr',
     'records/xpack*/item/artifacts/*.dbr',
-    'records/xpack*/item/artifacts/arcaneformulae/*.dbr']
+    'records/xpack*/item/artifacts/arcaneformulae/*.dbr',
+]
 
 SETS = [
     'records/item/sets/*.dbr',
-    'records/xpack*/item/sets/*.dbr']
+    'records/xpack*/item/sets/*.dbr'
+]
 
 SKILLS = [
     'records/skills/defensive/defensiveskilltree.dbr',
@@ -337,7 +335,8 @@ SKILLS = [
     'records/skills/storm/stormskilltree.dbr',
     'records/skills/warfare/warfareskilltree.dbr',
     'records/xpack/skills/dream/dreamskilltree.dbr',
-    'records/xpack2/skills/runemaster/runemaster_skilltree.dbr']
+    'records/xpack2/skills/runemaster/runemaster_skilltree.dbr'
+]
 
 STRINGS_TAGS = [
     'commonequipment.txt',

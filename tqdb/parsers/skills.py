@@ -21,7 +21,7 @@ class SkillBaseParser(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\skill_base.tpl'
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         """
         Parse the base properties of a skill.
 
@@ -74,7 +74,7 @@ class SkillBuffParser(TQDBParser):
             f'{TQDBParser.base}\\skillsecondary_buffradius.tpl',
         ]
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         """
         Parse the referenced buff skill, and pass that back as this result.
 
@@ -98,7 +98,7 @@ class SkillPetModifier(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\skillsecondary_petmodifier.tpl'
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         """
         Parse the referenced pet skill, and pass that back as this result.
 
@@ -128,7 +128,7 @@ class SkillProjectileBaseParser(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\skill_projectilebase.tpl'
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         """
         Parse the projectile properties.
 

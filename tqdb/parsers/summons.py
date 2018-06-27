@@ -17,7 +17,7 @@ class PetBonusParser(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\petbonusinc.tpl'
 
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         """
         Parse a possible skill bonus for a pet.
 

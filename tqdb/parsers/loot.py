@@ -1,6 +1,9 @@
+from tqdb import dbr as DBRParser
+from tqdb.parsers.main import TQDBParser
+from tqdb.utils.text import texts
 # import logging
-# import os
-# import re
+import os
+import re
 
 # import numexpr
 
@@ -9,100 +12,75 @@
 # from tqdb.storage import equipment
 
 
-# class LootRandomizerParser:
-#     """
-#     Parser for affixes.
+class LootRandomizerParser(TQDBParser):
+    """
+    Parser for `lootrandomizer.tpl`.
 
-#     """
-#     def __init__(self, dbr, props, strings):
-#         self.dbr = dbr
-#         self.props = props[0]
-#         self.strings = strings
+    """
+    def __init__(self):
+        super().__init__()
 
-#     @classmethod
-#     def keys(cls):
-#         return ['LootRandomizer']
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\lootrandomizer.tpl'
 
-#     def parse(self):
-#         result = {}
-#         if 'lootRandomizerName' in self.props:
-#             result['tag'] = self.props['lootRandomizerName']
-#             result['name'] = self.strings[result['tag']]
+    def parse(self, dbr, dbr_file, result):
+        result = {}
+        if 'lootRandomizerName' in dbr:
+            result['tag'] = dbr['lootRandomizerName']
+            result['name'] = texts.tag(result['tag'])
 
-#         util = UtilityParser(self.dbr, self.props, self.strings)
-#         util.parse_character()
-#         util.parse_damage()
-#         util.parse_defense()
-#         util.parse_item_skill_augment()
-#         util.parse_pet_bonus()
-#         util.parse_racial()
-#         util.parse_skill_properties()
-
-#         result['options'] = util.result
-
-#         # Now parse the requirements:
-#         result.update(util.parse_requirements())
-#         # After parsing the requirements, turn options into a list.
-#         result['options'] = [result['options']]
-
-#         # Find the LootRandomizerTables it's in:
-
-#         return result
+        # XXX - Find the LootRandomizerTables it's in:
 
 
-# class LootRandomizerTableParser:
-#     """
-#     Parser for affix/bonus tables.
+class LootRandomizerTableParser(TQDBParser):
+    """
+    Parser for `lootrandomizertable.tpl`.
 
-#     """
-#     def __init__(self, dbr, props, strings):
-#         self.dbr = dbr
-#         self.props = props[0]
-#         self.strings = strings
+    """
+    def __init__(self):
+        super().__init__()
 
-#     @classmethod
-#     def keys(cls):
-#         return ['LootRandomizerTable']
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\lootrandomizertable.tpl'
 
-#     def parse(self):
-#         from tqdb.parsers.main import parser
+    def parse(self, dbr, dbr_file, result):
+        tables = {}
+        weights = {}
 
-#         options = []
-#         option_files = {}
-#         weights = {}
+        # Initialize the results table:
+        result['table'] = []
 
-#         # Parse the possible completion bonuses:
-#         for field, value in self.props.items():
-#             if 'randomizerName' in field:
-#                 number = re.search(r'\d+', field).group()
-#                 option_files[number] = value
-#             if 'randomizerWeight' in field:
-#                 number = re.search(r'\d+', field).group()
-#                 weights[number] = int(value)
+        # Parse all available entries
+        for field, value in dbr.items():
+            if field.startswith('randomizerName'):
+                # Grab the number suffix (1-70)
+                number = re.search(r'\d+', field).group()
+                # Store the DBR reference in the table
+                tables[number] = value
+            if field.startswith('randomizerWeight'):
+                # Grab the number suffix (1-70)
+                number = re.search(r'\d+', field).group()
+                # Store the weight reference in the table
+                weights[number] = value
 
-#         util = UtilityParser(self.dbr, self.props, self.strings)
+        # Add all the weights together to determined % later
+        total_weight = sum(weights.values())
+        for key, dbr_file in tables.items():
+            # Skip entries without chance or without a file
+            if key not in weights or not os.path.exists(dbr_file):
+                continue
 
-#         if 'prefix' not in self.dbr and 'suffix' not in self.dbr:
-#             # Add all the weights together to determined % later
-#             total_weight = sum(weights.values())
-#             for field, value in option_files.items():
-#                 if field in weights:
-#                     # There are some old pointers files that no longer exist:
-#                     option_file = util.get_reference_dbr(value)
-#                     if not os.path.exists(option_file):
-#                         continue
+            # Parse the table entry
+            randomizer = DBRParser.parse(dbr_file)
 
-#                     # Append the parsed bonus with its chance:
-#                     options.append({
-#                         'chance': float('{0:.2f}'.format(
-#                             (weights[field] / total_weight) * 100)),
-#                         'option': parser.parse(option_file)['options'][0]
-#                     })
-
-#             # Set all parsed bonuses
-#             return {
-#                 'options': options
-#             }
+            # Append the parsed bonus with its chance:
+            result['table'].append({
+                'chance': float(
+                    '{0:.2f}'.format((weights[key] / total_weight) * 100)),
+                'option': randomizer['properties']
+            })
 
 
 # class LootMasterParser:

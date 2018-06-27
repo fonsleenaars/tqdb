@@ -7,6 +7,7 @@ DATA_DIR = Path('data')
 DATABASE_DIR = DATA_DIR / 'database'
 TEMPLATE_DIR = DATABASE_DIR / 'templates/**/*.tpl'
 TEMPLATE_PREFIX = '%TEMPLATE_DIR%'
+TEXTURES = Path('data/textures/')
 
 # Regex to match all Group or Variable lines, with a bracket on the next line
 BRACKET_REGEX = re.compile(r'(Group|Variable)\s+{')
@@ -106,8 +107,12 @@ class Variable:
             if always_return:
                 return bool(int(value))
             return bool(int(value)) if bool(int(value)) else None
-        elif self['type'] in ['file_dbr', 'file_tex']:
+        elif self['type'] == 'file_dbr':
+            # Prepare the DBR reference fully
             return DATABASE_DIR / value.lower()
+        elif self['type'] == 'file_tex':
+            # Prepare the TEX reference fully
+            return TEXTURES / value
         return value
 
 
@@ -234,7 +239,7 @@ class Template:
             # 'variable' or 'array' to this Template.
             self.variables.update(dict(
                 (k, v) for k, v in template.variables.items()
-                if v['class'] == 'variable' or v['class'] == 'array'))
+                if v['class'] in ['array', 'picklist', 'variable']))
         else:
             # Add the variable to the list:
             self.variables[variable['name']] = variable

@@ -1,18 +1,18 @@
 # import argparse
 import glob
 import json
-# import logging
-# import os
+import logging
+import os
 
 # from datetime import datetime
 from tqdb.constants import resources
 # from tqdb.parsers.equipment import SetParser
 from tqdb.dbr import parse
+from tqdb.utils import images
 # from tqdb.utils.core import FullPaths
 # from tqdb.utils.core import is_dir
 # from tqdb.utils.core import pluck
 # from tqdb.utils.core import print_progress
-# from tqdb.utils.images import SpriteCreator
 
 # Directory preparations for logging
 # if not os.path.exists('logs'):
@@ -28,8 +28,8 @@ from tqdb.dbr import parse
 #     datefmt='%H:%M')
 
 # Directory preparations for bitmap
-# if not os.path.exists('output/graphics'):
-#     os.makedirs('output/graphics')
+if not os.path.exists('output/graphics'):
+    os.makedirs('output/graphics')
 
 # # Parse command line call
 # argparser = argparse.ArgumentParser(description='TQ:IT Database parser')
@@ -123,23 +123,42 @@ data = {}
 ###############################################################################
 #                                 EQUIPMENT                                   #
 ###############################################################################
-# items = {}
-# if 'equipment-basic' in categories:
-#     items2, equipment2 = index_equipment(
-#         res.EQUIPMENT_BASE, parser, 'weapons, jewelry, armor')
-#     items.update(items2)
-#     equipment.update(equipment2)
+files = []
+for resource in resources.EQUIPMENT:
+    equipment_files = resources.DB / resource
 
-# if 'equipment' in categories:
-#     items2, equipment2 = index_equipment(
-#         res.EQUIPMENT_EXT, parser, 'charms, relics, scrolls, artifacts')
-#     items.update(items2)
-#     equipment.update(equipment2)
+    # Extend the equipment list, but exclude all files in 'old' and 'default'
+    files.extend([
+        equipment_file
+        for equipment_file
+        in glob.glob(str(equipment_files), recursive=True)
+        if not ('\\old' in equipment_file or '\\default' in equipment_file)
+    ])
 
-# if 'equipment-basic' in categories or 'equipment' in categories:
-#     # Also re-add skills because it might have been expanded during parsing:
-#     data['skills'] = skills
-#     data['equipment'] = items
+items = {}
+for dbr in files:
+    logging.debug(f'Parsing {dbr}')
+    parsed = parse(dbr)
+
+    # Skip equipment that couldn't be parsed:
+    if not parsed or 'classification' not in parsed or 'name' not in parsed:
+        continue
+
+    # Organize the equipment based on the category
+    category = parsed.pop('category')
+
+    # Save the bitmap and remove the bitmap key
+    if not images.save_bitmap(parsed, category, 'output/graphics/'):
+        # Skip any item that has no bitmap/image:
+        continue
+
+    # Now save the parsed item in the category:
+    if category and category in items:
+        items[category].append(parsed)
+    elif category:
+        items[category] = [parsed]
+
+data['equipment'] = items
 
 ###############################################################################
 #                                    LOOT                                     #
@@ -174,21 +193,21 @@ data = {}
 #                                      SETS                                   #
 ###############################################################################
 files = []
-for set_file in resources.SETS:
-    set_files = resources.DB / set_file
+for resource in resources.SETS:
+    set_files = resources.DB / resource
     files.extend(glob.glob(str(set_files), recursive=True))
 
 sets = {}
 for dbr in files:
-    print(f'Parsing {dbr}')
-    set_parsed = parse(dbr)
+    logging.debug(f'Parsing {dbr}')
+    parsed = parse(dbr)
 
     # Skip sets with no tag:
-    if 'tag' not in set_parsed:
+    if 'tag' not in parsed:
         continue
 
     # Add the set by its tag to the dictionary of sets:
-    sets[set_parsed['tag']] = set_parsed
+    sets[parsed['tag']] = parsed
 
 data['sets'] = sets
 
@@ -196,8 +215,8 @@ data['sets'] = sets
 ###############################################################################
 #                                    OUTPUT                                   #
 ###############################################################################
-# print('Writing output to files...')
-# SpriteCreator('output/graphics/', 'output')
+print('Writing output to files...')
+images.SpriteCreator('output/graphics/', 'output')
 
 with open('output/data.json', 'w') as data_file:
     json.dump(data, data_file, sort_keys=True)

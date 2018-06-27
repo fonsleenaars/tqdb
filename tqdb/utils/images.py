@@ -160,14 +160,13 @@ class SpriteCreator:
 ###############################################################################
 #                              BITMAP UTILITY                                 #
 ###############################################################################
-def save_bitmap(item, item_type, graphics, textures):
-    if 'bitmap' not in item:
+def save_bitmap(item, item_type, graphics):
+    if 'bitmap' not in item or not item['bitmap']:
         logging.warning(f'Missing bitmap for {item["tag"]}')
-        return
+        return False
 
-    bitmap = item['bitmap']
+    bitmap = item.pop('bitmap')
     tag = item['tag']
-    del(item['bitmap'])
 
     # Tags for formula's are all the same (lesser, greater, divine)
     if item_type == 'ItemArtifactFormula':
@@ -178,10 +177,13 @@ def save_bitmap(item, item_type, graphics, textures):
             return
 
     # Run the texture viewer if a bitmap and tag are set:
-    if tag and os.path.isfile(f'{textures}{bitmap}'):
+    if tag and bitmap.is_file():
         command = ['utils/textureviewer/TextureViewer.exe',
-                   f'{textures}{bitmap}',
+                   str(bitmap),
                    f'{graphics}{tag}.png']
         subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     else:
         logging.warning(f'Missing tag or bitmap for {item["tag"]}: {bitmap}')
+        return False
+
+    return True

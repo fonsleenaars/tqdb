@@ -61,7 +61,7 @@ class TQDBParser(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def parse(self, dbr, result):
+    def parse(self, dbr, dbr_file, result):
         """
         Parses a specific DBR file and updates the result.
 
