@@ -325,19 +325,6 @@ SETS = [
     'records/xpack*/item/sets/*.dbr',
 ]
 
-SKILLS = [
-    'records/skills/defensive/defensiveskilltree.dbr',
-    'records/skills/earth/earthskilltree.dbr',
-    'records/skills/hunting/huntingskilltree.dbr',
-    'records/skills/nature/natureskilltree.dbr',
-    'records/skills/spirit/spiritskilltree.dbr',
-    'records/skills/stealth/stealthskilltree.dbr',
-    'records/skills/storm/stormskilltree.dbr',
-    'records/skills/warfare/warfareskilltree.dbr',
-    'records/xpack/skills/dream/dreamskilltree.dbr',
-    'records/xpack2/skills/runemaster/runemaster_skilltree.dbr'
-]
-
 STRINGS_TAGS = [
     'commonequipment.txt',
     'xcommonequipment.txt',

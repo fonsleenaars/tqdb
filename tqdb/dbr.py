@@ -8,6 +8,7 @@ Upon receiving a file to parse it will grab the template associated with
 the DBR and then parse it according to all properties in that template.
 
 """
+from tqdb import storage
 from tqdb.parsers.main import parsers
 from tqdb.templates import templates, templates_by_path
 
@@ -67,6 +68,10 @@ def parse(dbr_file):
     Parse a DBR file according to its template.
 
     """
+    # First check if the file has been parsed before:
+    if dbr_file in storage.db:
+        return storage.db[dbr_file]
+
     dbr = read(dbr_file)
 
     # If a template exists for this type, parse it accordingly:
@@ -96,5 +101,8 @@ def parse(dbr_file):
     prioritized.sort(key=lambda p: p.get_priority(), reverse=True)
     for prioritized_parser in prioritized:
         prioritized_parser.parse(dbr, dbr_file, result)
+
+    # Set the parsed result in the storage db:
+    storage.db[dbr_file] = result
 
     return result

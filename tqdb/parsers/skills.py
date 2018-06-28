@@ -30,6 +30,7 @@ class SkillBaseParser(TQDBParser):
         'skillTargetNumber',
         'skillTargetRadius',
     ]
+    # These fields are left for individual parsers:
     # 'lifeMonitorPercent',   # 1 file: skill_passiveonlifebuffself.tpl
     # 'projectilePiercing',   # 1 file: skill_modifier.tpl
     # 'refreshTime',          # 1 file: skill_refreshcooldown.tpl
@@ -37,6 +38,17 @@ class SkillBaseParser(TQDBParser):
 
     def __init__(self):
         super().__init__()
+
+    def get_priority(self):
+        """
+        Override this parsers priority to set as lowest.
+
+        This parser needs to have the lowest priority so that when it is added
+        to the skills dictionary in storage, all other properties have been
+        parsed.
+
+        """
+        return TQDBParser.LOWEST_PRIORITY
 
     @staticmethod
     def get_template_path():
@@ -61,7 +73,7 @@ class SkillBaseParser(TQDBParser):
                 # If the tag wasn't returned, a friendly name weas found:
                 logging.warning(f'No skill name found for {result["tag"]}')
         else:
-            logging.debug('No skillDisplayName found')
+            logging.warning(f'No skillDisplayName found in {dbr_file}')
 
         if self.DESC in dbr and texts.has_tag(dbr[self.DESC]):
             # Also load the description, if it's known:
@@ -74,11 +86,10 @@ class SkillBaseParser(TQDBParser):
         max_level = dbr.get('skillUltimateLevel', dbr.get('skillMaxLevel'))
         is_singular = max_level == 1
 
-        for index in range(max_level):
-            # Create a new copy of the DBR with the values for this index:
-            itr_dbr = self._prepare_values(dbr, index)
+        for field in self.FIELDS:
+            for index in range(max_level):
+                itr_dbr = TQDBParser.extract_values(dbr, field, index)
 
-            for field in self.FIELDS:
                 if field not in itr_dbr:
                     continue
 
@@ -86,19 +97,23 @@ class SkillBaseParser(TQDBParser):
                 TQDBParser.insert_value(
                     field, itr_dbr[field], is_singular, result)
 
-    def _prepare_values(self, dbr, index):
-        """
-        Internal functions to iterate over all the shared fields.
+        # After all skill properties have been set, index them by level:
+        properties = [{} for i in range(max_level)]
 
-        Create a dictionary by going through all the shared fields and grabbing
-        the value at the index given.
+        # Insert the existing properties by adding them to the correct tier:
+        for field, values in result['properties'].items():
+            for index in range(max_level):
+                # Each value is either a list or a flat value to repeat:
+                if isinstance(values, list):
+                    # Skip properties that extend beyond the max_level
+                    if index >= len(values):
+                        continue
+                    properties[index][field] = values[index]
+                else:
+                    properties[index][field] = values
 
-        """
-        itr_dbr = {}
-        for field in self.FIELDS:
-            itr_dbr.update(TQDBParser.extract_values(dbr, field, index))
-
-        return itr_dbr
+        # Now set the reindexed properties:
+        result['properties'] = properties
 
 
 class SkillBuffParser(TQDBParser):
@@ -244,43 +259,5 @@ class SkillProjectileBaseParser(TQDBParser):
 
 #             # Save the skills and the summon:
 #             result['summons'].append(spawn)
-
-#         return result
-
-
-# class SkillTreeParser():
-#     """
-#     Parser for skill files.
-
-#     """
-#     def __init__(self, dbr, props, strings):
-#         from tqdb.parsers.main import parser
-
-#         self.dbr = dbr
-#         self.parser = parser
-#         self.strings = strings
-
-#         # Skill trees are never tiered, grab first item from list:
-#         self.props = props[0]
-
-#     @classmethod
-#     def keys(cls):
-#         return ['SkillTree']
-
-#     def parse(self):
-#         result = {}
-
-#         util = UtilityParser(self.dbr, self.props, self.strings)
-#         for prop, dbr in self.props.items():
-#             if 'skillName' in prop:
-#                 skill = self.parser.parse(util.get_reference_dbr(dbr))
-
-#                 if not skill:
-#                     continue
-
-#                 # Use the path as a key and remove it from the skill
-#                 skill_path = skill['path']
-#                 del(skill['path'])
-#                 result[skill_path] = skill
 
 #         return result

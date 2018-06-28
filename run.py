@@ -3,10 +3,10 @@ import glob
 import json
 import logging
 import os
+import time
 
-# from datetime import datetime
+from tqdb import storage
 from tqdb.constants import resources
-# from tqdb.parsers.equipment import SetParser
 from tqdb.dbr import parse
 from tqdb.utils import images
 # from tqdb.utils.core import FullPaths
@@ -17,15 +17,17 @@ from tqdb.utils import images
 # Directory preparations for logging
 # if not os.path.exists('logs'):
 #     os.makedirs('logs')
-# # Configure logging:
+# Configure logging:
 # LOG_FILENAME = os.path.join(
 #     'logs',
 #     datetime.now().strftime('tqdb_%Y%m%d-%H%M%S.log'))
-# logging.basicConfig(
-#     filename=LOG_FILENAME,
-#     level=logging.WARNING,
-#     format='%(asctime)s %(message)s',
-#     datefmt='%H:%M')
+# Disable any DEBUG logging from PIL:
+logging.getLogger('PIL').setLevel(logging.WARNING)
+logging.basicConfig(
+    # filename=LOG_FILENAME,
+    level=logging.INFO,
+    format='%(asctime)s %(message)s',
+    datefmt='%H:%M')
 
 # Directory preparations for bitmap
 if not os.path.exists('output/graphics'):
@@ -71,18 +73,6 @@ data = {}
 # if args.dir or 'equipment' in categories:
 #     categories.update(['equipment-basic', 'skills'])
 
-###############################################################################
-#                                  SKILLS                                     #
-###############################################################################
-# if 'skills' in categories:
-#     for skill_file in res.SKILLS:
-#         files.extend(glob.glob(res.DB + skill_file, recursive=True))
-
-#     for index, dbr in enumerate(files):
-#         print_progress("Parsing skills", index, len(files))
-#         skills.update(parser.parse(dbr))
-
-#     data['skills'] = skills
 
 ###############################################################################
 #                                   AFFIXES                                   #
@@ -119,6 +109,9 @@ data = {}
 #         files.extend(glob.glob(res.DB + table_file, recursive=True))
 
 #     data['affix'] = affixes
+
+# Log and reset the timer:
+timer = time.clock()
 
 ###############################################################################
 #                                 EQUIPMENT                                   #
@@ -158,7 +151,12 @@ for dbr in files:
     elif category:
         items[category] = [parsed]
 
+# Store the equipment to output to JSON
 data['equipment'] = items
+
+# Log and reset the timer:
+logging.info(f'Parsed equipment in {time.clock() - timer} seconds.')
+timer = time.clock()
 
 ###############################################################################
 #                                    LOOT                                     #
@@ -209,8 +207,19 @@ for dbr in files:
     # Add the set by its tag to the dictionary of sets:
     sets[parsed['tag']] = parsed
 
+# Store the sets to output to JSON
 data['sets'] = sets
 
+# Log and reset the timer:
+logging.info(f'Parsed sets in {time.clock() - timer} seconds.')
+timer = time.clock()
+
+##############################################################################
+#                                 SKILLS                                     #
+##############################################################################
+
+# Store the skills to output to JSON
+data['skills'] = storage.skills.copy()
 
 ###############################################################################
 #                                    OUTPUT                                   #

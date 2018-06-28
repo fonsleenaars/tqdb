@@ -5,6 +5,7 @@ Core templates that are often included by other templates.
 import logging
 
 from tqdb import dbr as DBRParser
+from tqdb import storage
 from tqdb.parsers.main import TQDBParser
 from tqdb.utils.text import texts
 
@@ -277,7 +278,12 @@ class ItemSkillAugmentParser(TQDBParser):
 
             skill = DBRParser.parse(dbr[self.SKILL_NAME])
 
+            # Insert this skill into the database:
             if 'tag' in skill:
+                if skill['tag'] not in storage.skills:
+                    storage.skills[skill['tag']] = skill
+
+                # Now add the granted skill to the item:
                 result['properties'][self.SKILL_NAME] = {
                     'tag': skill['tag'],
                     'name': (

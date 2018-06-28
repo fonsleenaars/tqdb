@@ -1,17 +1,12 @@
 import logging
 import math
 import os
-import re
 
 import numexpr
 
 from tqdb import dbr as DBRParser
 from tqdb.parsers.main import TQDBParser
 from tqdb.utils.text import texts
-
-
-# Regex to remove the {} prefixes in texts:
-BRACKETS = re.compile(r'\{[^)]*\}')
 
 
 class ItemArtifactParser(TQDBParser):
@@ -187,7 +182,7 @@ class ItemEquipmentParser(TQDBParser):
         result.update({
             'bitmap': dbr.get('bitmap', None),
             'itemLevel': dbr.get('itemLevel', None),
-            'name': BRACKETS.sub('', texts.tag(tag)),
+            'name': texts.tag(tag),
             'tag': tag,
         })
 
@@ -252,7 +247,7 @@ class ItemRelicParser(TQDBParser):
             # Difficulty classification is based on the file name
             'classification': self.DIFFICULTIES[difficulty_index],
             # Ironically the itemText holds the actual description tag
-            'description': BRACKETS.sub('', texts.tag(dbr['itemText'])),
+            'description': texts.tag(dbr['itemText']),
             # For relics the tag is in the Actor.tpl variable 'description'
             'name': texts.tag(dbr['description']),
             'tag': dbr['description'],

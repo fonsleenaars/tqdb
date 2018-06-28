@@ -18,6 +18,9 @@ class Texts:
     # Directory holding all the resources:
     BASE_DIR = Path('data/resources')
 
+    # Regex to remove the {} prefixes in texts:
+    BRACKETS = re.compile(r'\{[^)]*\}')
+
     # These resources need to be copied from existing ones, under a new name:
     COPY_RESOURCES = [
         # The misspelling of charcteritemglobalreduction is "correct", that's
@@ -256,8 +259,8 @@ class Texts:
 
         # Parse line into a dictionary of key, value properties:
         return dict(
-            # To be consistent, make all keys lower cased
-            (k.lower(), v) for k, v in (
+            # To be consistent, make all keys lower cased and remove all {}
+            (k.lower(), self.BRACKETS.sub('', v)) for k, v in (
                 properties.split('=', 1)
                 for properties in lines
                 if '=' in properties and not properties.startswith('//')))
