@@ -14,6 +14,27 @@ class SkillBaseParser(TQDBParser):
     DESC = 'skillBaseDescription'
     NAME = 'skillDisplayName'
 
+    # These fields aren't a part of the skill_base.tpl template, but rather
+    # are used by multiple skill templates. Instead of implementing a lot of
+    # template parsers that each do almost the same thing, the one thing they
+    # have in common is that they all include skill_base.tpl.
+    FIELDS = [
+        'skillActiveDuration',
+        'skillActiveLifeCost',
+        'skillActiveManaCost',
+        'skillCooldownTime',
+        'skillLifeBonus',
+        'skillManaCost',
+        'skillProjectileNumber',
+        'skillTargetAngle',
+        'skillTargetNumber',
+        'skillTargetRadius',
+    ]
+    # 'lifeMonitorPercent',   # 1 file: skill_passiveonlifebuffself.tpl
+    # 'projectilePiercing',   # 1 file: skill_modifier.tpl
+    # 'refreshTime',          # 1 file: skill_refreshcooldown.tpl
+    # 'skillChanceWeight',    # 1 file: templatebase\skill_wpattack.tpl
+
     def __init__(self):
         super().__init__()
 
@@ -42,14 +63,42 @@ class SkillBaseParser(TQDBParser):
         else:
             logging.debug('No skillDisplayName found')
 
-        # Also load the description, if it's known:
-        if self.DESC in dbr:
-            description = texts.tag(dbr[self.DESC])
-            # If no tag was found, the tag is returned
-            if dbr[self.DESC] == description and self.FILE in dbr:
-                # Use the FileDescription instead:
-                description = dbr['FileDescription']
-            result['description'] = description
+        if self.DESC in dbr and texts.has_tag(dbr[self.DESC]):
+            # Also load the description, if it's known:
+            result['description'] = texts.tag(dbr[self.DESC])
+        elif self.FILE in dbr:
+            # Use the FileDescription instead:
+            result['description'] = dbr['FileDescription']
+
+        # Check the shared fields for values:
+        max_level = dbr.get('skillUltimateLevel', dbr.get('skillMaxLevel'))
+        is_singular = max_level == 1
+
+        for index in range(max_level):
+            # Create a new copy of the DBR with the values for this index:
+            itr_dbr = self._prepare_values(dbr, index)
+
+            for field in self.FIELDS:
+                if field not in itr_dbr:
+                    continue
+
+                # Insert this skill property
+                TQDBParser.insert_value(
+                    field, itr_dbr[field], is_singular, result)
+
+    def _prepare_values(self, dbr, index):
+        """
+        Internal functions to iterate over all the shared fields.
+
+        Create a dictionary by going through all the shared fields and grabbing
+        the value at the index given.
+
+        """
+        itr_dbr = {}
+        for field in self.FIELDS:
+            itr_dbr.update(TQDBParser.extract_values(dbr, field, index))
+
+        return itr_dbr
 
 
 class SkillBuffParser(TQDBParser):
@@ -117,7 +166,6 @@ class SkillProjectileBaseParser(TQDBParser):
         'projectileExplosionRadius',
         'projectileFragmentsLaunchNumber',
         'projectileLaunchNumber',
-        # 'projectilePiercing',
         'projectilePiercingChance',
     ]
 
@@ -133,170 +181,6 @@ class SkillProjectileBaseParser(TQDBParser):
         Parse the projectile properties.
 
         """
-
-# class SkillBuffParser:
-#     """
-#     Parser for buffs that reference their skills.
-
-#     """
-#     def __init__(self, dbr, props, strings):
-#         self.dbr = dbr
-#         self.strings = strings
-#         # Buffs are never tiered, grab first item from list:
-#         self.props = props[0]
-
-#     @classmethod
-#     def keys(cls):
-#         return [
-#             'Skill_AttackBuff',
-#             'Skill_AttackBuffRadius',
-#             'Skill_AttackProjectileDebuf',
-#             'Skill_BuffRadius',
-#             'Skill_BuffRadiusToggled',
-#             'Skill_BuffOther',
-#             'SkillSecondary_BuffRadius',
-#             'SkillSecondary_PetModifier']
-
-#     def parse(self):
-#         from tqdb.parsers.main import parser
-
-#         skill_ref = (self.props['buffSkillName']
-#                      if 'buffSkillName' in self.props
-#                      else self.props['petSkillName'])
-
-#         # Parse the referenced skill:
-#         util = UtilityParser(self.dbr, self.props, self.strings)
-#         result = parser.parse(util.get_reference_dbr(skill_ref))
-
-#         # Remove the database prefix and format the path:
-#         result['path'] = format_path(self.dbr.replace(resources.DB, ''))
-
-#         return result
-
-
-# class SkillParser():
-#     """
-#     Parser for skill files.
-
-#     """
-#     def __init__(self, dbr, props, strings):
-#         self.dbr = dbr
-#         self.props = props
-#         self.strings = strings
-
-#     @classmethod
-#     def keys(cls):
-#         return [
-#             'Skill_AttackChain',
-#             'Skill_AttackProjectile',
-#             'Skill_AttackProjectileAreaEffect',
-#             'Skill_AttackProjectileBurst',
-#             'Skill_AttackProjectileFan',
-#             'Skill_AttackProjectileRing',
-#             'Skill_AttackRadius',
-#             'Skill_AttackRadiusLightning',
-#             'Skill_AttackSpell',
-#             'Skill_AttackSpellChaos',
-#             'Skill_AttackWave',
-#             'Skill_AttackWeapon',
-#             'Skill_AttackWeaponBlink',
-#             'Skill_AttackWeaponCharge',
-#             'Skill_AttackWeaponRangedSpread',
-#             'Skill_Buff',
-#             'Skill_BuffAttackRadiusDuration',
-#             'Skill_BuffAttackRadiusToggled',
-#             'Skill_BuffSelfColossus',
-#             'Skill_BuffSelfDuration',
-#             'Skill_BuffSelfImmobilize',
-#             'Skill_BuffSelfInvulnerable',
-#             'Skill_BuffSelfToggled',
-#             'Skill_DefensiveProjectileGroundRing',
-#             'Skill_DispelMagic',
-#             'Skill_DropProjectileTelekinesis',
-#             'Skill_GiveBonus',
-#             'Skill_Mastery',
-#             'Skill_Modifier',
-#             'Skill_OnHitAttackRadius',
-#             'Skill_Passive',
-#             'Skill_PassiveOnHitBuffSelf',
-#             'Skill_PassiveOnLifeBuffSelf',
-#             'Skill_ProjectileModifier',
-#             'Skill_RefreshCooldown',
-#             'Skill_WPAttack_BasicAttack',
-#             'Skill_WeaponPool_BasicAttack',
-#             'Skill_WeaponPool_ChargedFinale',
-#             'Skill_WeaponPool_ChargedLinear',
-#             'SkillBuff_Contageous',
-#             'SkillBuff_Debuf',
-#             'SkillBuff_DebufFreeze',
-#             'SkillBuff_DebufTrap',
-#             'SkillBuff_Passive',
-#             'SkillBuff_PassiveShield',
-#             'SkillSecondary_AttackRadius',
-#             'SkillSecondary_ChainBonus',
-#             'SkillSecondary_ChainLightning']
-
-#     def parse(self):
-#         # Grab generic skill data from the first list of properties
-#         skill = self.props[0]
-#         path = format_path(self.dbr.replace(resources.DB, ''))
-#         result = {'path': path}
-
-#         if 'skillDisplayName' in skill:
-#             result['tag'] = skill['skillDisplayName']
-#             if result['tag'] in self.strings:
-#                 result['name'] = self.strings[result['tag']]
-#             else:
-#                 logging.warning(
-#                     f'No skill name found for {result["tag"]} '
-#                     f'in {self.dbr}')
-#                 result['name'] = result['tag']
-#         else:
-#             logging.debug('No skillDisplayName found')
-
-#         if ('skillBaseDescription' in skill and
-#                 skill['skillBaseDescription'] in self.strings):
-#             result['description'] = self.strings[(
-#                 skill['skillBaseDescription'])]
-#         elif 'FileDescription' in skill:
-#             result['description'] = skill['FileDescription']
-
-#         # Remove the database prefix and format the path:
-#         result['path'] = path
-
-#         if len(self.props) > 1:
-#             result['properties'] = []
-#             for index, props in enumerate(self.props):
-#                 util = UtilityParser(self.dbr, props, self.strings)
-#                 util.parse_character()
-#                 util.parse_damage()
-#                 util.parse_defense()
-#                 util.parse_pet_bonus(index)
-#                 util.parse_racial()
-#                 util.parse_skill_properties()
-
-#                 result['properties'].append(util.result)
-
-#             # Check if there's an ultimate level set, if so, cap the tiers.
-#             if 'skillUltimateLevel' in skill:
-#                 ultimate = int(skill['skillUltimateLevel'])
-#                 if len(result['properties']) > ultimate:
-#                     result['properties'] = result['properties'][:ultimate - 1]
-#         else:
-#             util = UtilityParser(self.dbr, skill, self.strings)
-#             util.parse_character()
-#             util.parse_damage()
-#             util.parse_defense()
-#             util.parse_pet_bonus()
-#             util.parse_racial()
-#             util.parse_skill_properties()
-
-#             result['properties'] = util.result
-
-#         # Now parse the requirements:
-#         result.update(util.parse_requirements())
-
-#         return result
 
 
 # class SkillSpawnParser():

@@ -3,6 +3,8 @@ import math
 import os
 import re
 
+import numexpr
+
 from tqdb import dbr as DBRParser
 from tqdb.parsers.main import TQDBParser
 from tqdb.utils.text import texts
@@ -18,9 +20,9 @@ class ItemArtifactParser(TQDBParser):
 
     """
     DIFFICULTIES = {
-        'n': 'Normal',
-        'e': 'Epic',
-        'l': 'Legendary'
+        'n': 'Lesser',
+        'e': 'Greater',
+        'l': 'Divine',
     }
 
     def __init__(self):
@@ -110,6 +112,13 @@ class ItemBaseParser(TQDBParser):
         'l': 'Legendary',
     }
 
+    REQUIREMENTS = [
+        'dexterityRequirement',
+        'intelligenceRequirement',
+        'levelRequirement',
+        'strengthRequirement',
+    ]
+
     def __init__(self):
         super().__init__()
 
@@ -120,6 +129,11 @@ class ItemBaseParser(TQDBParser):
     def parse(self, dbr, dbr_file, result):
         # Always set the category:
         result['category'] = dbr.get('Class', None)
+
+        # Flat requirements are a part of ItemBase, variable ones aren't:
+        for requirement in self.REQUIREMENTS:
+            if requirement in dbr:
+                result[requirement] = dbr[requirement]
 
         # Only parse special/unique equipment:
         classification = dbr.get('itemClassification', None)
@@ -152,6 +166,13 @@ class ItemEquipmentParser(TQDBParser):
     def __init__(self):
         super().__init__()
 
+    def get_priority(self):
+        """
+        Override this parsers priority to set as lowest.
+
+        """
+        return TQDBParser.LOWEST_PRIORITY
+
     @staticmethod
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\itemequipment.tpl'
@@ -179,15 +200,6 @@ class ItemEquipmentParser(TQDBParser):
             # Only add the set if it has a tag:
             result['set'] = item_set.get(ItemSetParser.NAME, None)
 
-        # Although Requirements themselves are a part of ItemBase.tpl, the
-        # itemCostName property (equation based requirements) are a part of
-        # this parser, so they're added on here instead.
-        requirements = {}
-        for requirement in self.REQUIREMENTS:
-            key = requirement.lower() + 'Requirement'
-            if key in dbr:
-                requirements[key] = dbr[key]
-
         if 'itemCostName' in dbr:
             # Cost prefix of this props is determined by its class
             cost_prefix = dbr['Class'].split('_')[1]
@@ -202,22 +214,16 @@ class ItemEquipmentParser(TQDBParser):
                 equation_key = cost_prefix + requirement + 'Equation'
                 req = requirement.lower() + 'Requirement'
 
-                if equation_key in cost_properties and req not in requirements:
+                # Existing requirements shouldn't be overriden:
+                if equation_key in cost_properties and req not in result:
                     equation = cost_properties[equation_key]
 
-                    # Set the possible parameters in the equation:
-                    variables = {
-                        'itemLevel': dbr['itemLevel'],
-                        'totalAttCount': len(result['properties']),
-                    }
+                    # camelCased variables are required for the equations:
+                    itemLevel = dbr['itemLevel']  # noqa
+                    totalAttCount = len(result['properties'])  # noqa
 
                     # Eval the equation:
-                    requirements[req] = math.ceil(
-                        # XXX - Find safe eval solution.
-                        eval(equation, {}, variables))
-
-        # Now merge the finalized requirements:
-        result.update(requirements)
+                    result[req] = math.ceil(numexpr.evaluate(equation).item())
 
 
 class ItemRelicParser(TQDBParser):

@@ -219,6 +219,13 @@ class Texts:
         """
         return string.lower() in self.strings
 
+    def has_tag(self, tag):
+        """
+        Returns a boolean indicating whether or not this tag is known.
+
+        """
+        return tag.lower() in self.tags
+
     def get(self, string):
         """
         Return the friendly value, ready for formatting, for a string.

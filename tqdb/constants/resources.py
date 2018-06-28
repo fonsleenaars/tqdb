@@ -308,21 +308,21 @@ CREATURES = [
     'records/xpack*/creatures/monster/**/*.dbr']
 
 EQUIPMENT = [
-    # 'records/xpack*/item/equipment*/**/*.dbr',
-    # 'records/xpack/item/le_new/*.dbr',
-    # 'records/item/equipment*/**/*.dbr',
-    # 'records/item/relics/*.dbr',
-    # 'records/item/animalrelics/*.dbr',
-    # 'records/xpack*/item/relics/*.dbr',
-    # 'records/xpack*/item/charms/*.dbr',
-    # 'records/xpack*/item/scrolls/*.dbr',
+    'records/xpack*/item/equipment*/**/*.dbr',
+    'records/xpack/item/le_new/*.dbr',
+    'records/item/equipment*/**/*.dbr',
+    'records/item/relics/*.dbr',
+    'records/item/animalrelics/*.dbr',
+    'records/xpack*/item/relics/*.dbr',
+    'records/xpack*/item/charms/*.dbr',
+    'records/xpack*/item/scrolls/*.dbr',
     'records/xpack*/item/artifacts/*.dbr',
     'records/xpack*/item/artifacts/arcaneformulae/*.dbr',
 ]
 
 SETS = [
     'records/item/sets/*.dbr',
-    'records/xpack*/item/sets/*.dbr'
+    'records/xpack*/item/sets/*.dbr',
 ]
 
 SKILLS = [

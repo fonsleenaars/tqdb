@@ -235,7 +235,7 @@ class ItemSkillAugmentParser(TQDBParser):
     """
     # DBR constants used by this parser
     AUGMENT_ALL = 'augmentAllLevel'
-    SKILL_LEVEL = 'itemSkilllevel'
+    SKILL_LEVEL = 'itemSkillLevel'
     SKILL_NAME = 'itemSkillName'
 
     # Texts used by this parser
@@ -278,7 +278,7 @@ class ItemSkillAugmentParser(TQDBParser):
             skill = DBRParser.parse(dbr[self.SKILL_NAME])
 
             if 'tag' in skill:
-                result['properties']['itemSkillName'] = {
+                result['properties'][self.SKILL_NAME] = {
                     'tag': skill['tag'],
                     'name': (
                         self.TXT_GRANT.format(level, skill['name'])
@@ -684,23 +684,9 @@ class ParametersSkillParser(TQDBParser):
 
     """
     FIELDS = [
-        # 'lifeMonitorPercent',
-
-        # 'refreshTime',
-        # 'skillActiveDuration',
-        # 'skillActiveLifeCost',
-        # 'skillActiveManaCost',
-        # 'skillChanceWeight',
-        # 'skillCooldownTime',
         'skillCooldownReduction',
-        # 'skillLifeBonus',
-        # 'skillManaCost',
         'skillManaCostReduction',
-        # 'skillProjectileNumber',
         'skillProjectileSpeedModifier',
-        # 'skillTargetNumber',
-        # 'skillTargetRadius',
-        # 'TargetAngle',
     ]
 
     def __init__(self):

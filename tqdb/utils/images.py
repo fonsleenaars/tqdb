@@ -161,12 +161,12 @@ class SpriteCreator:
 #                              BITMAP UTILITY                                 #
 ###############################################################################
 def save_bitmap(item, item_type, graphics):
-    if 'bitmap' not in item or not item['bitmap']:
-        logging.warning(f'Missing bitmap for {item["tag"]}')
-        return False
-
-    bitmap = item.pop('bitmap')
+    bitmap = item.pop('bitmap', None)
     tag = item['tag']
+
+    if not tag or not bitmap or not bitmap.is_file():
+        logging.warning(f'Missing tag or bitmap for {item["tag"]}: {bitmap}')
+        return False
 
     # Tags for formula's are all the same (lesser, greater, divine)
     if item_type == 'ItemArtifactFormula':
@@ -174,16 +174,14 @@ def save_bitmap(item, item_type, graphics):
     # Skip all non-MI duplicates
     elif (item.get('classification', None) != 'Rare' and
           os.path.isfile(f'{graphics}{tag}.png')):
-            return
+            return True
 
     # Run the texture viewer if a bitmap and tag are set:
-    if tag and bitmap.is_file():
-        command = ['utils/textureviewer/TextureViewer.exe',
-                   str(bitmap),
-                   f'{graphics}{tag}.png']
-        subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    else:
-        logging.warning(f'Missing tag or bitmap for {item["tag"]}: {bitmap}')
-        return False
+    command = ['utils/textureviewer/TextureViewer.exe',
+               # Convert path to string
+               str(bitmap),
+               # Output to graphics folder, file name being the tag.
+               f'{graphics}{tag}.png']
+    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     return True
