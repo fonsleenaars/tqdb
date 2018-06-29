@@ -125,7 +125,10 @@ class Texts:
     def __init__(self):
         self.tags = {}
         for resource in self.TAG_RESOURCES:
-            self.tags.update(self.parse_text_resource(resource))
+            self.tags.update(
+                # Remove brackets from tag texts:
+                (k, self.BRACKETS.sub('', v))
+                for k, v in self.parse_text_resource(resource).items())
 
         self.strings = {}
         for resource in self.STRING_RESOURCES:
@@ -259,8 +262,8 @@ class Texts:
 
         # Parse line into a dictionary of key, value properties:
         return dict(
-            # To be consistent, make all keys lower cased and remove all {}
-            (k.lower(), self.BRACKETS.sub('', v)) for k, v in (
+            # To be consistent, make all keys lower cased
+            (k.lower(), v) for k, v in (
                 properties.split('=', 1)
                 for properties in lines
                 if '=' in properties and not properties.startswith('//')))

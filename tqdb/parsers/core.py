@@ -273,28 +273,7 @@ class ItemSkillAugmentParser(TQDBParser):
         Parse skill augments, mastery augments, and item granted skills.
 
         """
-        if self.SKILL_NAME in dbr and self.SKILL_LEVEL in dbr:
-            level = dbr[self.SKILL_LEVEL]
-
-            skill = DBRParser.parse(dbr[self.SKILL_NAME])
-
-            # Insert this skill into the database:
-            if 'tag' in skill:
-                if skill['tag'] not in storage.skills:
-                    storage.skills[skill['tag']] = skill
-
-                # Now add the granted skill to the item:
-                result['properties'][self.SKILL_NAME] = {
-                    'tag': skill['tag'],
-                    'name': (
-                        self.TXT_GRANT.format(level, skill['name'])
-                        if level > 1
-                        else self.TXT_GRANT_LVL1.format(skill['name'])),
-                    'level': level,
-                }
-            else:
-                # Log the warning and move on
-                logging.warning(f'No tag found in {dbr[self.SKILL_NAME]}')
+        self._parse_skill_grant(dbr, result)
 
         # Parse skills that are augmented:
         for name, level in self.SKILL_AUGMENTS.items():
@@ -303,6 +282,8 @@ class ItemSkillAugmentParser(TQDBParser):
                 continue
 
             skill = DBRParser.parse(dbr[name])
+            # Store the skill, which will ensure a unique tag:
+            skill_tag = storage.store_skill(skill)
             level = dbr[level]
 
             # Skill format is either ItemSkillIncrement or ItemMasteryIncrement
@@ -311,7 +292,7 @@ class ItemSkillAugmentParser(TQDBParser):
                             else self.TXT_MASTERY_INC)
 
             result['properties'][name] = {
-                'tag': skill['tag'],
+                'tag': skill_tag,
                 'name': texts.get(skill_format).format(level, skill['name']),
             }
 
@@ -320,6 +301,36 @@ class ItemSkillAugmentParser(TQDBParser):
             level = dbr[self.AUGMENT_ALL]
             result['properties'][self.AUGMENT_ALL] = (
                 texts.get(self.TXT_ALL_INC).format(level))
+
+    def _parse_skill_grant(self, dbr, result):
+        """
+        Parse a granted skill.
+
+        """
+        # Skip files without both granted skill name and level:
+        if self.SKILL_NAME not in dbr or self.SKILL_LEVEL not in dbr:
+            return
+
+        level = dbr[self.SKILL_LEVEL]
+        skill = DBRParser.parse(dbr[self.SKILL_NAME])
+
+        if 'name' not in skill:
+            return
+
+        # Store the skill, which will ensure a unique tag:
+        skill_tag = storage.store_skill(skill)
+
+        # Now add the granted skill to the item:
+        result['properties'][self.SKILL_NAME] = {
+            # Set the path to ensure it's unique, when skills are
+            # organized at the end, it will be replaced by a unique tag
+            'tag': skill_tag,
+            'name': (
+                self.TXT_GRANT.format(level, skill['name'])
+                if level > 1
+                else self.TXT_GRANT_LVL1.format(skill['name'])),
+            'level': level,
+        }
 
 
 class ParametersOffensiveParser(TQDBParser):

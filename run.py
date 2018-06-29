@@ -218,8 +218,18 @@ timer = time.clock()
 #                                 SKILLS                                     #
 ##############################################################################
 
+# The skills have been stored by their path while indexing equipment.
+# In order to reference and store them by tag, iterate over all the entries and
+# use or create a unique tag, then update the references in equipment files.
+skills = storage.skills.copy()
+
+for skill in skills.values():
+    # Pop the 'path' property, it was used during parsing to ensure correct
+    # skill tag references for requipment.
+    skill.pop('path')
+
 # Store the skills to output to JSON
-data['skills'] = storage.skills.copy()
+data['skills'] = skills
 
 ###############################################################################
 #                                    OUTPUT                                   #

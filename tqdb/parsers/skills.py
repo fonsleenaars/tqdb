@@ -30,22 +30,14 @@ class SkillBaseParser(TQDBParser):
         'skillTargetNumber',
         'skillTargetRadius',
     ]
-    # These fields are left for individual parsers:
-    # 'lifeMonitorPercent',   # 1 file: skill_passiveonlifebuffself.tpl
-    # 'projectilePiercing',   # 1 file: skill_modifier.tpl
-    # 'refreshTime',          # 1 file: skill_refreshcooldown.tpl
-    # 'skillChanceWeight',    # 1 file: templatebase\skill_wpattack.tpl
 
     def __init__(self):
         super().__init__()
 
     def get_priority(self):
         """
-        Override this parsers priority to set as lowest.
-
-        This parser needs to have the lowest priority so that when it is added
-        to the skills dictionary in storage, all other properties have been
-        parsed.
+        Assign the lowest priority to this parser so that all parsers have run
+        before the properties are indexed by skill level in this parser.
 
         """
         return TQDBParser.LOWEST_PRIORITY
@@ -62,6 +54,10 @@ class SkillBaseParser(TQDBParser):
         name (the property returns a tag), and the maximum level of a skill.
 
         """
+        # Store the path to this skill, it is used in tqdb.storage to ensure
+        # all tags are unique.
+        result['path'] = dbr_file
+
         if self.NAME in dbr:
             # The tag is the skillDisplayName property
             result['tag'] = dbr[self.NAME]
@@ -148,9 +144,34 @@ class SkillBuffParser(TQDBParser):
             result.update(DBRParser.parse(dbr[self.BUFF]))
 
 
+class SkillModifierParser(TQDBParser):
+    """
+    Parser for `skill_modifier.tpl`.
+
+    """
+    FIELD = 'projectilePiercing'
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\skill_modifier.tpl'
+
+    def parse(self, dbr, dbr_file, result):
+        """
+        Parse the "% Chance to pass through enemies" property.
+
+        """
+        if self.FIELD in dbr:
+            result['properties'][self.FIELD] = [
+                texts.get(self.FIELD).format(value)
+                for value in dbr[self.FIELD]]
+
+
 class SkillPetModifier(TQDBParser):
     """
-    Parser for `templatebase/skillsecondary_petmodifier.tpl`.
+    Parser for `skillsecondary_petmodifier.tpl`.
 
     """
     PET_SKILL = 'petSkillName'
@@ -170,6 +191,31 @@ class SkillPetModifier(TQDBParser):
         if self.PET_SKILL in dbr:
             # Now set our result as the result of the pet skill being parsed:
             result.update(DBRParser.parse(dbr[self.PET_SKILL]))
+
+
+class SkillPassiveOnLifeBuffSelfParser(TQDBParser):
+    """
+    Parser for `skill_passiveonlifebuffself.tpl`.
+
+    """
+    FIELD = 'lifeMonitorPercent'
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\skill_passiveonlifebuffself.tpl'
+
+    def parse(self, dbr, dbr_file, result):
+        """
+        Parse the "activated when health drops below ...%" property.
+
+        """
+        if self.FIELD in dbr:
+            result['properties'][self.FIELD] = [
+                texts.get(self.FIELD).format(value)
+                for value in dbr[self.FIELD]]
 
 
 class SkillProjectileBaseParser(TQDBParser):
@@ -196,6 +242,58 @@ class SkillProjectileBaseParser(TQDBParser):
         Parse the projectile properties.
 
         """
+
+
+class SkillRefreshCooldownParser(TQDBParser):
+    """
+    Parser for `skill_refreshcooldown.tpl`.
+
+    Note: the only skill that implements this seems to be Renewal from Nature.
+
+    """
+    FIELD = 'refreshTime'
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\skill_refreshcooldown.tpl'
+
+    def parse(self, dbr, dbr_file, result):
+        """
+        Parse the refresh cooldown property.
+
+        """
+        if self.FIELD in dbr:
+            result['properties'][self.FIELD] = [
+                texts.get(self.FIELD).format(value)
+                for value in dbr[self.FIELD]]
+
+
+class SkillWeaponAttackParser(TQDBParser):
+    """
+    Parser for `templatebase\skill_wpattack.tpl.tpl`.
+
+    """
+    FIELD = 'skillChanceWeight'
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\templatebase\\skill_wpattack.tpl'
+
+    def parse(self, dbr, dbr_file, result):
+        """
+        Parse the "Chance to be used" property.
+
+        """
+        if self.FIELD in dbr:
+            result['properties'][self.FIELD] = [
+                texts.get(self.FIELD).format(value)
+                for value in dbr[self.FIELD]]
 
 
 # class SkillSpawnParser():
