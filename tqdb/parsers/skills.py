@@ -31,6 +31,25 @@ class SkillBaseParser(TQDBParser):
         'skillTargetRadius',
     ]
 
+    # Damage absorption fields:
+    ABSORPTIONS = [
+        'damageAbsorption',
+        'damageAbsorptionPercent',
+    ]
+
+    # Damage absorption qualifier types:
+    QUALIFIERS = {
+        'bleedingDamageQualifier': 'tagQualifyingDamageBleeding',
+        'coldDamageQualifier': 'tagQualifyingDamageCold',
+        'elementalDamageQualifier': 'tagQualifyingDamageElemental',
+        'fireDamageQualifier': 'tagQualifyingDamageFire',
+        'lifeDamageQualifier': 'tagQualifyingDamageLife',
+        'lightningDamageQualifier': 'tagQualifyingDamageLightning',
+        'pierceDamageQualifier': 'tagQualifyingDamagePierce',
+        'physicalDamageQualifier': 'tagQualifyingDamagePhysical',
+        'poisonDamageQualifier': 'tagQualifyingDamagePoison',
+    }
+
     def __init__(self):
         super().__init__()
 
@@ -90,8 +109,44 @@ class SkillBaseParser(TQDBParser):
                     continue
 
                 # Insert this skill property
+                value = texts.get(field).format(itr_dbr[field])
                 TQDBParser.insert_value(
-                    field, itr_dbr[field], is_singular, result)
+                    field, value, is_singular, result)
+
+        # Check the damage absorption skill properties:
+        for field in self.ABSORPTIONS:
+            for index in range(max_level):
+                itr_dbr = TQDBParser.extract_values(dbr, field, index)
+
+                if field not in itr_dbr:
+                    continue
+
+                # Add 'skill' prefix and capitalize first letter:
+                field_prefixed = 'skill' + field[:1].upper() + field[1:]
+                value = itr_dbr[field]
+
+                # Find qualifier damage type:
+                qualified_damage = False
+                for dmg_type, text_key in self.QUALIFIERS.items():
+                    if dmg_type not in dbr:
+                        continue
+
+                    # Add the damage absorption value and dmg type:
+                    qualified_damage = True
+
+                    TQDBParser.insert_value(
+                        field_prefixed,
+                        texts.get(field).format(value, texts.get(text_key)),
+                        is_singular,
+                        result)
+
+                # If there is no qualifier, it's all damage:
+                if not qualified_damage:
+                    TQDBParser.insert_value(
+                        field_prefixed,
+                        texts.get(field).format(value, 'All'),
+                        is_singular,
+                        result)
 
         # After all skill properties have been set, index them by level:
         properties = [{} for i in range(max_level)]

@@ -25,6 +25,17 @@ class Texts:
     INLINE = r'(.*)\/\/(.*)'
     INLINE_REPLACE = r'\1'
 
+    # These resources are manually inserted:
+    CUSTOM_RESOURCES = [
+        ['damageabsorption', '{%.0f0} ({%s1}) Damage Absorption'],
+        ['damageabsorptionpercent', '{%.0f0}% ({%s1}) Damage Absorption'],
+        ['retaliationstun', ' second(s) of Stun retaliation'],
+        ['projectileexplosionradius', '{%.0f0} Meter Radius'],
+        ['skillactiveduration', '{%.0f0} Second Duration'],
+        ['skillcooldowntime', '{%.1f0} Second(s) Recharge'],
+        ['skilltargetradius', '{%.0f0} Meter Radius'],
+    ]
+
     # These resources need to be copied from existing ones, under a new name:
     COPY_RESOURCES = [
         # The misspelling of charcteritemglobalreduction is "correct", that's
@@ -48,6 +59,12 @@ class Texts:
         ['offensivefumble', 'damagedurationfumble'],
         ['offensiveprojectilefumble', 'damagedurationprojectilefumble'],
         ['offensivepierceratio', 'damagebasepierceratio'],
+        ['projectilefragmentslaunchnumberranged',
+         'projectilefragmentslaunchnumberminmax'],
+        ['skillmanacost', 'manacost'],
+        ['skillprojectilenumber', 'projectilelaunchnumber'],
+        ['skilltargetangle', 'targetangle'],
+        ['skilltargetnumber', 'targetnumber'],
         ['spawnobjectstimetolive', 'skillpettimetolive'],
     ]
 
@@ -162,6 +179,10 @@ class Texts:
             (new_key, self.strings[old_key])
             for new_key, old_key in self.COPY_RESOURCES))
 
+        # Insert a few custom resources that are otherwise incorrect:
+        self.strings.update(dict(
+            (custom[0], custom[1]) for custom in self.CUSTOM_RESOURCES))
+
         # Now replace words that are different in DBR files such as
         # 'damage' becoming 'offensive':
         replacements = {}
@@ -203,7 +224,8 @@ class Texts:
                 ranged[key + 'ranged'] = '{0:.1f} ~ {1:.1f}' + value
                 value = '{0:.1f}' + value
             # All other regular get a non-decimal ranged variant:
-            elif 'characterattackspeed' not in key:
+            elif ('characterattackspeed' not in key
+                  and 'tagqualifying' not in key):
                 # Also add a ranged formatter:
                 ranged[key + 'ranged'] = '{0:.0f} ~ {1:.0f}' + value
                 value = '{0:.0f}' + value

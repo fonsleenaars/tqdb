@@ -2,8 +2,6 @@
 Core templates that are often included by other templates.
 
 """
-import logging
-
 from tqdb import dbr as DBRParser
 from tqdb import storage
 from tqdb.parsers.main import TQDBParser
@@ -758,28 +756,6 @@ class ParametersSkillParser(TQDBParser):
 
                 TQDBParser.insert_value(
                     field, f'{prefix}{value}', is_singular, result)
-
-    # Check the damage absorption skill properties:
-    # if 'damageAbsorption' in props or 'damageAbsorptionPercent' in props:
-    #     field = ('damageAbsorption'
-    #              if 'damageAbsorption' in props
-    #              else 'damageAbsorptionPercent')
-    #     value = int(float(props[field]))
-
-    #     # Add 'skill' prefix and capitalize first letter:
-    #     field_prefixed = 'skill' + field[:1].upper() + field[1:]
-
-    #     # Find qualifier damage type:
-    #     for prop, damage in fc.QUALIFIERS.items():
-    #         if prop in props and props[prop]:
-    #             # Add the damage absorption value and dmg type:
-    #             self.result[field_prefixed] = (
-    #                 self.strings[field].format(value, damage))
-
-    #     # If there is no qualifier, it's all damage:
-    #     if field_prefixed not in self.result:
-    #         self.result[field_prefixed] = (
-    #             self.strings[field].format(value, 'All'))
 
 
 class RacialBonusParser(TQDBParser):

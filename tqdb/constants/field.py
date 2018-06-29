@@ -25,16 +25,3 @@ PET_IGNORE_SKILLS = [
     'records\\skills\\monster skills\\defense\\resist_undead.dbr',
     'records\\skills\\monster skills\\defense_undeadresists.dbr',
     'records\\skills\\boss skills\\boss_conversionimmunity.dbr']
-
-# Damage qualifier types:
-QUALIFIERS = {
-    'bleedingDamageQualifier': 'Bleeding',
-    'coldDamageQualifier': 'Cold',
-    'elementalDamageQualifier': 'Elemental',
-    'fireDamageQualifier': 'Fire',
-    'lifeDamageQualifier': 'Vitality',
-    'lightningDamageQualifier': 'Lightning',
-    'pierceDamageQualifier': 'Pierce',
-    'physicalDamageQualifier': 'Physical',
-    'poisonDamageQualifier': 'Poison',
-}

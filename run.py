@@ -10,22 +10,10 @@ from tqdb.constants import resources
 from tqdb.dbr import parse, read
 from tqdb.utils import images
 from tqdb.utils.core import get_affix_table_type
-# from tqdb.utils.core import FullPaths
-# from tqdb.utils.core import is_dir
-# from tqdb.utils.core import pluck
-# from tqdb.utils.core import print_progress
 
-# Directory preparations for logging
-# if not os.path.exists('logs'):
-#     os.makedirs('logs')
-# Configure logging:
-# LOG_FILENAME = os.path.join(
-#     'logs',
-#     datetime.now().strftime('tqdb_%Y%m%d-%H%M%S.log'))
 # Disable any DEBUG logging from PIL:
 logging.getLogger('PIL').setLevel(logging.WARNING)
 logging.basicConfig(
-    # filename=LOG_FILENAME,
     level=logging.INFO,
     format='%(asctime)s %(message)s',
     datefmt='%H:%M')
@@ -34,46 +22,7 @@ logging.basicConfig(
 if not os.path.exists('output/graphics'):
     os.makedirs('output/graphics')
 
-# # Parse command line call
-# argparser = argparse.ArgumentParser(description='TQ:IT Database parser')
-# argparser.add_argument(
-#     '-d',
-#     '--dir',
-#     help='Specify a file or directory to parse',
-#     action=FullPaths,
-#     type=is_dir)
-# argparser.add_argument(
-#     '-c',
-#     '--categories',
-#     nargs='+',
-#     help=('Specify the categories to parse. You can choose from: affixes, '
-#           'equipment, loot, sets, skills'))
-
-# # Grab the arguments:
-# args = argparser.parse_args()
-
-# categories = set()
-# files = []
 data = {}
-
-# Determine which files are required:
-# print('Determining what files are required...')
-# if args.categories:
-#     categories.update(args.categories)
-# elif not args.dir:
-#     categories.update([
-#         'affixes',
-#         'loot',
-#         'equipment-basic',
-#         'equipment',
-#         'sets',
-#         'skills',
-#     ])
-# if args.dir or {'loot', 'sets'} & set(categories):
-#     categories.add('equipment-basic')
-# if args.dir or 'equipment' in categories:
-#     categories.update(['equipment-basic', 'skills'])
-
 timer = time.clock()
 ###############################################################################
 #                                   AFFIXES                                   #
