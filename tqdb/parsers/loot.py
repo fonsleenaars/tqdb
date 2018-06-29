@@ -1,15 +1,10 @@
-from tqdb import dbr as DBRParser
-from tqdb.parsers.main import TQDBParser
-from tqdb.utils.text import texts
-# import logging
+# import numexpr
 import os
 import re
 
-# import numexpr
-
-# from tqdb.parsers.util import format_path
-# from tqdb.parsers.util import UtilityParser
-# from tqdb.storage import equipment
+from tqdb import dbr as DBRParser
+from tqdb.parsers.main import TQDBParser
+from tqdb.utils.text import texts
 
 
 class LootRandomizerParser(TQDBParser):
@@ -25,12 +20,10 @@ class LootRandomizerParser(TQDBParser):
         return f'{TQDBParser.base}\\lootrandomizer.tpl'
 
     def parse(self, dbr, dbr_file, result):
-        result = {}
         if 'lootRandomizerName' in dbr:
             result['tag'] = dbr['lootRandomizerName']
-            result['name'] = texts.tag(result['tag'])
-
-        # XXX - Find the LootRandomizerTables it's in:
+            # Some names had inline comments, so strip the spaces:
+            result['name'] = texts.tag(result['tag']).strip()
 
 
 class LootRandomizerTableParser(TQDBParser):

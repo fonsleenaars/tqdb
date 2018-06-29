@@ -7,8 +7,9 @@ import time
 
 from tqdb import storage
 from tqdb.constants import resources
-from tqdb.dbr import parse
+from tqdb.dbr import parse, read
 from tqdb.utils import images
+from tqdb.utils.core import get_affix_table_type
 # from tqdb.utils.core import FullPaths
 # from tqdb.utils.core import is_dir
 # from tqdb.utils.core import pluck
@@ -73,44 +74,72 @@ data = {}
 # if args.dir or 'equipment' in categories:
 #     categories.update(['equipment-basic', 'skills'])
 
-
+timer = time.clock()
 ###############################################################################
 #                                   AFFIXES                                   #
 ###############################################################################
-# if 'affixes' in categories:
-#     files = []
-#     for affix_file in res.AFFIXES:
-#         files.extend(glob.glob(res.DB + affix_file, recursive=True))
+files = []
+for resource in resources.AFFIX_TABLES:
+    table_files = resources.DB / resource
+    files.extend(glob.glob(str(table_files), recursive=True))
 
-#     affixes = {'prefixes': {}, 'suffixes': {}}
-#     for index, dbr in enumerate(files):
-#         print_progress("Parsing affixes", index, len(files))
-#         affix = parser.parse(dbr)
+# The affix tables will determine what gear an affix can be applied to.
+affix_tables = {}
+for dbr in files:
+    table = read(dbr)
 
-#         # Skip affixes without bonuses (first one will be empty):
-#         if not affix['options'][0]:
-#             continue
+    # Use the filename to determine what equipment this table is for:
+    file_name = os.path.basename(dbr).split('_')
+    table_type = get_affix_table_type(file_name[0])
 
-#         # Add affixes to their respective pre- or suffix list:
-#         affixType = 'prefixes' if 'Prefix' in affix['tag'] else 'suffixes'
-#         affixTag = affix['tag']
+    # For each affix in this table, create an entry:
+    for field, affix_dbr in table.items():
+        if not field.startswith('randomizerName') or not table_type:
+            continue
 
-#         # Remove the tag property now
-#         del(affix['tag'])
+        affix_dbr = str(affix_dbr)
+        if affix_dbr not in affix_tables:
+            affix_tables[affix_dbr] = [table_type]
+        elif table_type not in affix_tables[affix_dbr]:
+            affix_tables[affix_dbr].append(table_type)
 
-#         # Either add the affix or add its properties as an alternative
-#         if affixTag in affixes[affixType]:
-#             affixes[affixType][affixTag]['options'].extend(affix['options'])
-#         else:
-#             affixes[affixType][affixTag] = affix
+files = []
+for resource in resources.AFFIXES:
+    affix_files = resources.DB / resource
+    files.extend(glob.glob(str(affix_files), recursive=True))
 
-#     files = []
-#     for table_file in res.AFFIX_TABLES:
-#         files.extend(glob.glob(res.DB + table_file, recursive=True))
+affixes = {'prefixes': {}, 'suffixes': {}}
+for dbr in files:
+    affix = parse(dbr)
 
-#     data['affix'] = affixes
+    # Skip affixes without properties (first one will be empty):
+    if not affix['properties']:
+        continue
+
+    # Assign the table types to this affix:
+    if dbr not in affix_tables or len(affix_tables[dbr]) == 17:
+        # Affix can occur on all equipment:
+        affix['equipment'] = 'All equipment'
+    else:
+        affix['equipment'] = ', '.join(affix_tables[dbr])
+
+    # Add affixes to their respective pre- or suffix list:
+    affixType = 'prefixes' if 'Prefix' in affix['tag'] else 'suffixes'
+    affixTag = affix.pop('tag')
+
+    # Either add the affix or add its properties as an alternative
+    if affixTag in affixes[affixType]:
+        affixes[affixType][affixTag]['properties'].append(affix['properties'])
+    else:
+        # Place the affix properties into a list that can be extended by
+        # alternatives during this parsing.
+        affix['properties'] = [affix['properties']]
+        affixes[affixType][affixTag] = affix
+
+data['affix'] = affixes
 
 # Log and reset the timer:
+logging.info(f'Parsed affixes in {time.clock() - timer} seconds.')
 timer = time.clock()
 
 ###############################################################################

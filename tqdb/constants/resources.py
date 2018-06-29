@@ -9,13 +9,13 @@ DB = Path('data/database/')
 RES = Path('data/resources/')
 
 AFFIXES = [
-    'records/item/\lootmagicalaffixes/*ix/default/*.dbr',
-    'records/xpack*/item/\lootmagicalaffixes/*ix/default/*.dbr',
-    'records/xpack*/item/\lootmagicalaffixes/*ix/*.dbr']
+    'records/item/lootmagicalaffixes/*ix/default/*.dbr',
+    'records/xpack*/item/lootmagicalaffixes/*ix/default/*.dbr',
+    'records/xpack*/item/lootmagicalaffixes/*ix/*.dbr']
 
 AFFIX_TABLES = [
-    'records/item/\lootmagicalaffixes/*ix/**/*.dbr',
-    'records/xpack*/item/\lootmagicalaffixes/*ix/**/*.dbr']
+    'records/item/lootmagicalaffixes/*ix/table*/table*.dbr',
+    'records/xpack*/item/lootmagicalaffixes/*ix/table*/*.dbr']
 
 CHESTS = {
     'tagMonsterName004': [

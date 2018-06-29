@@ -3,13 +3,8 @@ Utility functions.
 
 """
 import argparse
-import glob
 import os
 import sys
-
-from tqdb.constants.resources import DB, TEX
-from tqdb.parsers.util import format_path
-from tqdb.utils.images import save_bitmap
 
 
 ###########################################################################
@@ -62,44 +57,47 @@ def print_progress(label,  i, end_val, bar_length=20):
 ###########################################################################
 #                              PARSE UTILITY                              #
 ###########################################################################
-def index_equipment(resource, parser, label):
-    files = []
-    for equipment_file in resource:
-        # Exclude the /default and /old directories from equipment:
-        equipment_files = glob.glob(DB + equipment_file, recursive=True)
-        files.extend([
-            equipment_file
-            for equipment_file
-            in equipment_files
-            if not ('\\old' in equipment_file or '\\default' in equipment_file)
-        ])
+def get_affix_table_type(file_prefix):
+    """
+    Retrieve a friendly name for an affix table.
 
-    equipment = {}
-    items = {}
+    This transforms something like 'headmage' into 'Head (Mage)'
 
-    for index, dbr in enumerate(files):
-        print_progress(f'Parsing {label}', index, len(files))
-        parsed, category = pluck(parser.parse(dbr, include_type=True),
-                                 'parsed',
-                                 'class')
-
-        # The equipment files have some unwanted files, check classification:
-        if not parsed or 'classification' not in parsed or not parsed['name']:
-            continue
-
-        # Save the bitmap and remove the bitmap key
-        save_bitmap(parsed, category, 'output/graphics/', TEX)
-
-        # Add to the global equipment list:
-        equipment[format_path(dbr.replace(DB, ''))] = parsed
-
-        # Organize the equipment based on the category
-        if category and category in items:
-            items[category].append(parsed)
-        elif category:
-            items[category] = [parsed]
-
-    return items, equipment
+    """
+    if file_prefix.startswith('armsmage'):
+        return 'Arms (Mage)'
+    elif file_prefix.startswith('armsmelee'):
+        return 'Arms (Melee)'
+    elif file_prefix.startswith('headmage'):
+        return 'Head (Mage)'
+    elif file_prefix.startswith('headmelee'):
+        return 'Head (Melee)'
+    elif file_prefix.startswith('legmage'):
+        return 'Legs (Mage)'
+    elif file_prefix.startswith('legmelee'):
+        return 'Legs (Melee)'
+    elif file_prefix.startswith('torsomage'):
+        return 'Chest (Mage)'
+    elif file_prefix.startswith('torsomelee'):
+        return 'Chest (Melee)'
+    elif file_prefix.startswith('amulet'):
+        return 'Amulet'
+    elif file_prefix.startswith('ring'):
+        return 'Ring'
+    elif file_prefix.startswith('shield'):
+        return 'Shield'
+    elif file_prefix.startswith('axe'):
+        return 'Axe'
+    elif file_prefix.startswith('bow'):
+        return 'Bow'
+    elif file_prefix.startswith('club'):
+        return 'Club'
+    elif file_prefix.startswith('spear'):
+        return 'Spear'
+    elif file_prefix.startswith('staff'):
+        return 'Staff'
+    elif file_prefix.startswith('sword'):
+        return 'Sword'
 
 
 def pluck(d, *k):

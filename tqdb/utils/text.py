@@ -21,6 +21,10 @@ class Texts:
     # Regex to remove the {} prefixes in texts:
     BRACKETS = re.compile(r'\{[^)]*\}')
 
+    # Regex to remove inline comments in texts:
+    INLINE = r'(.*)\/\/(.*)'
+    INLINE_REPLACE = r'\1'
+
     # These resources need to be copied from existing ones, under a new name:
     COPY_RESOURCES = [
         # The misspelling of charcteritemglobalreduction is "correct", that's
@@ -262,10 +266,10 @@ class Texts:
 
         # Parse line into a dictionary of key, value properties:
         return dict(
-            # To be consistent, make all keys lower cased
-            (k.lower(), v) for k, v in (
-                properties.split('=', 1)
-                for properties in lines
+            # Keys are lowercased, inline comments are removed
+            (k.lower(), re.sub(self.INLINE, self.INLINE_REPLACE, v))
+            for k, v in (
+                properties.split('=', 1) for properties in lines
                 if '=' in properties and not properties.startswith('//')))
 
 
