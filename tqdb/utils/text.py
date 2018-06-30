@@ -33,6 +33,8 @@ class Texts:
         ['projectileexplosionradius', '{%.0f0} Meter Radius'],
         ['skillactiveduration', '{%.0f0} Second Duration'],
         ['skillcooldowntime', '{%.1f0} Second(s) Recharge'],
+        # Can't use 'manacost' entry because of incorrect spacing
+        ['skillmanacost', '{%.0f0} Energy Cost'],
         ['skilltargetradius', '{%.0f0} Meter Radius'],
     ]
 
@@ -61,7 +63,6 @@ class Texts:
         ['offensivepierceratio', 'damagebasepierceratio'],
         ['projectilefragmentslaunchnumberranged',
          'projectilefragmentslaunchnumberminmax'],
-        ['skillmanacost', 'manacost'],
         ['skillprojectilenumber', 'projectilelaunchnumber'],
         ['skilltargetangle', 'targetangle'],
         ['skilltargetnumber', 'targetnumber'],

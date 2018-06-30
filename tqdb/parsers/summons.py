@@ -30,8 +30,20 @@ class PetBonusParser(TQDBParser):
             # Parse the pet bonus and add it:
             pet_bonus = DBRParser.parse(dbr[self.NAME])
 
+            properties = (
+                # If a tiered property set is found, return the first entry
+                pet_bonus['properties'][0]
+                if isinstance(pet_bonus['properties'], list)
+                # Otherwise just return the list
+                else pet_bonus['properties'])
+
+            # Don't allow nested petBonus properties
+            # One example of this is the Spear of Nemetona
+            if 'petBonus' in properties:
+                properties.pop('petBonus')
+
             # Set the properties of the bonus as the value for this field:
-            result['petBonus'] = pet_bonus['properties']
+            result['properties']['petBonus'] = properties
 
 
 class SummonParser():
