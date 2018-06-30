@@ -5,6 +5,7 @@ These text related functions are the strings that are displayed for attributes,
 item names, and all other properties used in Titan Quest.abs
 
 """
+import logging
 import re
 
 from pathlib import Path
@@ -144,8 +145,10 @@ class Texts:
     # New python friendly regex structure
     REGEX_NEW = '{{{arg}:{pre_signed}{post_signed}{decimals}{type}}}'
 
-    def __init__(self):
+    def __init__(self, locale):
         self.tags = {}
+        self.locale = locale
+
         for resource in self.TAG_RESOURCES:
             self.tags.update(
                 # Remove brackets from tag texts:
@@ -236,6 +239,9 @@ class Texts:
         # Now that iteration is done, merge the ranged formats:
         self.strings.update(ranged)
 
+        # Last but not least, merge the entirety of text resources:
+        self.texts = {**self.tags, **self.strings}
+
     def tag(self, tag):
         """
         Return the friendly name for a tag.
@@ -243,7 +249,7 @@ class Texts:
         If no friendly name was found, return the tag itself.
 
         """
-        return self.tags.get(tag.lower(), tag)
+        return self.texts.get(tag.lower(), tag)
 
     def has(self, string):
         """
@@ -264,7 +270,7 @@ class Texts:
         Return the friendly value, ready for formatting, for a string.
 
         """
-        return self.strings[string.lower()]
+        return self.texts[string.lower()]
 
     def get_og(self, string):
         """
@@ -278,7 +284,7 @@ class Texts:
         Parse a text resource file, for a certain locale.
 
         """
-        f = self.BASE_DIR / text_file
+        f = self.BASE_DIR / self.locale / text_file
 
         try:
             # Most files have UTF-16 or RAW encoding
@@ -286,6 +292,12 @@ class Texts:
         except UnicodeError:
             # Some files have ??? encoding (literally)
             lines = [l.rstrip('\n') for l in open(f)]
+        except FileNotFoundError:
+            # Log error and move on:
+            logging.warning(f'Text resource file missing: {text_file}')
+
+            # Return an empty dict not to break the loop
+            return {}
 
         # Parse line into a dictionary of key, value properties:
         return dict(
@@ -297,4 +309,4 @@ class Texts:
 
 
 # Prepare an instance for usage:
-texts = Texts()
+texts = Texts(locale='en')
