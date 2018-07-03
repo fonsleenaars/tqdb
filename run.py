@@ -55,8 +55,8 @@ def tqdb():
     images.SpriteCreator('output/graphics/', 'output')
 
     output_name = f'output/tqdb.{args.locale.lower()}.{tqdb_version}.json'
-    with open(output_name, 'w') as data_file:
-        json.dump(data, data_file, sort_keys=True)
+    with open(output_name, 'w', encoding='utf8') as data_file:
+        json.dump(data, data_file, ensure_ascii=False, sort_keys=True)
 
 
 if __name__ == '__main__':

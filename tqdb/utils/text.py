@@ -258,8 +258,12 @@ class Texts:
         self.texts = {**self.tags, **self.strings}
 
         # Output the dictionary so it can be reviewed during parsings:
-        with open('output/texts.json', 'w') as texts_file:
-            json.dump(self.texts, texts_file, sort_keys=True)
+        with open('output/texts.json', 'w', encoding='utf8') as texts_file:
+            json.dump(
+                self.texts,
+                texts_file,
+                ensure_ascii=False,
+                sort_keys=True)
 
     def tag(self, tag):
         """
