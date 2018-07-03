@@ -542,7 +542,7 @@ class ParametersOffensiveParser(TQDBParser):
         if xor:
             value = {
                 'chance': (
-                    texts.get_og(GLOBAL_XOR_ALL)
+                    texts.get(GLOBAL_XOR_ALL)
                     if chance == 100
                     else texts.get(GLOBAL_XOR_PCT).format(chance)),
                 'properties': fields,
@@ -550,7 +550,7 @@ class ParametersOffensiveParser(TQDBParser):
         else:
             value = {
                 'chance': (
-                    texts.get_og(GLOBAL_ALL).format('')
+                    texts.get(GLOBAL_ALL).format('')
                     if chance == 100
                     else texts.get(GLOBAL_PCT).format(chance)),
                 'properties': self.offensive,

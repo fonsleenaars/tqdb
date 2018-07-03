@@ -6,6 +6,7 @@ item names, and all other properties used in Titan Quest.abs
 
 """
 import logging
+import json
 import re
 
 from pathlib import Path
@@ -18,6 +19,21 @@ class Texts:
     """
     # Directory holding all the resources:
     BASE_DIR = Path('data/resources')
+
+    # Regex to match base fields (starts with these prefixes):
+    BASE_FIELDS = re.compile(
+        # Make sure we're matching prefixes
+        r'^('
+        # Don't match characterattackspeed or characterclass
+        r'(character(?!attackspeed|class))|'
+        # All defensive prefixes
+        r'defensive|'
+        # All offensive prefixes
+        r'offensive|'
+        # And lastly all retaliation prefixes
+        r'retaliation'
+        r')'
+    )
 
     # Regex to remove the {} prefixes in texts:
     BRACKETS = re.compile(r'\{[^)]*\}')
@@ -161,9 +177,6 @@ class Texts:
         for resource in self.STRING_RESOURCES:
             self.strings.update(self.parse_text_resource(resource))
 
-        # Maintain a dictionary of the original strings for some edge cases:
-        self.original_strings = self.strings.copy()
-
         # Some strings require formatting to replace their TQ regex structure
         # with a python friendly one, others need some replacements in their
         # property names, and some fields are missing from the text database.
@@ -224,17 +237,17 @@ class Texts:
                     value = value.replace(
                         match.group(),
                         self.REGEX_NEW.format(**match.groupdict()))
-            # Add a decimal ranged variant for values that have seconds:
-            elif 'second' in value:
-                # Also add a ranged formatter:
-                ranged[key + 'ranged'] = '{0:.1f} ~ {1:.1f}' + value
-                value = '{0:.1f}' + value
-            # All other regular get a non-decimal ranged variant:
-            elif ('characterattackspeed' not in key
-                  and 'tagqualifying' not in key):
-                # Also add a ranged formatter:
-                ranged[key + 'ranged'] = '{0:.0f} ~ {1:.0f}' + value
-                value = '{0:.0f}' + value
+            # All other base fields need a numeric prefix for values
+            elif self.BASE_FIELDS.match(key):
+                # Add a decimal ranged variant for values that have seconds:
+                if 'second' in value:
+                    # Also add a ranged formatter:
+                    ranged[key + 'ranged'] = '{0:.1f} ~ {1:.1f}' + value
+                    value = '{0:.1f}' + value
+                else:
+                    # Also add a ranged formatter:
+                    ranged[key + 'ranged'] = '{0:.0f} ~ {1:.0f}' + value
+                    value = '{0:.0f}' + value
 
             self.strings[key] = value
 
@@ -243,6 +256,10 @@ class Texts:
 
         # Last but not least, merge the entirety of text resources:
         self.texts = {**self.tags, **self.strings}
+
+        # Output the dictionary so it can be reviewed during parsings:
+        with open('output/texts.json', 'w') as texts_file:
+            json.dump(self.texts, texts_file, sort_keys=True)
 
     def tag(self, tag):
         """
@@ -273,13 +290,6 @@ class Texts:
 
         """
         return self.texts[string.lower()]
-
-    def get_og(self, string):
-        """
-        Return a string from the original set of unchanged text resources.
-
-        """
-        return self.original_strings[string.lower()]
 
     def parse_text_resource(self, text_file):
         """
