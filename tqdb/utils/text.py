@@ -145,9 +145,11 @@ class Texts:
     # New python friendly regex structure
     REGEX_NEW = '{{{arg}:{pre_signed}{post_signed}{decimals}{type}}}'
 
-    def __init__(self, locale):
+    def __init__(self):
         self.tags = {}
-        self.locale = locale
+
+    def load_locale(self, locale):
+        self.locale = locale.lower()
 
         for resource in self.TAG_RESOURCES:
             self.tags.update(
@@ -309,4 +311,4 @@ class Texts:
 
 
 # Prepare an instance for usage:
-texts = Texts(locale='en')
+texts = Texts()

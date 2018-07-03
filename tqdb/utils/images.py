@@ -166,7 +166,7 @@ def save_bitmap(item, item_type, graphics):
 
     if not tag or not bitmap or not bitmap.is_file():
         logging.warning(f'Missing tag or bitmap for {item["tag"]}: {bitmap}')
-        return False
+        return
 
     # Tags for formula's are all the same (lesser, greater, divine)
     if item_type == 'ItemArtifactFormula':
@@ -174,7 +174,7 @@ def save_bitmap(item, item_type, graphics):
     # Skip all non-MI duplicates
     elif (item.get('classification', None) != 'Rare' and
           os.path.isfile(f'{graphics}{tag}.png')):
-            return True
+        return
 
     # Run the texture viewer if a bitmap and tag are set:
     command = ['utils/textureviewer/TextureViewer.exe',
@@ -184,4 +184,4 @@ def save_bitmap(item, item_type, graphics):
                f'{graphics}{tag}.png']
     subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    return True
+    return
