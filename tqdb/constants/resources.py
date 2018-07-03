@@ -14,8 +14,8 @@ AFFIXES = [
     'records/xpack*/item/lootmagicalaffixes/*ix/*.dbr']
 
 AFFIX_TABLES = [
-    'records/item/lootmagicalaffixes/*ix/table*/table*.dbr',
-    'records/xpack*/item/lootmagicalaffixes/*ix/table*/*.dbr']
+    'records/item/lootmagicalaffixes/*ix/tables*/*.dbr',
+    'records/xpack*/item/lootmagicalaffixes/*ix/tables*/*.dbr']
 
 CHESTS = {
     'tagMonsterName004': [

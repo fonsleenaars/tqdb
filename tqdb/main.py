@@ -123,6 +123,10 @@ def parse_equipment():
             # Organize the equipment based on the category
             category = parsed.pop('category')
 
+            # Skip items without rarities
+            if 'classification' not in parsed:
+                continue
+
             # Save the bitmap and remove the bitmap key
             images.save_bitmap(parsed, category, 'output/graphics/')
         except KeyError:
