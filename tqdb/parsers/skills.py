@@ -125,23 +125,20 @@ class SkillBaseParser(TQDBParser):
                 field_prefixed = 'skill' + field[:1].upper() + field[1:]
                 value = itr_dbr[field]
 
-                # Find qualifier damage type:
-                qualified_damage = False
-                for dmg_type, text_key in self.QUALIFIERS.items():
-                    if dmg_type not in dbr:
-                        continue
+                # Find qualifier damage type(s):
+                damage_types = ', '.join([
+                    texts.get(text_key)
+                    for dmg_type, text_key in self.QUALIFIERS.items()
+                    if dmg_type in dbr])
 
-                    # Add the damage absorption value and dmg type:
-                    qualified_damage = True
-
+                if damage_types:
                     TQDBParser.insert_value(
                         field_prefixed,
-                        texts.get(field).format(value, texts.get(text_key)),
+                        texts.get(field).format(value, damage_types),
                         is_singular,
                         result)
-
-                # If there is no qualifier, it's all damage:
-                if not qualified_damage:
+                else:
+                    # If there is no qualifier, it's all damage:
                     TQDBParser.insert_value(
                         field_prefixed,
                         texts.get(field).format(value, 'All'),
