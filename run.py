@@ -31,10 +31,10 @@ def tqdb():
         '-l',
         '--locale',
         action='store',
-        default='EN',
-        nargs=1,
-        choices=['CH', 'CZ', 'DE', 'EN', 'ES', 'FR', 'IT', 'JA', 'KO', 'PL',
-                 'RU', 'UK'],
+        default='en',
+        type=lambda s: s.lower(),
+        choices=['ch', 'cz', 'de', 'en', 'es', 'fr', 'it', 'ja', 'ko', 'pl',
+                 'ru', 'uk'],
         help=('Specify the two letter locale you want to parse (default: '
               '%(default))'))
 
