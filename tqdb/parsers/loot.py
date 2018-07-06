@@ -23,7 +23,7 @@ class LootRandomizerParser(TQDBParser):
         if 'lootRandomizerName' in dbr:
             result['tag'] = dbr['lootRandomizerName']
             # Some names had inline comments, so strip the spaces:
-            result['name'] = texts.tag(result['tag']).strip()
+            result['name'] = texts.get(result['tag']).strip()
 
 
 class LootRandomizerTableParser(TQDBParser):

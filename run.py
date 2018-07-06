@@ -1,7 +1,6 @@
 import argparse
 import json
 import logging
-import os
 
 from tqdb import __version__ as tqdb_version
 from tqdb import main
@@ -21,10 +20,6 @@ def tqdb():
     Run the Titan Quest Database parser.
 
     """
-    # Directory preparations for bitmap
-    if not os.path.exists('output/graphics'):
-        os.makedirs('output/graphics')
-
     # Parse command line parameters
     argparser = argparse.ArgumentParser(description='TQ Database parser')
     argparser.add_argument(
@@ -52,7 +47,10 @@ def tqdb():
     }
 
     logging.info('Writing output to files...')
-    images.SpriteCreator('output/graphics/', 'output')
+
+    if data.get('equipment', None):
+        # Only create a sprite if equipment was parsed:
+        images.SpriteCreator('output/graphics/', 'output')
 
     output_name = f'output/tqdb.{args.locale.lower()}.{tqdb_version}.json'
     with open(output_name, 'w', encoding='utf8') as data_file:

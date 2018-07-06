@@ -42,7 +42,7 @@ class ItemArtifactParser(TQDBParser):
             # Act it starts dropping is based on the file name
             'dropsIn': self.DIFFICULTIES[file_name[0]],
             # For relics the tag is in the Actor.tpl variable 'description'
-            'name': texts.tag(dbr['description']),
+            'name': texts.get(dbr['description']),
             'tag': dbr['description'],
         })
 
@@ -182,7 +182,7 @@ class ItemEquipmentParser(TQDBParser):
         result.update({
             'bitmap': dbr.get('bitmap', None),
             'itemLevel': dbr.get('itemLevel', None),
-            'name': texts.tag(tag),
+            'name': texts.get(tag),
             'tag': tag,
         })
 
@@ -247,9 +247,9 @@ class ItemRelicParser(TQDBParser):
             # Difficulty classification is based on the file name
             'classification': self.DIFFICULTIES[difficulty_index],
             # Ironically the itemText holds the actual description tag
-            'description': texts.tag(dbr['itemText']),
+            'description': texts.get(dbr['itemText']),
             # For relics the tag is in the Actor.tpl variable 'description'
-            'name': texts.tag(dbr['description']),
+            'name': texts.get(dbr['description']),
             'tag': dbr['description'],
         })
 
@@ -282,14 +282,14 @@ class ItemSetParser(TQDBParser):
     def parse(self, dbr, dbr_file, result):
         tag = dbr.get(self.NAME, None)
 
-        if not tag or texts.tag(tag) == tag:
+        if not tag or texts.get(tag) == tag:
             logging.warning(f'No tag or name for set found in {dbr_file}.')
             return
 
         result.update({
             # Prepare the list of set items
             'items': [],
-            'name': texts.tag(tag),
+            'name': texts.get(tag),
             'tag': tag,
         })
 
@@ -302,7 +302,13 @@ class ItemSetParser(TQDBParser):
             result['items'].append(set_member['tag'])
 
         # Find the property that has the most tiers
-        highest_tier = max([len(v) for v in result['properties'].values()])
+        highest_tier = max(
+            # Property was parsed as list, grab length of the list
+            len(v)
+            if isinstance(v, list)
+            # Property wasn't parsed as list, meaning there is 1 instance
+            else 1
+            for v in result['properties'].values())
 
         # Because this parser has the lowest priority, all properties will
         # already have been parsed, so they can now be reconstructed to match
@@ -312,6 +318,14 @@ class ItemSetParser(TQDBParser):
 
         # Insert the existing properties by adding them to the correct tier:
         for field, values in result['properties'].items():
+            if not isinstance(values, list):
+                # Values that aren't repeated should be set for all tiers:
+                for index, _ in enumerate(properties):
+                    properties[index][field] = values
+
+                # Don't parse any further
+                continue
+
             # The starting tier is determined by the highest tier
             starting_index = highest_tier - len(values)
 
@@ -356,9 +370,9 @@ class OneShotScrollParser(TQDBParser):
 
         result.update({
             'tag': dbr['description'],
-            'name': texts.tag(dbr['description']),
+            'name': texts.get(dbr['description']),
             'classification': self.DIFFICULTIES[difficulty_index],
-            'description': texts.tag(dbr['itemText']),
+            'description': texts.get(dbr['itemText']),
         })
 
         # Set the bitmap if it exists

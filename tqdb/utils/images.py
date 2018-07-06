@@ -160,6 +160,11 @@ class SpriteCreator:
 ###############################################################################
 #                              BITMAP UTILITY                                 #
 ###############################################################################
+# Directory preparations for bitmap
+if not os.path.exists('output/graphics'):
+    os.makedirs('output/graphics')
+
+
 def save_bitmap(item, item_type, graphics):
     bitmap = item.pop('bitmap', None)
     tag = item['tag']

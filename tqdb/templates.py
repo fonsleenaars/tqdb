@@ -3,27 +3,16 @@ import re
 
 from pathlib import Path
 
+templates_by_path = {}
+templates = {}
+
+# Global directory constants
 DATA_DIR = Path('data')
 DATABASE_DIR = DATA_DIR / 'database'
+OUTPUT_DIR = Path('output/parsing')
 TEMPLATE_DIR = DATABASE_DIR / 'templates/**/*.tpl'
 TEMPLATE_PREFIX = '%TEMPLATE_DIR%'
 TEXTURES = Path('data/textures/')
-
-# Regex to match all Group or Variable lines, with a bracket on the next line
-BRACKET_REGEX = re.compile(r'(Group|Variable)\s+{')
-# Regex to place the bracket on the same line as the Group or Variable
-BRACKET_REPLACE = r'\1 {'
-# Regex to find all tabs
-TAB_REGEX = re.compile(r'\t')
-# Regex to find empty lines
-EMPTY_LINE_REGEX = re.compile(r'\n\n')
-# Replace empty lines with a single linebreak
-EMPTY_LINE_REPLACE = r'\n'
-
-VARIABLE_REGEX = re.compile(r'Variable {\n(?P<properties>[^}]*)\n}')
-
-templates_by_path = {}
-templates = {}
 
 
 class Variable:
@@ -121,6 +110,18 @@ class Template:
     Template class representing a TPL file.
 
     """
+    # Regex to match all Group or Variable lines, with a bracket on the next
+    # line
+    BRACKET_REGEX = re.compile(r'(Group|Variable)\s+{')
+    # Regex to place the bracket on the same line as the Group or Variable
+    BRACKET_REPLACE = r'\1 {'
+    # Regex to find all tabs
+    TAB_REGEX = re.compile(r'\t')
+    # Regex to find empty lines
+    EMPTY_LINE_REGEX = re.compile(r'\n\n')
+    # Replace empty lines with a single linebreak
+    EMPTY_LINE_REPLACE = r'\n'
+
     def __init__(self, tpl_file):
         template_file = Path(tpl_file)
 
@@ -143,13 +144,13 @@ class Template:
         self.templates = list()
 
         # First move all the brackets '{' on the same line:
-        content = BRACKET_REGEX.sub(BRACKET_REPLACE, content)
+        content = self.BRACKET_REGEX.sub(self.BRACKET_REPLACE, content)
 
         # Remove all tab indentation:
-        content = TAB_REGEX.sub('', content)
+        content = self.TAB_REGEX.sub('', content)
 
         # Remove all unnecessary newlines:
-        content = EMPTY_LINE_REGEX.sub(EMPTY_LINE_REPLACE, content)
+        content = self.EMPTY_LINE_REGEX.sub(self.EMPTY_LINE_REPLACE, content)
 
         # Split the content by line and recursively build the groups:
         self.parse_content(content.split('\n'), [])

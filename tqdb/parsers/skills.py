@@ -82,7 +82,7 @@ class SkillBaseParser(TQDBParser):
             result['tag'] = dbr[self.NAME]
 
             # Now try to find a friendly name for the tag:
-            result['name'] = texts.tag(result['tag'])
+            result['name'] = texts.get(result['tag'])
 
             if result['name'] == result['tag']:
                 # If the tag wasn't returned, a friendly name weas found:
@@ -90,9 +90,9 @@ class SkillBaseParser(TQDBParser):
         else:
             logging.warning(f'No skillDisplayName found in {dbr_file}')
 
-        if self.DESC in dbr and texts.has_tag(dbr[self.DESC]):
+        if self.DESC in dbr and texts.has(dbr[self.DESC]):
             # Also load the description, if it's known:
-            result['description'] = texts.tag(dbr[self.DESC])
+            result['description'] = texts.get(dbr[self.DESC])
         elif self.FILE in dbr:
             # Use the FileDescription instead:
             result['description'] = dbr['FileDescription']
@@ -134,14 +134,15 @@ class SkillBaseParser(TQDBParser):
                 if damage_types:
                     TQDBParser.insert_value(
                         field_prefixed,
-                        texts.get(field).format(value, damage_types),
+                        f'{texts.get(field_prefixed).format(value)} '
+                        f'({damage_types})',
                         is_singular,
                         result)
                 else:
                     # If there is no qualifier, it's all damage:
                     TQDBParser.insert_value(
                         field_prefixed,
-                        texts.get(field).format(value, 'All'),
+                        texts.get(field_prefixed).format(value),
                         is_singular,
                         result)
 

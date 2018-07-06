@@ -9,13 +9,34 @@ from tqdb.utils.text import texts
 
 # Some shared core constants:
 CHANCE = 'ChanceOfTag'
-DOT_SINGLE = 'offensiveSingleFormatTime'
-EOT_SINGLE = 'offensiveFixedSingleFormatTime'
+
 IMPRV_TIME = 'ImprovedTimeFormat'
 GLOBAL_ALL = 'GlobalChanceOfAllTag'
 GLOBAL_PCT = 'GlobalPercentChanceOfAllTag'
 GLOBAL_XOR_ALL = 'GlobalChanceOfOneTag'
 GLOBAL_XOR_PCT = 'GlobalPercentChanceOfOneTag'
+
+# Damage single value formats
+# {%.0f0}
+DMG_SINGLE = 'DamageSingleFormat'
+# {%.1f0}
+DMG_SINGLE_DECIMAL = 'DamageInfluenceSingleFormat'
+
+# Damage range value formats
+# {%.0f0} ~ {%.0f1}
+DMG_RANGE = 'DamageRangeFormat'
+# {%.1f0} ~ {%.1f1}
+DMG_RANGE_DECIMAL = 'DamageInfluenceRangeFormat'
+
+# Damage over/for time formats
+# over {%.1f0} - {%.1f1} Seconds
+DOT_RANGE = 'DamageRangeFormatTime'
+# over {%.1f0} Seconds
+DOT_SINGLE = 'DamageSingleFormatTime'
+# for {%.1f0} - {%.1f1} Seconds
+DFT_RANGE = 'DamageFixedRangeFormatTime'
+# for {%.1f0} Seconds
+DFT_SINGLE = 'DamageFixedSingleFormatTime'
 
 
 class ParametersCharacterParser(TQDBParser):
@@ -320,13 +341,7 @@ class ItemSkillAugmentParser(TQDBParser):
 
         # Now add the granted skill to the item:
         result['properties'][self.SKILL_NAME] = {
-            # Set the path to ensure it's unique, when skills are
-            # organized at the end, it will be replaced by a unique tag
             'tag': skill_tag,
-            'name': (
-                self.TXT_GRANT.format(level, skill['name'])
-                if level > 1
-                else self.TXT_GRANT_LVL1.format(skill['name'])),
             'level': level,
         }
 
@@ -438,6 +453,31 @@ class ParametersOffensiveParser(TQDBParser):
         # - parameters_retaliation.tpl and
         # - parameters_weaponsbonusoffensive.tpl
         return f'{TQDBParser.base}\\templatebase\\parameters_offensive.tpl'
+
+    def format(self, field_type, field, min, max):
+        """
+        Format a specific field.
+
+        A field is formatted by determining the numeric format and appending
+        the text specific for that field.
+
+        """
+        if max > min:
+            if field_type == self.EOT:
+                # Effect damage is done in seconds, so add a decimal
+                value = texts.get(DMG_RANGE_DECIMAL).format(min, max)
+            else:
+                # DOT and regular damage is flat, so no decimals:
+                value = texts.get(DMG_RANGE).format(min, max)
+        else:
+            if field_type == self.EOT:
+                # Effect damage is done in seconds, so add a decimal
+                value = texts.get(DMG_SINGLE_DECIMAL).format(min)
+            else:
+                # DOT and regular damage is flat, so no decimals:
+                value = texts.get(DMG_SINGLE).format(min)
+
+        return f'{value}{texts.get(field)}'
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -604,17 +644,10 @@ class ParametersOffensiveParser(TQDBParser):
             duration_min = dbr.get(f'{field}DurationMin', 0)
 
             if duration_min:
-                suffix = texts.get(EOT_SINGLE).format(duration_min)
+                suffix = texts.get(DFT_SINGLE).format(duration_min)
 
-        # Ranged key is used when retrieving the attribute friendly text
-        ranged = f'{field}Ranged'
-
-        if max > min and texts.has(ranged):
-            # Add the range of damage
-            value = texts.get(ranged).format(min, max)
-        else:
-            # Add the flat damage
-            value = texts.get(field).format(min)
+        # Format the value based on its field type and values:
+        value = self.format(field_type, field, min, max)
 
         if chance and not is_xor:
             prefix = texts.get(CHANCE).format(chance)
