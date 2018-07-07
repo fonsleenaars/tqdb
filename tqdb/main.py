@@ -133,6 +133,10 @@ def parse_equipment():
             # Skip equipment that couldn't be parsed:
             continue
 
+        # Pop off the properties key off any item without properties:
+        if 'properties' in parsed and not parsed['properties']:
+            parsed.pop('properties')
+
         # Now save the parsed item in the category:
         if category and category in items:
             items[category].append(parsed)

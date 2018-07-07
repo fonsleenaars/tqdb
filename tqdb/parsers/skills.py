@@ -295,7 +295,6 @@ class SkillProjectileBaseParser(TQDBParser):
     """
     FIELDS = [
         'projectileExplosionRadius',
-        'projectileFragmentsLaunchNumber',
         'projectileLaunchNumber',
         'projectilePiercingChance',
     ]

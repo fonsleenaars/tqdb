@@ -201,7 +201,7 @@ class Texts:
             # The string component becomes 'Duration'
             .replace('%s1', self.strings['manacost'])
             # The regex component becomes the regular {0:.1f} format
-            .replace('%.1f0', '{0:.0f}'))
+            .replace('%.0f0', '{0:.0f}'))
 
         # Active health or energy cost is formatted using a locale dependent
         # format such as '{%.1f0 %s1}'
