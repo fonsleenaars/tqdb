@@ -121,6 +121,7 @@ class Texts:
         'commonequipment.txt',
         'xcommonequipment.txt',
         'x2commonequipment.txt',
+        'menu.txt',
         'monsters.txt',
         'xmonsters.txt',
         'x2monsters.txt',

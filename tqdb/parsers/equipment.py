@@ -8,18 +8,22 @@ from tqdb import dbr as DBRParser
 from tqdb.parsers.main import TQDBParser
 from tqdb.utils.text import texts
 
+# Shared constant to determine what difficulty an item drops in:
+DIFFICULTIES = {
+    # Normal Difficulty
+    'n': 'tagRDifficultyTitle01',
+    # Epic Difficulty
+    'e': 'tagRDifficultyTitle02',
+    # Legendary Difficulty
+    'l': 'tagRDifficultyTitle03',
+}
+
 
 class ItemArtifactParser(TQDBParser):
     """
     Parser for `itemartifact.tpl`.
 
     """
-    DIFFICULTIES = {
-        'n': 'Lesser',
-        'e': 'Greater',
-        'l': 'Divine',
-    }
-
     def __init__(self):
         super().__init__()
 
@@ -31,7 +35,7 @@ class ItemArtifactParser(TQDBParser):
         file_name = os.path.basename(dbr_file).split('_')
 
         # Skip artifacts with unknown difficulties in which they drop:
-        if file_name[0] not in self.DIFFICULTIES:
+        if file_name[0] not in DIFFICULTIES:
             return
 
         result.update({
@@ -39,8 +43,8 @@ class ItemArtifactParser(TQDBParser):
             'bitmap': dbr.get('artifactBitmap', None),
             # Classification is either Lesser, Greater or Divine
             'classification': dbr.get('artifactClassification', None),
-            # Act it starts dropping is based on the file name
-            'dropsIn': self.DIFFICULTIES[file_name[0]],
+            # Difficulty it starts dropping is based on the file name
+            'dropsIn': texts.get(DIFFICULTIES[file_name[0]]).strip(),
             # For relics the tag is in the Actor.tpl variable 'description'
             'name': texts.get(dbr['description']),
             'tag': dbr['description'],
@@ -100,13 +104,6 @@ class ItemBaseParser(TQDBParser):
     Parser for `templatebase/itembase.tpl`.
 
     """
-    # TQ difficulties, the keys are used in file names and values in texts.
-    DIFFICULTIES = {
-        'n': 'Normal',
-        'e': 'Epic',
-        'l': 'Legendary',
-    }
-
     REQUIREMENTS = [
         'dexterityRequirement',
         'intelligenceRequirement',
@@ -139,10 +136,10 @@ class ItemBaseParser(TQDBParser):
         # For Monster Infrequents, make sure a drop difficulty exists:
         if classification == 'Rare':
             file_name = os.path.basename(dbr_file).split('_')
-            if len(file_name) < 2 or file_name[1] not in self.DIFFICULTIES:
+            if len(file_name) < 2 or file_name[1] not in DIFFICULTIES:
                 return {}
 
-            result['dropsIn'] = self.DIFFICULTIES[file_name[1]]
+            result['dropsIn'] = texts.get(DIFFICULTIES[file_name[1]]).strip()
 
 
 class ItemEquipmentParser(TQDBParser):
@@ -226,7 +223,7 @@ class ItemRelicParser(TQDBParser):
     Parser for `itemrelic.tpl`.
 
     """
-    DIFFICULTIES = ['Normal', 'Epic', 'Legendary']
+    DIFFICULTIES_LIST = list(DIFFICULTIES.values())
 
     def __init__(self):
         super().__init__()
@@ -237,7 +234,7 @@ class ItemRelicParser(TQDBParser):
 
     def parse(self, dbr, dbr_file, result):
         file_name = os.path.basename(dbr_file).split('_')
-        difficulty_index = int(file_name[0][1:]) - 1
+        difficulty = self.DIFFICULTIES_LIST[int(file_name[0][1:]) - 1]
 
         result.update({
             # The act it starts dropping in is also listed in the file name
@@ -245,7 +242,7 @@ class ItemRelicParser(TQDBParser):
             # Bitmap has a different key name than items here.
             'bitmap': dbr.get('relicBitmap', None),
             # Difficulty classification is based on the file name
-            'classification': self.DIFFICULTIES[difficulty_index],
+            'classification': texts.get(difficulty).strip(),
             # Ironically the itemText holds the actual description tag
             'description': texts.get(dbr['itemText']),
             # For relics the tag is in the Actor.tpl variable 'description'
@@ -343,7 +340,7 @@ class OneShotScrollParser(TQDBParser):
     Parser for `oneshot_scroll.tpl`.
 
     """
-    DIFFICULTIES = ['Normal', 'Epic', 'Legendary']
+    DIFFICULTIES_LIST = list(DIFFICULTIES.values())
 
     def __init__(self):
         super().__init__()
@@ -361,13 +358,13 @@ class OneShotScrollParser(TQDBParser):
         # Use the file name to determine the difficulty:
         file_name = os.path.basename(dbr_file).split('_')[0][1:]
         # Strip all but digits from the string, then cast to int:
-        difficulty_index = int(
-            ''.join(filter(lambda x: x.isdigit(), file_name))) - 1
+        difficulty = self.DIFFICULTIES_LIST[int(
+            ''.join(filter(lambda x: x.isdigit(), file_name))) - 1]
 
         result.update({
             'tag': dbr['description'],
             'name': texts.get(dbr['description']),
-            'classification': self.DIFFICULTIES[difficulty_index],
+            'classification': texts.get(difficulty).strip(),
             'description': texts.get(dbr['itemText']),
         })
 

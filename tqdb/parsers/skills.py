@@ -384,7 +384,10 @@ class SkillSpawnPetParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f'{TQDBParser.base}\\skill_spawnpet.tpl'
+        return [
+            f'{TQDBParser.base}\\skill_spawnpet.tpl',
+            f'{TQDBParser.base}\\skill_defensivewall.tpl',
+        ]
 
     def parse(self, dbr, dbr_file, result):
         """

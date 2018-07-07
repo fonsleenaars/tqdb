@@ -324,28 +324,3 @@ SETS = [
     'records/item/sets/*.dbr',
     'records/xpack*/item/sets/*.dbr',
 ]
-
-STRINGS_TAGS = [
-    'commonequipment.txt',
-    'xcommonequipment.txt',
-    'x2commonequipment.txt',
-    'menu.txt',
-    'monsters.txt',
-    'xmonsters.txt',
-    'x2monsters.txt',
-    'quest.txt',
-    'xquest.txt',
-    'x2quest.txt',
-    'skills.txt',
-    'xskills.txt',
-    'x2skills.txt',
-    'uniqueequipment.txt',
-    'xuniqueequipment.txt',
-    'x2uniqueequipment.txt',
-]
-
-STRINGS_UI = [
-    'ui.txt',
-    'xui.txt',
-    'x2ui.txt',
-]
