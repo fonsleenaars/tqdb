@@ -15,13 +15,3 @@ EQUIPABLE_LOOT = [
     'Misc1',
     'Misc2',
     'Misc3']
-
-# Skills to ignore when parsing pet buffs/skills:
-PET_IGNORE_SKILLS = [
-    'records\\skills\\monster skills\\passive_totaldamageabsorption01.dbr',
-    'records\\skills\\monster skills\\defense\\armor_passive.dbr',
-    'records\\skills\\monster skills\\defense\\banner_debuff.dbr',
-    'records\\skills\\monster skills\\defense\\trap_resists.dbr',
-    'records\\skills\\monster skills\\defense\\resist_undead.dbr',
-    'records\\skills\\monster skills\\defense_undeadresists.dbr',
-    'records\\skills\\boss skills\\boss_conversionimmunity.dbr']
