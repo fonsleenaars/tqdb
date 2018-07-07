@@ -6,6 +6,31 @@ db = {}
 skills = {}
 
 
+def duplicate_suffix(needle):
+    """
+    Find the next suffix for an existing prefix in skill storage.
+
+    For example:
+        prefix = 'skillName1'
+        storage = {'skillName1': ....}
+
+        # Return 1 because the new tag will be 'skillName1-1'
+        return 1
+
+    """
+    result = 1
+
+    for haystack in skills.keys():
+        if '-' not in haystack:
+            continue
+
+        prefix, suffix = haystack.split('-')
+        if prefix == needle and int(suffix) >= result:
+            result += 1
+
+    return result
+
+
 def store_skill(skill):
     """
     Store a skill and return a unique tag.
@@ -22,16 +47,13 @@ def store_skill(skill):
     skill_tag = skill.get('tag', 'unnamed')
 
     if skill_tag in skills and skills[skill_tag]['path'] != skill['path']:
-        # The tag exists, but the path is different, so this is a new skill.
-        tag_pieces = skill_tag.split('-')
-        skill_tag = (
-            # First duplicate, add a -1
-            f'{skill_tag}-1'
-            if len(tag_pieces) == 1
-            # More duplicates exist, increment numeric suffix
-            else f'{skill_tag}-{int(tag_pieces[1]) + 1}')
+        if '-' in skill_tag:
+            prefix, _ = skill_tag.split('-')
+            skill_tag = f'{prefix}-{duplicate_suffix(prefix)}'
+        else:
+            skill_tag = f'{skill_tag}-{duplicate_suffix(skill_tag)}'
 
-        # Set the newly suffixed tag:
+        # Set the unique tag:
         skill['tag'] = skill_tag
 
     # Store the skill

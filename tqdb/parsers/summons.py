@@ -1,4 +1,5 @@
 from tqdb import dbr as DBRParser
+from tqdb import storage
 from tqdb.parsers.main import TQDBParser
 from tqdb.parsers.base import ParametersOffensiveParser
 
@@ -9,7 +10,7 @@ class MonsterSkillManager(TQDBParser):
 
     """
     # Skills to ignore when parsing pet buffs/skills:
-    IGNORE_SKILLS = [
+    IGNORE_SKILLS = list(
         f'data\\database\\records{skill}' for skill in [
             'skills\\monster skills\\passive_totaldamageabsorption01.dbr',
             '\\skills\\monster skills\\defense\\armor_passive.dbr',
@@ -18,7 +19,13 @@ class MonsterSkillManager(TQDBParser):
             '\\skills\\monster skills\\defense\\resist_undead.dbr',
             '\\skills\\monster skills\\defense_undeadresists.dbr',
             '\\skills\\boss skills\\boss_conversionimmunity.dbr',
-        ]]
+        ]) + [
+            # Breaking wheel has its skill three times for some reason:
+            'data\\database\\records\\xpack\\skills\\scroll skills\\pets\\'
+            'all_breakingwheel_bladeattack2.dbr',
+            'data\\database\\records\\xpack\\skills\\scroll skills\\pets\\'
+            'all_breakingwheel_bladeattack3.dbr',
+        ]
 
     PROJECTILES = 'projectileLaunchNumber'
 
@@ -28,20 +35,6 @@ class MonsterSkillManager(TQDBParser):
     @staticmethod
     def get_template_path():
         return f'{TQDBParser.base}\\templatebase\\monsterskillmanager.tpl'
-
-    def hash_properties(self, properties):
-        """
-        Return a string of properties.
-
-        """
-        return '&'.join([
-            f'{key}={properties[key]}'
-            for key in sorted(properties.keys())
-            # projectileLaunchNumber is ignored in this hash because it is the
-            # one key that's messing up Scroll of the Breaking Wheel, which has
-            # three identical skills except for its launch projectiles.
-            if key != self.PROJECTILES
-        ])
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -61,37 +54,18 @@ class MonsterSkillManager(TQDBParser):
                 continue
 
             skill = DBRParser.parse(dbr[nameTag])
-
             if not skill['properties']:
                 continue
 
-            # Check if this skill already exists, based on an exact match
-            # of its properties:
-            if any(self.hash_properties(skill['properties'][0]) ==
-                    self.hash_properties(ability['properties'][0])
-                    for ability in result['abilities']):
-                continue
+            # Store the skill, which will ensure a unique tag:
+            skill_tag = storage.store_skill(skill)
+            level = dbr[levelTag][0]
 
-            # Initialize the ability with its properties and level
-            ability = {
-                'level': dbr[levelTag][0],
-                'properties': skill['properties'],
-            }
-
-            # Only set the name if it's available
-            if 'name' in skill:
-                ability['name'] = skill['name']
-
-            result['abilities'].append(ability)
-
-        # Now run through the parsed abilities one more time and set the level:
-        for ability in result['abilities']:
-            level = ability.pop('level')
-
-            try:
-                ability['properties'] = ability['properties'][level - 1]
-            except IndexError:
-                ability['properties'] = ability['properties'][-1]
+            # Append the stored skill to the ability list
+            result['abilities'].append({
+                'tag': skill_tag,
+                'level': level,
+            })
 
         return result
 

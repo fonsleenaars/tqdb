@@ -221,7 +221,6 @@ def parse_skills():
     but is no longer required for output.
 
     """
-
     skills = storage.skills.copy()
     for skill in skills.values():
         # Pop the 'path' property, it was used during parsing to ensure correct
