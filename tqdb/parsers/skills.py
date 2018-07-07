@@ -311,6 +311,13 @@ class SkillProjectileBaseParser(TQDBParser):
         Parse the projectile properties.
 
         """
+        for field in self.FIELDS:
+            if field not in dbr:
+                continue
+
+            result['properties'][field] = [
+                texts.get(field).format(value)
+                for value in dbr[field]]
 
 
 class SkillRefreshCooldownParser(TQDBParser):
