@@ -259,8 +259,6 @@ class ItemSkillAugmentParser(TQDBParser):
     SKILL_NAME = 'itemSkillName'
 
     # Texts used by this parser
-    TXT_GRANT = 'Grants skill: Level {0:d} {1:s}'
-    TXT_GRANT_LVL1 = 'Grants skill: {0:s}'
     TXT_ALL_INC = 'ItemAllSkillIncrement'
     TXT_MASTERY_INC = 'ItemMasteryIncrement'
     TXT_SKILL_INC = 'ItemSkillIncrement'
@@ -768,10 +766,7 @@ class ParametersSkillParser(TQDBParser):
                 # Create a new copy of the DBR with the values for this index:
                 itr_dbr = TQDBParser.extract_values(dbr, field, index)
 
-                ranged = f'{field}Ranged'
                 chance = itr_dbr.get(f'{field}Chance', 0)
-                min = itr_dbr.get(f'{field}Min', 0)
-                max = itr_dbr.get(f'{field}Max', 0)
 
                 # Prepare an optional prefix:
                 prefix = ''
@@ -780,10 +775,7 @@ class ParametersSkillParser(TQDBParser):
                 if val <= 0.01 and not min:
                     continue
 
-                if max > min and texts.has(ranged):
-                    value = texts.get(ranged).format(min, max)
-                else:
-                    value = texts.get(field).format(val)
+                value = texts.get(field).format(val)
 
                 if chance:
                     prefix = texts.get(CHANCE).format(chance)
@@ -880,19 +872,20 @@ class RacialBonusParser(TQDBParser):
             else:
                 races.append(race)
 
+        properties = {}
         for field in self.FIELDS:
             if field not in dbr:
                 continue
 
-            # Bonuses can be applied to multiple races, so keep a list:
-            result['properties'][field] = []
-            values = dbr[field]
+            # Setup each tier, and for each tier add all races:
+            properties[field] = [
+                [texts.get(field).format(value, race) for race in races]
+                for value in dbr[field]
+            ]
 
-            for i in range(0, len(races)):
-                # Either append unique value or same if none is available:
-                result['properties'][field].append(
-                    texts.get(field).format(
-                        # Damage number
-                        values[0] if len(races) else values[i],
-                        # Name of the race
-                        races[i]))
+            # Extract list if there is only one tier:
+            if len(properties[field]) == 1:
+                properties[field] = properties[field][0]
+
+        # If there is only one tier, just set it as the properties:
+        result['properties'] = properties

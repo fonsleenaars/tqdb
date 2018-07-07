@@ -240,6 +240,13 @@ class ItemRelicParser(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\itemrelic.tpl'
 
+    def get_priority(self):
+        """
+        Override this parsers priority to set as lowest.
+
+        """
+        return TQDBParser.LOWEST_PRIORITY
+
     def parse(self, dbr, dbr_file, result):
         file_name = os.path.basename(dbr_file).split('_')
         difficulty = self.DIFFICULTIES_LIST[int(file_name[0][1:]) - 1]
@@ -261,6 +268,26 @@ class ItemRelicParser(TQDBParser):
         # The possible completion bonuses are in bonusTableName:
         bonuses = DBRParser.parse(dbr['bonusTableName'])
         result['bonus'] = bonuses.get('table', [])
+
+        # Find how many pieces this relic has
+        max_pieces = TQDBParser.highest_tier(
+            result['properties'], result['properties'].keys())
+
+        # Initialize a list of tiers
+        properties = [{} for i in range(max_pieces)]
+
+        # Setup properties as list to correspond to adding pieces of a relic:
+        for key, values in result['properties'].items():
+            if not isinstance(values, list):
+                # This property is just repeated for all tiers:
+                for i in range(max_pieces):
+                    properties[i][key] = values
+                continue
+
+            for index, value in enumerate(values):
+                properties[index][key] = value
+
+        result['properties'] = properties
 
 
 class ItemSetParser(TQDBParser):
@@ -383,9 +410,9 @@ class OneShotScrollParser(TQDBParser):
         # Grab the skill file:
         skill = DBRParser.parse(dbr['skillName'])
 
-        # Add properties if there are any:
+        # Add the first tier of properties if there are any:
         if 'properties' in skill and skill['properties']:
-            result['properties'] = skill['properties']
+            result['properties'] = skill['properties'][0]
 
         # Add any summon (just the first one)
         if 'summons' in skill:
