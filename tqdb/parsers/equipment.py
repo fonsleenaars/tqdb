@@ -104,6 +104,13 @@ class ItemBaseParser(TQDBParser):
     Parser for `templatebase/itembase.tpl`.
 
     """
+    CLASSIFICATIONS = {
+        'Magical': 'tagTutorialTip05TextE',
+        'Rare': 'tagTutorialTip05TextF',
+        'Epic': 'tagRDifficultyTitle02',
+        'Legendary': 'tagRDifficultyTitle03',
+    }
+
     REQUIREMENTS = [
         'dexterityRequirement',
         'intelligenceRequirement',
@@ -129,9 +136,10 @@ class ItemBaseParser(TQDBParser):
 
         # Only parse special/unique equipment:
         classification = dbr.get('itemClassification', None)
-        if classification not in ['Rare', 'Epic', 'Legendary', 'Magical']:
+        if classification not in self.CLASSIFICATIONS.keys():
             return
-        result['classification'] = classification
+        result['classification'] = texts.get(
+            self.CLASSIFICATIONS[classification]).strip()
 
         # For Monster Infrequents, make sure a drop difficulty exists:
         if classification == 'Rare':

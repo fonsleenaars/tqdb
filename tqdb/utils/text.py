@@ -131,6 +131,7 @@ class Texts:
         'skills.txt',
         'xskills.txt',
         'x2skills.txt',
+        'tutorial.txt',
         'uniqueequipment.txt',
         'xuniqueequipment.txt',
         'x2uniqueequipment.txt',
