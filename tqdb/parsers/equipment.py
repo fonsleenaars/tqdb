@@ -302,13 +302,9 @@ class ItemSetParser(TQDBParser):
             result['items'].append(set_member['tag'])
 
         # Find the property that has the most tiers
-        highest_tier = max(
-            # Property was parsed as list, grab length of the list
-            len(v)
-            if isinstance(v, list)
-            # Property wasn't parsed as list, meaning there is 1 instance
-            else 1
-            for v in result['properties'].values())
+        highest_tier = TQDBParser.highest_tier(
+            result['properties'],
+            result['properties'].keys())
 
         # Because this parser has the lowest priority, all properties will
         # already have been parsed, so they can now be reconstructed to match

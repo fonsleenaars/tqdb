@@ -97,12 +97,12 @@ class SkillBaseParser(TQDBParser):
             # Use the FileDescription instead:
             result['description'] = dbr['FileDescription']
 
-        # Check the shared fields for values:
-        max_level = dbr.get('skillUltimateLevel', dbr.get('skillMaxLevel'))
-        is_singular = max_level == 1
+        # Check the skill base fields:
+        base_tiers = TQDBParser.highest_tier(dbr, self.FIELDS)
+        base_singular = base_tiers == 1
 
         for field in self.FIELDS:
-            for index in range(max_level):
+            for index in range(base_tiers):
                 itr_dbr = TQDBParser.extract_values(dbr, field, index)
 
                 if field not in itr_dbr:
@@ -111,11 +111,14 @@ class SkillBaseParser(TQDBParser):
                 # Insert this skill property
                 value = texts.get(field).format(itr_dbr[field])
                 TQDBParser.insert_value(
-                    field, value, is_singular, result)
+                    field, value, base_singular, result)
 
         # Check the damage absorption skill properties:
+        abs_tiers = TQDBParser.highest_tier(dbr, self.ABSORPTIONS)
+        abs_singular = abs_tiers == 1
+
         for field in self.ABSORPTIONS:
-            for index in range(max_level):
+            for index in range(abs_tiers):
                 itr_dbr = TQDBParser.extract_values(dbr, field, index)
 
                 if field not in itr_dbr:
@@ -136,30 +139,44 @@ class SkillBaseParser(TQDBParser):
                         field_prefixed,
                         f'{texts.get(field_prefixed).format(value)} '
                         f'({damage_types})',
-                        is_singular,
+                        abs_singular,
                         result)
                 else:
                     # If there is no qualifier, it's all damage:
                     TQDBParser.insert_value(
                         field_prefixed,
                         texts.get(field_prefixed).format(value),
-                        is_singular,
+                        abs_singular,
                         result)
 
+        # Prepare two variables to determine the max number of tiers:
+        skill_cap = dbr.get('skillUltimateLevel', dbr.get('skillMaxLevel'))
+        props = result['properties']
+
+        # The maximum number of properties is now the minimum between the skill
+        # cap and the highest number of tiers available in the properties:
+        max_tiers = min(
+            TQDBParser.highest_tier(props, props.keys()),
+            skill_cap)
+
         # After all skill properties have been set, index them by level:
-        properties = [{} for i in range(max_level)]
+        properties = [{} for i in range(max_tiers)]
 
         # Insert the existing properties by adding them to the correct tier:
         for field, values in result['properties'].items():
-            for index in range(max_level):
+            for index in range(max_tiers):
                 # Each value is either a list or a flat value to repeat:
                 if isinstance(values, list):
-                    # Skip properties that extend beyond the max_level
+                    # Skip properties that don't have this tier
                     if index >= len(values):
                         continue
                     properties[index][field] = values[index]
                 else:
                     properties[index][field] = values
+
+        # For summoned skills it's very likely a lot of extraneous empty
+        # property tiers were added, filter those out:
+        properties = [tier for tier in properties if tier]
 
         # Now set the reindexed properties:
         result['properties'] = properties

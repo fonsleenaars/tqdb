@@ -108,6 +108,33 @@ class TQDBParser(metaclass=abc.ABCMeta):
         return result
 
     @staticmethod
+    def highest_tier(dbr, properties):
+        """
+        Find the highest number of tiers within a list of fields.
+
+        For a list of fields, find which field in the DBR has the most
+        tiers (tiers are property values separated by semi-colons (;)).
+
+        For example:
+            offensiveSlowColdMin,12;13;14,
+            offensiveCold,50;60,
+
+        For this set of data, the highest number of tiers is 3.
+
+        """
+        fields = [dbr[p] for p in properties if p in dbr]
+
+        return max((
+            # If properties are lists, grab their length:
+            len(field)
+            if isinstance(field, list)
+            # Regular properties just have a single tier:
+            else 1
+            for field in fields),
+            # If there aren't any properties, default to 1
+            default=1)
+
+    @staticmethod
     def insert_value(field, value, is_singular, result):
         """
         Insert a value for a parsed field in a DBR.
