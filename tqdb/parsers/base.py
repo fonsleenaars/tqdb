@@ -759,29 +759,28 @@ class ParametersSkillParser(TQDBParser):
             if field not in dbr:
                 continue
 
-            is_singular = len(dbr[field]) == 1
+            result['properties'][field] = []
 
             # Now iterate as many times as is necessary for this field:
-            for index, val in enumerate(dbr[field]):
-                # Create a new copy of the DBR with the values for this index:
-                itr_dbr = TQDBParser.extract_values(dbr, field, index)
-
-                chance = itr_dbr.get(f'{field}Chance', 0)
-
-                # Prepare an optional prefix:
-                prefix = ''
-
+            for index, value in enumerate(dbr[field]):
                 # Skip any field that has a negligible value
-                if val <= 0.01 and not min:
+                if value <= 0.01:
                     continue
 
-                value = texts.get(field).format(val)
+                value = texts.get(field).format(value)
+                prefix = ''
 
-                if chance:
+                # Grab the chance and prepare an optional prefix for it:
+                if f'{field}Chance' in dbr:
+                    chance = dbr[f'{field}Chance'][index]
                     prefix = texts.get(CHANCE).format(chance)
 
-                TQDBParser.insert_value(
-                    field, f'{prefix}{value}', is_singular, result)
+                # Insert the value:
+                result['properties'][field].append(f'{prefix}{value}')
+
+            # If this field only has one tier, extract it:
+            if len(result['properties'][field]) == 1:
+                result['properties'][field] = result['properties'][field][0]
 
 
 class PetBonusParser(TQDBParser):
