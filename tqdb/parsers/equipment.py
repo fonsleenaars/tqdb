@@ -382,9 +382,13 @@ class OneShotScrollParser(TQDBParser):
         # Grab the skill file:
         skill = DBRParser.parse(dbr['skillName'])
 
-        # Add properties and summons from the scrolls, whichever is applicable:
-        if 'properties' in skill:
+        # Add properties if there are any:
+        if 'properties' in skill and skill['properties']:
             result['properties'] = skill['properties']
+
+        # Add any summon (just the first one)
+        if 'summons' in skill:
+            result['summons'] = skill['summons'][0]
 
 
 class ShieldParser(TQDBParser):

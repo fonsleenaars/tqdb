@@ -349,66 +349,68 @@ class SkillWeaponAttackParser(TQDBParser):
                 for value in dbr[self.FIELD]]
 
 
-# class SkillSpawnParser():
-#     """
-#     Parser for skills that spawn pets, constructs or other summons.
+class SkillSpawnPetParser(TQDBParser):
+    """
+    Parser for `templatebase\skill_spawnpet.tpl.tpl`.
 
-#     """
-#     def __init__(self, dbr, props, strings):
-#         self.dbr = dbr
-#         self.strings = strings
-#         self.props = props
+    """
+    TTL = 'spawnObjectsTimeToLive'
 
-#     @classmethod
-#     def keys(cls):
-#         return [
-#             'Skill_AttackProjectileSpawnPet',
-#             'Skill_DefensiveGround',
-#             'Skill_DefensiveWall',
-#             'Skill_SpawnPet']
+    def __init__(self):
+        super().__init__()
 
-#     def parse(self):
-#         from tqdb.parsers.main import parser
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\skill_spawnpet.tpl'
 
-#         # Grab generic skill data from the first list of properties
-#         skill = self.props[0]
+    def parse(self, dbr, dbr_file, result):
+        """
+        Parse the skill that spawns a pet.
 
-#         result = {}
-#         result['tag'] = skill['skillDisplayName']
-#         result['name'] = self.strings.get(result['tag'], result['tag'])
-#         result['description'] = (self.strings[skill['skillBaseDescription']]
-#                                  if 'skillBaseDescription' in skill
-#                                  else '')
+        """
+        # Only set time to live it's set (otherwise it's infinite)
+        ttl_list = dbr.get(self.TTL, None)
 
-#         result['path'] = format_path(self.dbr.replace(resources.DB, ''))
-#         result['summons'] = []
+        # Parse all the summons and set them as a list:
+        result['summons'] = []
+        for index, spawn_file in enumerate(dbr['spawnObjects']):
+            spawn = DBRParser.parse(spawn_file)
 
-#         # Prepare utility parser
-#         util = UtilityParser(self.dbr, self.props, self.strings)
+            # We need the raw values from the spawn DBR for hp/mp
+            spawn['properties'] = {}
+            spawn_dbr = DBRParser.read(spawn_file)
 
-#         # Run both tiered and non-tiered summons:
-#         tiers = self.props if len(self.props) > 1 else [skill]
-#         for tier in tiers:
-#             # Parse the summon reference:
-#             spawn = parser.parse(util.get_reference_dbr(tier['spawnObjects']))
+            if 'characterLife' in spawn_dbr:
+                hp_list = spawn_dbr['characterLife']
+                hp = (
+                    hp_list[index]
+                    if index < len(hp_list)
+                    else hp_list[len(hp_list) - 1])
+                TQDBParser.insert_value(
+                    'characterLife',
+                    texts.get('LifeText').format(hp),
+                    len(hp_list) == 1,
+                    spawn)
+            if 'characterMana' in spawn_dbr:
+                mp_list = spawn_dbr['characterMana']
+                mp = (
+                    mp_list[index]
+                    if index < len(mp_list)
+                    else mp_list[len(mp_list) - 1])
+                TQDBParser.insert_value(
+                    'characterMana',
+                    texts.get('ManaText').format(mp),
+                    len(mp_list) == 1,
+                    spawn)
+            if ttl_list:
+                ttl = (
+                    ttl_list[index]
+                    if index < len(ttl_list)
+                    else ttl_list[len(ttl_list) - 1])
+                TQDBParser.insert_value(
+                    self.TTL,
+                    texts.get(self.TTL).format(ttl),
+                    len(ttl_list) == 1,
+                    spawn)
 
-#             # Only set time to live it's it exists (otherwise it's infinite)
-#             if 'spawnObjectsTimeToLive' in tier:
-#                 spawn['spawnObjectsTimeToLive'] = (
-#                     self.strings['spawnObjectsTimeToLive'].format(
-#                         float(tier['spawnObjectsTimeToLive'])))
-
-#             if 'petLimit' in tier:
-#                 spawn['petLimit'] = (
-#                     self.strings['skillPetLimit'].format(
-#                         int(tier['petLimit'])))
-
-#             if 'skillManaCost' in tier:
-#                 spawn['skillManaCost'] = (
-#                     self.strings['skillManaCost'].format(
-#                         int(float(tier['skillManaCost']))))
-
-#             # Save the skills and the summon:
-#             result['summons'].append(spawn)
-
-#         return result
+            result['summons'].append(spawn)

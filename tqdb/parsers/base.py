@@ -454,7 +454,8 @@ class ParametersOffensiveParser(TQDBParser):
         # - parameters_weaponsbonusoffensive.tpl
         return f'{TQDBParser.base}\\templatebase\\parameters_offensive.tpl'
 
-    def format(self, field_type, field, min, max):
+    @classmethod
+    def format(cls, field_type, field, min, max):
         """
         Format a specific field.
 
@@ -463,14 +464,14 @@ class ParametersOffensiveParser(TQDBParser):
 
         """
         if max > min:
-            if field_type == self.EOT:
+            if field_type == cls.EOT:
                 # Effect damage is done in seconds, so add a decimal
                 value = texts.get(DMG_RANGE_DECIMAL).format(min, max)
             else:
                 # DOT and regular damage is flat, so no decimals:
                 value = texts.get(DMG_RANGE).format(min, max)
         else:
-            if field_type == self.EOT:
+            if field_type == cls.EOT:
                 # Effect damage is done in seconds, so add a decimal
                 value = texts.get(DMG_SINGLE_DECIMAL).format(min)
             else:
@@ -789,6 +790,49 @@ class ParametersSkillParser(TQDBParser):
 
                 TQDBParser.insert_value(
                     field, f'{prefix}{value}', is_singular, result)
+
+
+class PetBonusParser(TQDBParser):
+    """
+    Parser for `templatebase/petbonusinc.tpl`.
+
+    """
+    NAME = 'petBonusName'
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\templatebase\\petbonusinc.tpl'
+
+    def parse(self, dbr, dbr_file, result):
+        """
+        Parse a possible skill bonus for a pet.
+
+        These bonuses are things like:
+            - 15 Vitality Damage
+            - +5% Vitality Damage
+
+        """
+        if self.NAME in dbr:
+            # Parse the pet bonus and add it:
+            pet_bonus = DBRParser.parse(dbr[self.NAME])
+
+            properties = (
+                # If a tiered property set is found, return the first entry
+                pet_bonus['properties'][0]
+                if isinstance(pet_bonus['properties'], list)
+                # Otherwise just return the list
+                else pet_bonus['properties'])
+
+            # Don't allow nested petBonus properties
+            # One example of this is the Spear of Nemetona
+            if 'petBonus' in properties:
+                properties.pop('petBonus')
+
+            # Set the properties of the bonus as the value for this field:
+            result['properties']['petBonus'] = properties
 
 
 class RacialBonusParser(TQDBParser):
