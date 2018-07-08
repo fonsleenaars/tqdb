@@ -167,10 +167,12 @@ class SkillBaseParser(TQDBParser):
             for index in range(max_tiers):
                 # Each value is either a list or a flat value to repeat:
                 if isinstance(values, list):
-                    # Skip properties that don't have this tier
+                    # Properties that are capped before this tier repeat their
+                    # last value:
                     if index >= len(values):
-                        continue
-                    properties[index][field] = values[index]
+                        properties[index][field] = values[len(values) - 1]
+                    else:
+                        properties[index][field] = values[index]
                 else:
                     properties[index][field] = values
 
