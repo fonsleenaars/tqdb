@@ -415,7 +415,6 @@ class ParametersOffensiveParser(TQDBParser):
         'retaliationPercentCurrentLife': ABSOLUTE,
         'retaliationPhysical': ABSOLUTE,
         'retaliationPierce': ABSOLUTE,
-        'retaliationPierceRatio': ABSOLUTE,
         'retaliationPoison': ABSOLUTE,
         'retaliationSlowAttackSpeed': EOT,
         'retaliationSlowBleeding': DOT,
@@ -645,8 +644,14 @@ class ParametersOffensiveParser(TQDBParser):
             if duration_min:
                 suffix = texts.get(DFT_SINGLE).format(duration_min)
 
-        # Format the value based on its field type and values:
-        value = self.format(field_type, field, min, max)
+        # Pierce ratio is a singular exception for flat properties:
+        if field == 'offensivePierceRatio':
+            # Pierce ratio already has its formatter in the flat property:
+            # "{0:.0f}% Pierce Ratio" instead of "% Pierce Ratio"
+            value = texts.get(field).format(min)
+        else:
+            # Format the value based on its field type and values:
+            value = self.format(field_type, field, min, max)
 
         if chance and not is_xor:
             prefix = texts.get(CHANCE).format(chance)
