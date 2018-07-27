@@ -1,2 +1,0 @@
-numexpr ~= 2.6.4
-Pillow ~= 4.2.1
