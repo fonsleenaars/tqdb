@@ -43,6 +43,13 @@ class ParametersCharacterParser(TQDBParser):
     """
     Parser for `templatebase/parameters_character.tpl`.
 
+    Character properties modify all of the properties and abilities that a
+    character can be assigned. This ranges from the three primary statistics
+    STR, DEX, INT to requirements for specific pieces of equipment.
+
+    Character properties are either flat values or modifier (%) values and are
+    never chance based.
+
     """
     FIELDS = [
         'characterArmorStrengthReqReduction',
@@ -67,7 +74,6 @@ class ParametersCharacterParser(TQDBParser):
         'characterLevelReqReduction',
         'characterLife',
         'characterLifeRegen',
-        'characterOffensiveAbility',
         'characterMana',
         'characterManaLimitReserve',
         'characterManaLimitReserveReduction',
@@ -75,6 +81,8 @@ class ParametersCharacterParser(TQDBParser):
         'characterMeleeStrengthReqReduction',
         'characterMeleeDexterityReqReduction',
         'characterMeleeIntelligenceReqReduction',
+        'characterOffensiveAbility',
+        'characterPhysToElementalRatio',
         'characterRunSpeed',
         'characterShieldStrengthReqReduction',
         'characterShieldDexterityReqReduction',
@@ -106,43 +114,40 @@ class ParametersCharacterParser(TQDBParser):
 
     def parse(self, dbr, dbr_file, result):
         """
-        Parse the character properties.
+        Parse the character properties as specified in `FIELDS`.
 
         """
         for field in self.FIELDS:
-            # Find whether the flat, modifier, or both fields are present:
+            if field in dbr:
+                self.parse_field(field, dbr, result)
+
             mod = f'{field}Modifier'
+            if mod in dbr:
+                self.parse_field(mod, dbr, result)
 
-            iterations = max(
-                len(dbr[field]) if field in dbr else 0,
-                len(dbr[mod]) if mod in dbr else 0,
-                0)
+    def parse_field(self, field, dbr, result):
+        """
+        Parse all values for a given character field that is in the DBR.
 
-            # Boolean to indicate if a single value is being inserted:
-            is_singular = iterations == 1
-
-            # Now iterate as many times as is necessary for this field:
-            for index in range(iterations):
-                # Create a new copy of the DBR with the values for this index:
-                itr_dbr = TQDBParser.extract_values(dbr, field, index)
-
-                if field in itr_dbr:
-                    # Insert the flat (+...) version:
-                    TQDBParser.insert_value(
-                        field, texts.get(field).format(itr_dbr[field]),
-                        is_singular, result)
-                if mod in itr_dbr:
-                    # Insert the modifier (+...%) version:
-                    TQDBParser.insert_value(
-                        mod, texts.get(mod).format(itr_dbr[mod]),
-                        is_singular, result)
+        """
+        for value in dbr[field]:
+            formatted = texts.get(field).format(value)
+            TQDBParser.insert_value(field, formatted, result)
 
 
 class ParmatersDefensiveParser(TQDBParser):
     """
     Parser for `templatebase/parameters_defensive.tpl`.
 
+    Defensive properties modify all of the armor and resistance based
+    properties a charachter has.
+
+    Defensive properties are either flat values or modifier (%) values and can
+    be chance based.
+
     """
+    # Special field that has a different suffix for its value
+    DTS = 'defensiveTotalSpeed'
     FIELDS = [
         'defensiveAbsorption',
         'defensiveBleeding',
@@ -204,53 +209,55 @@ class ParmatersDefensiveParser(TQDBParser):
 
         """
         for field in self.FIELDS:
-            # Find whether the flat, modifier, or both fields are present:
+            # defensiveTotalSpeed has a 'resistance' suffix for its value
+            if field == self.DTS and f'{self.DTS}Resistance' in dbr:
+                # Add the result to the regular field:
+                dbr[self.DTS] = dbr[f'{self.DTS}Resistance']
+                self.parse_field(self.DTS, dbr, result)
+            elif field in dbr:
+                self.parse_field(field, dbr, result)
+
             mod = f'{field}Modifier'
+            if mod in dbr:
+                self.parse_field(mod, dbr, result)
 
-            iterations = max(
-                len(dbr[field]) if field in dbr else 0,
-                len(dbr[mod]) if mod in dbr else 0,
-                1)
+    def parse_field(self, field, dbr, result):
+        """
+        Parse all values for a given defensive field that is in the DBR.
 
-            # Boolean to indicate if a single value is being inserted:
-            is_singular = iterations == 1
+        """
+        for i in range(len(dbr[field])):
+            iteration = TQDBParser.extract_values(dbr, field, i)
 
-            # Now iterate as many times as is necessary for this field:
-            for index in range(iterations):
-                # Create a new copy of the DBR with the values for this index:
-                itr_dbr = TQDBParser.extract_values(dbr, field, index)
+            # It's possible some values aren't set in this iteration:
+            if field not in iteration:
+                continue
 
-                # defensiveTotalSpeed has a 'Resistance' suffix for its value.
-                if field == 'defensiveTotalSpeed':
-                    field_value = itr_dbr.get(f'{field}Resistance', 0)
-                else:
-                    field_value = itr_dbr.get(field, 0)
+            chance = iteration.get(f'{field}Chance', 0)
+            value = iteration[field]
 
-                if field_value:
-                    # Parse the flat (+...) version:
-                    chance = itr_dbr.get(f'{field}Chance', 0)
-                    value = texts.get(field).format(field_value)
+            # Format the value using the texts:
+            formatted = texts.get(field).format(value)
 
-                    if chance:
-                        # Prefix the
-                        value = texts.get(CHANCE).format(chance) + value
+            # Prepend a chance if it's set:
+            if chance:
+                formatted = texts.get(CHANCE).format(chance) + formatted
 
-                    TQDBParser.insert_value(field, value, is_singular, result)
-                if mod in itr_dbr:
-                    # Add the modifier (%) version of the field:
-                    chance = itr_dbr.get(f'{mod}Chance', 0)
-                    value = texts.get(mod).format(itr_dbr[mod])
-
-                    if chance:
-                        # Prefix the
-                        value = texts.get(CHANCE).format(chance) + value
-
-                    TQDBParser.insert_value(mod, value, is_singular, result)
+            TQDBParser.insert_value(field, formatted, result)
 
 
 class ItemSkillAugmentParser(TQDBParser):
     """
     Parser for `templatebase/itemskillaugments.tpl`.
+
+    Item and skill augmented properties both grant and augment skills and
+    masteries. Granted skills have a set level and augmented masteries or
+    skills increase their respective level by a certain number.
+
+    Either all skills, all skills in a specific mastery, or a
+    specific skill is augmented.
+
+    These properties are never chance based.
 
     """
     # DBR constants used by this parser
@@ -347,6 +354,10 @@ class ItemSkillAugmentParser(TQDBParser):
 class ParametersOffensiveParser(TQDBParser):
     """
     Parser for `templatebase/parameters_offensive.tpl`.
+
+    The offensive and retaliation properties map to types of damage. These
+    damages have chances, can be a range of values, can be modifiers (%) and
+    part of a global chance.
 
     """
     # A few constants to indicate the type of parsing needed
@@ -509,19 +520,17 @@ class ParametersOffensiveParser(TQDBParser):
                 len(dbr[mod]) if mod in dbr else 0,
                 0)
 
-            self.is_singular = iterations == 1
-
             # Now iterate as many times as is necessary for this field:
             for index in range(iterations):
                 # Create a new copy of the DBR with the values for this index:
-                itr_dbr = TQDBParser.extract_values(dbr, field, index)
+                iteration = TQDBParser.extract_values(dbr, field, index)
 
-                if min in itr_dbr:
+                if min in iteration:
                     # Parse the flat (+...) version:
-                    self.parse_flat(field, field_type, itr_dbr)
-                if mod in itr_dbr:
+                    self.parse_flat(field, field_type, iteration)
+                if mod in iteration:
                     # Parse the modifier (+...%) version
-                    self.parse_modifier(field, field_type, itr_dbr)
+                    self.parse_modifier(field, field_type, iteration)
 
         # Now add the global chance tags if they're set:
         offensive_key = 'offensiveGlobalChance'
@@ -573,7 +582,7 @@ class ParametersOffensiveParser(TQDBParser):
             (k, v[index])
             if index < len(v)
             # If this value isn't repeated, grab the last value
-            else (k, v[len(v) - 1])
+            else (k, v[-1])
             for k, v in all_fields.items())
 
         # Check if the XOR was set for any field:
@@ -591,11 +600,11 @@ class ParametersOffensiveParser(TQDBParser):
                     texts.get(GLOBAL_ALL).format('')
                     if chance == 100
                     else texts.get(GLOBAL_PCT).format(chance)),
-                'properties': self.offensive,
+                'properties': fields,
             }
 
         # Insert the value normally
-        TQDBParser.insert_value(key, value, self.is_singular, self.result)
+        TQDBParser.insert_value(key, value, self.result)
 
     def parse_flat(self, field, field_type, dbr):
         """
@@ -661,7 +670,6 @@ class ParametersOffensiveParser(TQDBParser):
             TQDBParser.insert_value(
                 field,
                 f'{prefix}{value}{suffix}',
-                self.is_singular,
                 self.result)
         elif field.startswith('offensive'):
             # Add this field to the global offensive list
@@ -712,7 +720,6 @@ class ParametersOffensiveParser(TQDBParser):
             TQDBParser.insert_value(
                 field_mod,
                 f'{prefix}{value}{suffix}',
-                self.is_singular,
                 self.result)
         elif field.startswith('offensive'):
             # Add this field to the global offensive list
@@ -733,6 +740,11 @@ class ParametersOffensiveParser(TQDBParser):
 class ParametersSkillParser(TQDBParser):
     """
     Parser for `templatebase/parameters_skill.tpl`.
+
+    There are a few skill properties that modify mana cost, cooldown time and
+    the speed of projectiles.
+
+    These properties can be chance based.
 
     """
     FIELDS = [
@@ -764,33 +776,30 @@ class ParametersSkillParser(TQDBParser):
             if field not in dbr:
                 continue
 
-            result['properties'][field] = []
-
             # Now iterate as many times as is necessary for this field:
             for index, value in enumerate(dbr[field]):
                 # Skip any field that has a negligible value
                 if value <= 0.01:
                     continue
 
-                value = texts.get(field).format(value)
-                prefix = ''
+                formatted = texts.get(field).format(value)
 
-                # Grab the chance and prepare an optional prefix for it:
+                # Grab the chance and add a prefix with it:
                 if f'{field}Chance' in dbr:
                     chance = dbr[f'{field}Chance'][index]
-                    prefix = texts.get(CHANCE).format(chance)
+                    formatted = texts.get(CHANCE).format(chance) + formatted
 
                 # Insert the value:
-                result['properties'][field].append(f'{prefix}{value}')
-
-            # If this field only has one tier, extract it:
-            if len(result['properties'][field]) == 1:
-                result['properties'][field] = result['properties'][field][0]
+                TQDBParser.insert_value(field, formatted, result)
 
 
 class PetBonusParser(TQDBParser):
     """
     Parser for `templatebase/petbonusinc.tpl`.
+
+    A pet bonus is a reference to a file that has a few properties that all
+    pets will receive. These bonuses can be things any base property that's
+    parsed in this module.
 
     """
     NAME = 'petBonusName'
@@ -867,6 +876,17 @@ class RacialBonusParser(TQDBParser):
         if self.RACE not in dbr:
             return
 
+        for field in self.FIELDS:
+            self.parse_field(field, dbr, result)
+
+    def parse_field(self, field, dbr, result):
+        """
+        Parse all values for a given racial bonus field that is in the DBR.
+
+        """
+        if field not in dbr:
+            return
+
         races = []
         for race in dbr[self.RACE]:
             if race == 'Beastman':
@@ -876,20 +896,9 @@ class RacialBonusParser(TQDBParser):
             else:
                 races.append(race)
 
-        properties = {}
-        for field in self.FIELDS:
-            if field not in dbr:
-                continue
-
-            # Setup each tier, and for each tier add all races:
-            properties[field] = [
-                [texts.get(field).format(value, race) for race in races]
-                for value in dbr[field]
-            ]
-
-            # Extract list if there is only one tier:
-            if len(properties[field]) == 1:
-                properties[field] = properties[field][0]
-
-        # If there is only one tier, just set it as the properties:
-        result['properties'] = properties
+        for value in dbr[field]:
+            TQDBParser.insert_value(
+                field,
+                # Create a list of all racial bonuses
+                [texts.get(field).format(value, race) for race in races],
+                result)

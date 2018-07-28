@@ -135,7 +135,7 @@ class TQDBParser(metaclass=abc.ABCMeta):
             default=1)
 
     @staticmethod
-    def insert_value(field, value, is_singular, result):
+    def insert_value(field, value, result):
         """
         Insert a value for a parsed field in a DBR.
 
@@ -156,12 +156,15 @@ class TQDBParser(metaclass=abc.ABCMeta):
             Output: offensiveSlowCold: ['3 Cold Damage', '6 Cold Damage']
 
         """
-        if is_singular:
+        if field not in result['properties']:
             result['properties'][field] = value
-        elif field in result['properties']:
+            return
+
+        current_field = result['properties'][field]
+        if isinstance(current_field, list):
             result['properties'][field].append(value)
         else:
-            result['properties'][field] = [value]
+            result['properties'][field] = [current_field, value]
 
 
 def load_parsers():

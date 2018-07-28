@@ -99,7 +99,6 @@ class SkillBaseParser(TQDBParser):
 
         # Check the skill base fields:
         base_tiers = TQDBParser.highest_tier(dbr, self.FIELDS)
-        base_singular = base_tiers == 1
 
         for field in self.FIELDS:
             for index in range(base_tiers):
@@ -110,12 +109,10 @@ class SkillBaseParser(TQDBParser):
 
                 # Insert this skill property
                 value = texts.get(field).format(itr_dbr[field])
-                TQDBParser.insert_value(
-                    field, value, base_singular, result)
+                TQDBParser.insert_value(field, value, result)
 
         # Check the damage absorption skill properties:
         abs_tiers = TQDBParser.highest_tier(dbr, self.ABSORPTIONS)
-        abs_singular = abs_tiers == 1
 
         for field in self.ABSORPTIONS:
             for index in range(abs_tiers):
@@ -139,14 +136,12 @@ class SkillBaseParser(TQDBParser):
                         field_prefixed,
                         f'{texts.get(field_prefixed).format(value)} '
                         f'({damage_types})',
-                        abs_singular,
                         result)
                 else:
                     # If there is no qualifier, it's all damage:
                     TQDBParser.insert_value(
                         field_prefixed,
                         texts.get(field_prefixed).format(value),
-                        abs_singular,
                         result)
 
         # Prepare two variables to determine the max number of tiers:
@@ -417,7 +412,6 @@ class SkillSpawnPetParser(TQDBParser):
                 TQDBParser.insert_value(
                     'characterLife',
                     texts.get('LifeText').format(hp),
-                    len(hp_list) == 1,
                     spawn)
             if 'characterMana' in spawn_dbr:
                 mp_list = spawn_dbr['characterMana']
@@ -428,7 +422,6 @@ class SkillSpawnPetParser(TQDBParser):
                 TQDBParser.insert_value(
                     'characterMana',
                     texts.get('ManaText').format(mp),
-                    len(mp_list) == 1,
                     spawn)
             if ttl_list:
                 ttl = (
@@ -438,7 +431,6 @@ class SkillSpawnPetParser(TQDBParser):
                 TQDBParser.insert_value(
                     self.TTL,
                     texts.get(self.TTL).format(ttl),
-                    len(ttl_list) == 1,
                     spawn)
 
             result['summons'].append(spawn)
