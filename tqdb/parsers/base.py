@@ -55,7 +55,7 @@ class ParametersCharacterParser(TQDBParser):
         'characterArmorStrengthReqReduction',
         'characterArmorDexterityReqReduction',
         'characterArmorIntelligenceReqReduction',
-        'characterAttackSpeedModifier',
+        'characterAttackSpeed',
         'characterDefensiveAbility',
         'characterDefensiveBlockRecoveryReduction',
         'characterDeflectProjectile',
@@ -135,7 +135,7 @@ class ParametersCharacterParser(TQDBParser):
             TQDBParser.insert_value(field, formatted, result)
 
 
-class ParmatersDefensiveParser(TQDBParser):
+class ParametersDefensiveParser(TQDBParser):
     """
     Parser for `templatebase/parameters_defensive.tpl`.
 
@@ -412,6 +412,7 @@ class ParametersOffensiveParser(TQDBParser):
         'offensiveSlowSpellCastSpeed': EOT,
         'offensiveSlowTotalSpeed': EOT,
         'offensiveStun': EOT,
+        'offensiveTaunt': EOT,
         'offensiveTotalDamage': ABSOLUTE,
         'offensiveTotalDamageReductionAbsolute': EOT,
         'offensiveTotalDamageReductionPercent': EOT,

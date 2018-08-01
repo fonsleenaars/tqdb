@@ -266,6 +266,17 @@ class Texts:
             # Stun retaliation has been fixed, we're done
             break
 
+        # Taunt is missing the whole prefix of 'Second(s) of' so copy it from:
+        # stun retaliation, which we know has been fixed:
+        borrowed = ' '.join(stun_retaliation)
+        self.strings['damagetaunt'] = (
+            # This is the full 'Second(s) of Stun Retaliation' text.
+            self.strings['retaliationstun'].replace(
+                # This is the verified 'Stun retaliation' text
+                borrowed,
+                # This is the incorrect but verified 'Taunt' text
+                self.strings['damagetaunt']))
+
         # Copy over a few strings under a new property name, to match the
         # property that's set in the DBR files.
         for new_key, old_key in self.COPY_RESOURCES:

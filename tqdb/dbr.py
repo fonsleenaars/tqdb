@@ -9,8 +9,11 @@ the DBR and then parse it according to all properties in that template.
 
 """
 from tqdb import storage
-from tqdb.parsers.main import parsers
+from tqdb.parsers.main import load_parsers
 from tqdb.templates import templates, templates_by_path
+
+
+parsers = {}
 
 
 def get_template(dbr, dbr_file):
@@ -68,6 +71,11 @@ def parse(dbr_file):
     Parse a DBR file according to its template.
 
     """
+    # Initialize the parsers map if necessary:
+    global parsers
+    if not parsers:
+        parsers = load_parsers()
+
     # First check if the file has been parsed before:
     if dbr_file in storage.db:
         return storage.db[dbr_file]

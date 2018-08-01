@@ -203,6 +203,3 @@ def load_parsers():
                     parser_map[templates] = instanced
 
     return parser_map
-
-
-parsers = load_parsers()
