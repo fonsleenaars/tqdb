@@ -403,6 +403,12 @@ class OneShotScrollParser(TQDBParser):
             'description': texts.get(dbr['itemText']),
         })
 
+        # Greater scroll of svefnthorn is incorrectly referenced as its Divine
+        # variant. Manual fix required for now:
+        if '02_svefnthorn.dbr' in dbr_file:
+            result['tag'] = 'x2tagScrollName06'
+            result['name'] = texts.get('x2tagScrollName06')
+
         # Set the bitmap if it exists
         if 'bitmap' in dbr:
             result['bitmap'] = dbr['bitmap']
