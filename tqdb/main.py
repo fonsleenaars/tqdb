@@ -116,7 +116,6 @@ def parse_equipment():
 
     items = {}
     for dbr in files:
-        logging.debug(f'Parsing {dbr}')
         parsed = parse(dbr)
 
         try:
@@ -148,34 +147,34 @@ def parse_equipment():
 
     return items
 
-###############################################################################
-#                                    LOOT                                     #
-###############################################################################
-# if 'loot' in categories:
-#     files = []
-#     for boss_file in res.CREATURES:
-#         files.extend(glob.glob(res.DB + boss_file, recursive=True))
 
-#     bosses = {}
-#     for index, dbr in enumerate(files):
-#         print_progress("Parsing boss loot", index, len(files))
+def parse_creatures():
+    """
+    Parse all creatures (bosses and heroes) in Titan Quest.
 
-#         parsed = parser.parse(dbr)
-#         if not parsed or 'tag' not in parsed:
-#             continue
+    Parsing the bosses and heroes is mostly about parsing their loot tables
+    to create an index of what they can drop. This index will work two ways,
+    the first being a complete list of items that the monster can drop and the
+    reverse being added to each individual item's loot table so it can be
+    sorted.
 
-#         bossTag, boss = pluck(parsed, 'tag', 'result')
+    """
+    files = []
+    for resource in resources.CREATURES:
+        boss_files = resources.DB / resource
+        files.extend(glob.glob(str(boss_files), recursive=True))
 
-#         # Add new bosses:
-#         if (bossTag and bossTag not in bosses) or (
-#                 bossTag in bosses and
-#                 'chest' in bosses[bossTag] and
-#                 not bosses[bossTag]['chest']):
-#             bosses[bossTag] = boss
+    creatures = {}
+    for dbr in files:
+        parsed = parse(dbr)
 
-#     data['bosses'] = bosses
+        try:
+            creatures[parsed['tag']] = parsed
+        except KeyError:
+            logging.error(f'Skipping tagless creature {dbr}')
+            continue
 
-#     quests = {}
+    return creatures
 
 
 def parse_sets():
@@ -195,7 +194,6 @@ def parse_sets():
 
     sets = {}
     for dbr in files:
-        logging.debug(f'Parsing {dbr}')
         parsed = parse(dbr)
 
         try:

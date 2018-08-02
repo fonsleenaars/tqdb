@@ -67,8 +67,6 @@ class MonsterSkillManager(TQDBParser):
                 'level': level,
             })
 
-        return result
-
 
 class CharacterParser(TQDBParser):
     """
@@ -94,7 +92,7 @@ class CharacterParser(TQDBParser):
             return
 
         dmg_min = dbr[self.MIN]
-        dmg_max = dbr[self.MAX]
+        dmg_max = dbr.get(self.MAX, dmg_min)
 
         # Set the damage this summon does as a property:
         result['properties']['offensivePhysical'] = (

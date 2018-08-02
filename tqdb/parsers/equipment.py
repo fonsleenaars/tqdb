@@ -405,7 +405,7 @@ class OneShotScrollParser(TQDBParser):
 
         # Greater scroll of svefnthorn is incorrectly referenced as its Divine
         # variant. Manual fix required for now:
-        if '02_svefnthorn.dbr' in dbr_file:
+        if '02_svefnthorn.dbr' in str(dbr_file):
             result['tag'] = 'x2tagScrollName06'
             result['name'] = texts.get('x2tagScrollName06')
 

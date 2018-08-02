@@ -1,4 +1,5 @@
-# import numexpr
+import logging
+import numexpr
 import os
 import re
 
@@ -76,231 +77,222 @@ class LootRandomizerTableParser(TQDBParser):
             })
 
 
-# class LootMasterParser:
-#     """
-#     Parser for a master table of loot.
+class LootMasterTableParser(TQDBParser):
+    """
+    Parser for `lootmastertable.tpl`.
 
-#     """
-#     def __init__(self, dbr, props, strings):
-#         self.dbr = dbr
-#         self.props = props[0]
-#         self.strings = strings
+    """
+    def __init__(self):
+        super().__init__()
 
-#     @classmethod
-#     def keys(cls):
-#         return ['LootMasterTable']
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\lootmastertable.tpl'
 
-#     def parse(self):
-#         from tqdb.parsers.main import parser
+    def parse(self, dbr, dbr_file, result):
+        items = {}
 
-#         util = UtilityParser(self.dbr, self.props, self.strings)
-#         items = {}
+        # Add up all the loot weights:
+        summed = sum(v for k, v in dbr.items() if k.startswith('lootWeight'))
 
-#         # Add up all the loot weights:
-#         summed = sum(int(v) for k, v in self.props.items()
-#                      if k.startswith('lootWeight'))
+        # Run through all the loot entries and parse them:
+        for i in range(1, 31):
+            weight = dbr.get(f'lootWeight{i}', 0)
 
-#         # Run through all the loot chances and parse them:
-#         for i in range(1, 31):
-#             weight = int(self.props.get(f'lootWeight{i}', '0'))
+            # Skip items with no chance:
+            if not weight:
+                continue
 
-#             # Skip items with no chance:
-#             if not weight:
-#                 continue
+            chance = float('{0:.5f}'.format(weight / summed))
 
-#             chance = float('{0:.5f}'.format(weight / summed))
+            try:
+                # Try to parse the referenced loot file
+                loot_file = dbr[f'lootName{i}']
+            except KeyError:
+                logging.warning(f'lootName{i} not found in {dbr_file}.')
+                continue
 
-#             # Parse the table and multiply the values by the chance:
-#             loot_file = self.props.get(f'lootName{i}')
-#             if not loot_file:
-#                 logging.warning(f'lootName{i} not found in {self.dbr}')
-#                 continue
+            # Parse the loot file
+            loot = DBRParser.parse(loot_file)
 
-#             table = parser.parse(util.get_reference_dbr(loot_file)).items()
-#             new_items = dict((k, v * chance) for k, v in table)
+            # Loot entries will be in 'table', add those:
+            for k, v in loot['loot_table'].items():
+                if k in items:
+                    items[k] += (v * chance)
+                else:
+                    items[k] = (v * chance)
 
-#             for k, v in new_items.items():
-#                 if k in items:
-#                     items[k] += v
-#                 else:
-#                     items[k] = v
-
-#         return items
+        # Add the parsed loot table
+        result['loot_table'] = items
 
 
-# class LootFixedContainerParser:
-#     """
-#     Parser for chests and fixed item loot.
+class FixedItemContainerParser(TQDBParser):
+    """
+    Parser for `fixeditemcontainer.tpl`.
 
-#     """
-#     def __init__(self, dbr, props, strings):
-#         self.dbr = dbr
-#         self.props = props[0]
-#         self.strings = strings
+    This type of loot table simply references another in its 'tables' property.
+    All that's required is parsing the reference, and setting the result.
 
-#     @classmethod
-#     def keys(cls):
-#         return ['FixedItemContainer']
+    """
+    def __init__(self):
+        super().__init__()
 
-#     def parse(self):
-#         from tqdb.parsers.main import parser
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\fixeditemcontainer.tpl'
 
-#         util = UtilityParser(self.dbr, self.props, self.strings)
+    def parse(self, dbr, dbr_file, result):
+        if 'tables' not in dbr:
+            logging.warning(f'No table found in {dbr_file}')
+            return
 
-#         if 'tables' not in self.props:
-#             logging.warning(f'No table found in {self.dbr}')
-#             return {}
-#         loot_dbr = util.get_reference_dbr(self.props['tables'])
-#         loot_props = parser.reader.read(loot_dbr)
-
-#         return LootFixedItemParser(loot_dbr, loot_props, self.strings).parse()
+        # Parse the references 'tables' file and set the result:
+        loot = DBRParser.parse(dbr['tables'][0])
+        result['loot_table'] = loot['loot_table']
 
 
-# class LootFixedItemParser:
-#     """
-#     Parser for a fixed list of loot.
+class FixedItemLootParser(TQDBParser):
+    """
+    Parser for `fixeditemloot.tpl`.
 
-#     """
-#     def __init__(self, dbr, props, strings):
-#         self.dbr = dbr
-#         self.props = props[0]
-#         self.strings = strings
+    """
+    def __init__(self):
+        super().__init__()
 
-#     @classmethod
-#     def keys(cls):
-#         return ['FixedItemLoot']
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\fixeditemloot.tpl'
 
-#     def parse(self):
-#         from tqdb.parsers.main import parser
+    def parse(self, dbr, dbr_file, result):
+        # Initialize a dictionary of item chances to add to:
+        self.items = {}
 
-#         util = UtilityParser(self.dbr, self.props, self.strings)
-#         items = {}
+        # This camelCased variable is required for the spawn equations:
+        numberOfPlayers = 1  # noqa
 
-#         # This camelCased variable is required for the spawn equations:
-#         numberOfPlayers = 1  # noqa
+        # Grab min/max equation for items that will spawn:
+        max_spawn = numexpr.evaluate(dbr['numSpawnMaxEquation']).item()
+        min_spawn = numexpr.evaluate(dbr['numSpawnMinEquation']).item()
+        spawn_number = (min_spawn + max_spawn) / 2
 
-#         # Grab min/max equation for items that will spawn:
-#         max_spawn = numexpr.evaluate(self.props['numSpawnMaxEquation']).item()
-#         min_spawn = numexpr.evaluate(self.props['numSpawnMinEquation']).item()
-#         spawn_number = (min_spawn + max_spawn) / 2
+        # There are 6 loot slots:
+        for slot in range(1, 7):
+            self.parse_loot(f'loot{slot}', spawn_number, dbr)
 
-#         # There are 6 loot slots:
-#         for slot in range(1, 7):
-#             slot_key = f'loot{slot}'
-#             slot_chance = float(self.props.get(slot_key + 'Chance', '0'))
+        result['loot_table'] = self.items
 
-#             # Skip slots that have 0 chance to drop
-#             if not slot_chance:
-#                 continue
+    def parse_loot(self, loot_key, spawn_number, dbr):
+        chance = dbr.get(f'{loot_key}Chance', 0)
 
-#             # Add up all the loot weights:
-#             summed = sum(int(v) for k, v in self.props.items()
-#                          if k.startswith(slot_key + 'Weight'))
+        # Skip slots that have 0 chance to drop
+        if not chance:
+            return
 
-#             # Run through all the loot chances and parse them:
-#             for i in range(1, 7):
-#                 weight = int(self.props.get(f'{slot_key}Weight{i}', '0'))
+        # Add up all the loot weights:
+        summed = sum(v for k, v in dbr.items()
+                     if k.startswith(f'{loot_key}Weight'))
 
-#                 # Skip items with no chance:
-#                 if not weight:
-#                     continue
+        # Run through all the loot possibilities and parse them:
+        for i in range(1, 7):
+            weight = dbr.get(f'{loot_key}Weight{i}', 0)
 
-#                 loot_dbr = util.get_reference_dbr(
-#                     self.props.get(f'{slot_key}Name{i}'))
+            # Skip items with no chance:
+            if not weight:
+                continue
 
-#                 if not os.path.exists(loot_dbr):
-#                     continue
+            try:
+                loot = DBRParser.parse(dbr[f'{loot_key}Name{i}'][0])
 
-#                 # Parse the table and multiply the values by the chance:
-#                 loot_chance = float('{0:.5f}'.format(weight / summed))
-#                 new_items = dict(
-#                     (k, v * loot_chance * slot_chance * spawn_number)
-#                     for k, v in parser.parse(loot_dbr).items()
-#                 )
+                # Parse the table and multiply the values by the chance:
+                loot_chance = float('{0:.5f}'.format(weight / summed))
+                new_items = dict(
+                    (k, v * loot_chance * chance * spawn_number)
+                    for k, v in loot['loot_table'].items()
+                )
+            except KeyError:
+                # Skip files that weren't found/parsed (no loot_table)
+                continue
 
-#                 for k, v in new_items.items():
-#                     if k in items:
-#                         items[k] += v
-#                     else:
-#                         items[k] = v
-
-#         return items
+            for k, v in new_items.items():
+                if k in self.items:
+                    self.items[k] += v
+                else:
+                    self.items[k] = v
 
 
-# class LootTableDWParser:
-#     """
-#     Parser for Dynamic Weight loot tables.
+class LootItemTable_DynWeightParser(TQDBParser):
+    """
+    Parser for `lootitemtable_dynweight.tpl`.
 
-#     """
-#     def __init__(self, dbr, props, strings):
-#         self.dbr = dbr
-#         self.props = props
-#         self.strings = strings
+    """
+    def __init__(self):
+        super().__init__()
 
-#     @classmethod
-#     def keys(cls):
-#         return ['LootItemTable_DynWeight']
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\lootitemtable_dynweight.tpl'
 
-#     def parse(self):
-#         items = {}
+    def parse(self, dbr, dbr_file, result):
+        items = {}
 
-#         # Add up all the loot weights:
-#         summed = sum(float(prop['bellSlope']) for prop in self.props)
+        # Add up all the loot weights:
+        summed = sum(weight for weight in dbr['bellSlope'])
 
-#         for prop in self.props:
-#             # Skip tables without items:
-#             if not prop.get('itemNames') or not prop.get('bellSlope'):
-#                 continue
+        for index, loot_file in enumerate(dbr.get('itemNames', [])):
+            # Grab the item and its chance
+            item = DBRParser.parse(loot_file)
 
-#             # Check that this item is in the equipment list:
-#             item_path = format_path(prop['itemNames'])
-#             if not item_path or item_path not in equipment:
-#                 logging.warning(f'Could not find {item_path} in equipment')
-#                 continue
+            if 'tag' not in item:
+                logging.warning(f'No tag for {loot_file} in {dbr_file}')
+                continue
 
-#             weight = float(prop['bellSlope'])
-#             items[equipment[item_path]['tag']] = float(
-#                 '{0:.5f}'.format(weight / summed))
+            try:
+                weight = dbr['bellSlope'][index]
+            except IndexError:
+                # Grab the last known entry
+                weight = dbr['bellSlope'][-1]
 
-#         return items
+            # Store the chance of this item by its tag:
+            items[item['tag']] = float('{0:.5f}'.format(weight / summed))
+
+        result['loot_table'] = items
 
 
-# class LootTableFWParser:
-#     """
-#     Parser for Fixed Weight loot tables.
+class LootItemTable_FixedWeightParser(TQDBParser):
+    """
+    Parser for `lootitemtable_fixedweight.tpl`.
 
-#     """
-#     def __init__(self, dbr, props, strings):
-#         self.dbr = dbr
-#         self.props = props[0]
-#         self.strings = strings
+    """
+    def __init__(self):
+        super().__init__()
 
-#     @classmethod
-#     def keys(cls):
-#         return ['LootItemTable_FixedWeight']
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\lootitemtable_fixedweight.tpl'
 
-#     def parse(self):
-#         items = {}
+    def parse(self, dbr, dbr_file, result):
+        items = {}
 
-#         # Add up all the loot weights:
-#         summed = sum(int(v) for k, v in self.props.items()
-#                      if k.startswith('lootWeight'))
+        # Add up all the loot weights:
+        summed = sum(v for k, v in dbr.items()
+                     if k.startswith('lootWeight'))
 
-#         # Run through all the loot chances and parse them:
-#         for i in range(1, 31):
-#             weight = int(self.props.get('lootWeight' + str(i), '0'))
+        # Run through all the loot chances and parse them:
+        for i in range(1, 31):
+            weight = dbr.get(f'lootWeight{i}', 0)
 
-#             # Skip items with no chance:
-#             if not weight:
-#                 continue
+            # Skip items with no chance:
+            if not weight:
+                continue
 
-#             # Check that this item is in the equipment list:
-#             item_path = format_path(self.props.get('lootName' + str(i)))
-#             if item_path not in equipment:
-#                 continue
+            # Grab the item and its chance
+            item = DBRParser.parse(dbr[f'lootName{i}'])
 
-#             # Parse the table and multiply the values by the chance:
-#             items[equipment[item_path]['tag']] = float(
-#                 '{0:.5f}'.format(weight / summed))
+            try:
+                # Store the chance of this item by its tag:
+                items[item['tag']] = float('{0:.5f}'.format(weight / summed))
+            except KeyError:
+                # Skip items that have no tag:
+                continue
 
-#         return items
+        result['loot_table'] = items

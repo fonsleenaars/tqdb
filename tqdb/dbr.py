@@ -8,6 +8,8 @@ Upon receiving a file to parse it will grab the template associated with
 the DBR and then parse it according to all properties in that template.
 
 """
+import logging
+
 from tqdb import storage
 from tqdb.parsers.main import load_parsers
 from tqdb.templates import templates, templates_by_path
@@ -40,6 +42,7 @@ def read(dbr):
     try:
         dbr_file = open(dbr)
     except FileNotFoundError:
+        logging.debug(f'No file found for {dbr}')
         return {}
 
     result = {}
@@ -71,6 +74,8 @@ def parse(dbr_file):
     Parse a DBR file according to its template.
 
     """
+    logging.debug(f'Parsing {dbr_file}')
+
     # Initialize the parsers map if necessary:
     global parsers
     if not parsers:
@@ -82,15 +87,19 @@ def parse(dbr_file):
 
     dbr = read(dbr_file)
 
-    # If a template exists for this type, parse it accordingly:
-    template = get_template(dbr, dbr_file)
-
     # Initialize an empty result, this variable will be updated by the parsers.
     result = {
         # Properties will be filled by all core attribute parsers, like
         # character, offensive, defensive, etc.
         'properties': {}
     }
+
+    # There are still non-existent references, make sure the DBR isn't empty:
+    if not dbr:
+        return result
+
+    # If a template exists for this type, parse it accordingly:
+    template = get_template(dbr, dbr_file)
 
     # Construct a list of parsers to organize by priority:
     prioritized = []

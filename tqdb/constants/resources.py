@@ -11,11 +11,13 @@ RES = Path('data/resources/')
 AFFIXES = [
     'records/item/lootmagicalaffixes/*ix/default/*.dbr',
     'records/xpack*/item/lootmagicalaffixes/*ix/default/*.dbr',
-    'records/xpack*/item/lootmagicalaffixes/*ix/*.dbr']
+    'records/xpack*/item/lootmagicalaffixes/*ix/*.dbr',
+]
 
 AFFIX_TABLES = [
     'records/item/lootmagicalaffixes/*ix/tables*/*.dbr',
-    'records/xpack*/item/lootmagicalaffixes/*ix/tables*/*.dbr']
+    'records/xpack*/item/lootmagicalaffixes/*ix/tables*/*.dbr',
+]
 
 CHESTS = {
     'tagMonsterName004': [
@@ -305,7 +307,8 @@ CHESTS = {
 
 CREATURES = [
     'records/creature/monster/**/*.dbr',
-    'records/xpack*/creatures/monster/**/*.dbr']
+    'records/xpack*/creatures/monster/**/*.dbr',
+]
 
 EQUIPMENT = [
     'records/xpack*/item/equipment*/**/*.dbr',
