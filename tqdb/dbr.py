@@ -117,7 +117,11 @@ def parse(dbr_file):
     # Prioritize the list and then run through the parsers:
     prioritized.sort(key=lambda p: p.get_priority(), reverse=True)
     for prioritized_parser in prioritized:
-        prioritized_parser.parse(dbr, dbr_file, result)
+        try:
+            prioritized_parser.parse(dbr, dbr_file, result)
+        except StopIteration:
+            # One of the parsers has determined this file shouldn't be parsed:
+            return {}
 
     # Set the parsed result in the storage db:
     storage.db[dbr_file] = result

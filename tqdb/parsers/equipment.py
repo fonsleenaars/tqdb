@@ -73,7 +73,7 @@ class ItemArtifactFormulaParser(TQDBParser):
     def parse(self, dbr, dbr_file, result):
         # Skip formula without artifacts
         if self.ARTIFACT not in dbr:
-            return
+                raise StopIteration
 
         artifact = DBRParser.parse(dbr[self.ARTIFACT])
 
@@ -115,6 +115,15 @@ class ItemBaseParser(TQDBParser):
         'Legendary': 'tagRDifficultyTitle03',
     }
 
+    # Classification checks don't count for these classes:
+    ALLOWED = [
+        'ItemArtifact',
+        'ItemArtifactFormula',
+        'ItemRelic',
+        'ItemCharm',
+        'OneShot_Scroll',
+    ]
+
     REQUIREMENTS = [
         'dexterityRequirement',
         'intelligenceRequirement',
@@ -130,6 +139,8 @@ class ItemBaseParser(TQDBParser):
         return f'{TQDBParser.base}\\templatebase\\itembase.tpl'
 
     def parse(self, dbr, dbr_file, result):
+        self.is_valid_classification(dbr, dbr_file, result)
+
         # Always set the category:
         result['category'] = dbr.get('Class', None)
 
@@ -138,20 +149,30 @@ class ItemBaseParser(TQDBParser):
             if requirement in dbr:
                 result[requirement] = dbr[requirement]
 
-        # Only parse special/unique equipment:
+    def is_valid_classification(self, dbr, dbr_file, result):
+        """
+        Check if this item is of a valid classification for TQDB.
+
+        """
+        itemClass = dbr.get('Class')
         classification = dbr.get('itemClassification', None)
-        if classification not in self.CLASSIFICATIONS.keys():
-            return
-        result['classification'] = texts.get(
-            self.CLASSIFICATIONS[classification]).strip()
 
-        # For Monster Infrequents, make sure a drop difficulty exists:
-        if classification == 'Rare':
-            file_name = os.path.basename(dbr_file).split('_')
-            if len(file_name) < 2 or file_name[1] not in DIFFICULTIES:
-                return {}
+        if (itemClass not in self.ALLOWED and
+                classification not in self.CLASSIFICATIONS.keys()):
+            raise StopIteration
+        elif classification in self.CLASSIFICATIONS.keys():
+            result['classification'] = texts.get(
+                self.CLASSIFICATIONS[classification]).strip()
 
-            result['dropsIn'] = texts.get(DIFFICULTIES[file_name[1]]).strip()
+            # For Monster Infrequents, make sure a drop difficulty exists:
+            if classification == 'Rare':
+                file_name = os.path.basename(dbr_file).split('_')
+                if len(file_name) < 2 or file_name[1] not in DIFFICULTIES:
+                    raise StopIteration
+
+                # Set the difficulty for which this MI drops:
+                result['dropsIn'] = texts.get(
+                    DIFFICULTIES[file_name[1]]).strip()
 
 
 class ItemEquipmentParser(TQDBParser):

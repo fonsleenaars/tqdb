@@ -6,7 +6,9 @@ import logging
 
 from tqdb import dbr as DBRParser
 from tqdb.constants.resources import DB, CHESTS
+from tqdb.parsers.base import ParametersDefensiveParser
 from tqdb.parsers.main import TQDBParser
+from tqdb.storage import db
 from tqdb.utils.text import texts
 
 
@@ -42,6 +44,9 @@ class MonsterParser(TQDBParser):
         'Misc3',
     ]
 
+    HP = 'characterLife'
+    MP = 'characterMana'
+
     def __init__(self):
         super().__init__()
 
@@ -49,32 +54,19 @@ class MonsterParser(TQDBParser):
     def get_template_path():
         return f'{TQDBParser.base}\\monster.tpl'
 
+    def get_priority(self):
+        """
+        Override this parsers priority to set as lowest.
+
+        """
+        return TQDBParser.LOWEST_PRIORITY
+
     def parse(self, dbr, dbr_file, result):
         """
         Parse the monster.
 
         """
-        # Grab the first set of properties:
-        classification = dbr.get('monsterClassification', 'Common')
-        tag = dbr.get('description', None)
-
-        logging.error(f'{tag}, {classification}')
-
-        # Skip tagless monsters as well as common ones:
-        if not tag or classification not in self.CLASSIFICATIONS:
-            return
-
-        # Keep track of all of the result data:
-        result.update({
-            'name': texts.get(tag),
-            'tag': tag,
-        })
-
-        # The Ragnarok DLC bosses don't all have names yet in the txt resources
-        if not result['name'] and tag.startswith('x2tag'):
-            result['name'] = tag.split('_')[-1].title()
-            logging.warning(
-                f'Found a nameless boss with {tag}, using {result["name"]}')
+        self.parse_creature(dbr, dbr_file, result)
 
         # Iterate over normal, epic & legendary version of the boss:
         difficulties = {}
@@ -94,6 +86,7 @@ class MonsterParser(TQDBParser):
             result['loot'] = difficulties
 
         chests = {}
+        tag = result['tag']
 
         # Find the chest for each difficulty:
         for index, difficulty in enumerate(self.DIFFICULTIES):
@@ -108,6 +101,65 @@ class MonsterParser(TQDBParser):
 
         # We're done parsing chest loot, store it!
         result['chest'] = chests
+
+    def parse_creature(self, dbr, dbr_file, result):
+        """
+        Parse the creature and its properties and skills.
+
+        """
+        # Grab the first set of properties:
+        classification = dbr.get('monsterClassification', 'Common')
+        tag = dbr.get('description', None)
+
+        # Skip tagless monsters as well as common ones:
+        if not tag or classification not in self.CLASSIFICATIONS:
+            raise StopIteration
+
+        # Set the known properties for this creature
+        result.update({
+            'name': texts.get(tag),
+            'tag': tag,
+        })
+
+        # The Ragnarok DLC bosses don't all have names yet in the txt resources
+        if not result['name'] and tag.startswith('x2tag'):
+            result['name'] = tag.split('_')[-1].title()
+            logging.warning(
+                f'Found a nameless boss with {tag}, using {result["name"]}')
+
+        # Manually parse the defensive properties, since there's no template
+        # tied for it for monsters:
+        ParametersDefensiveParser().parse(dbr, dbr_file, result)
+
+        # Iterate over the properties for each difficulty:
+        properties = []
+        for i in range(0, 3):
+            properties.append({})
+            itr = TQDBParser.extract_values(dbr, '', i)
+
+            # Set this creature's HP and MP as stats, not as bonuses:
+            if self.HP in itr:
+                hp = itr[self.HP]
+                properties[i][self.HP] = texts.get('LifeText').format(hp)
+            if self.MP in itr:
+                mp = itr[self.MP]
+                properties[i][self.MP] = texts.get('ManaText').format(mp)
+
+            # Add defensive properties:
+            for k, v in result['properties'].items():
+                if not k.startswith('defensive'):
+                    continue
+
+                # Add the defensive property to the correct difficulty index:
+                if isinstance(v, list):
+                    # The defensive property changes per difficulty:
+                    properties[i][k] = v[i] if i < len(v) else v[-1]
+                else:
+                    # The defensive property is constant:
+                    properties[i][k] = v
+
+        # Add the base damage, stats, regens, and resistances:
+        result['properties'] = properties
 
     def parse_difficulty(self, dbr, dbr_file):
         """
