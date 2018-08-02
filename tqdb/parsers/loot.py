@@ -113,7 +113,7 @@ class LootMasterTableParser(TQDBParser):
                 # Try to parse the referenced loot file
                 loot_file = dbr[f'lootName{i}']
             except KeyError:
-                logging.warning(f'lootName{i} not found in {dbr_file}.')
+                logging.debug(f'No lootName{i} not found in {dbr_file}.')
                 continue
 
             # Parse the loot file
@@ -147,7 +147,7 @@ class FixedItemContainerParser(TQDBParser):
 
     def parse(self, dbr, dbr_file, result):
         if 'tables' not in dbr:
-            logging.warning(f'No table found in {dbr_file}')
+            logging.debug(f'No table found in {dbr_file}')
             return
 
         # Parse the references 'tables' file and set the result:
@@ -247,7 +247,7 @@ class LootItemTable_DynWeightParser(TQDBParser):
             item = DBRParser.parse(loot_file)
 
             if 'tag' not in item:
-                logging.warning(f'No tag for {loot_file} in {dbr_file}')
+                logging.debug(f'No tag for {loot_file} in {dbr_file}')
                 continue
 
             try:

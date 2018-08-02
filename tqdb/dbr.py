@@ -74,8 +74,6 @@ def parse(dbr_file):
     Parse a DBR file according to its template.
 
     """
-    logging.debug(f'Parsing {dbr_file}')
-
     # Initialize the parsers map if necessary:
     global parsers
     if not parsers:
@@ -85,6 +83,7 @@ def parse(dbr_file):
     if dbr_file in storage.db:
         return storage.db[dbr_file]
 
+    logging.debug(f'Parsing {dbr_file}')
     dbr = read(dbr_file)
 
     # Initialize an empty result, this variable will be updated by the parsers.

@@ -159,6 +159,8 @@ def parse_creatures():
     sorted.
 
     """
+    timer = time.clock()
+
     files = []
     for resource in resources.CREATURES:
         boss_files = resources.DB / resource
@@ -171,8 +173,11 @@ def parse_creatures():
         try:
             creatures[parsed['tag']] = parsed
         except KeyError:
-            logging.error(f'Skipping tagless creature {dbr}')
+            # Skip creatures without tags
             continue
+
+    # Log the timer:
+    logging.info(f'Parsed creatures in {time.clock() - timer} seconds.')
 
     return creatures
 

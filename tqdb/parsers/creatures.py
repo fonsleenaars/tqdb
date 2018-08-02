@@ -196,7 +196,7 @@ class MonsterParser(TQDBParser):
                 loot_key = f'loot{equipment}Item{i}'
                 loot_file = dbr.get(loot_key)
                 if not loot_file or not loot_file.is_file():
-                    logging.warning(f'No {loot_key} in {dbr_file}')
+                    logging.debug(f'No {loot_key} in {dbr_file}')
                     continue
 
                 loot = DBRParser.parse(loot_file)

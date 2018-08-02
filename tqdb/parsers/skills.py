@@ -90,9 +90,9 @@ class SkillBaseParser(TQDBParser):
 
             if result['name'] == result['tag']:
                 # If the tag wasn't returned, a friendly name weas found:
-                logging.warning(f'No skill name found for {result["tag"]}')
+                logging.debug(f'No skill name found for {result["tag"]}')
         else:
-            logging.warning(f'No skillDisplayName found in {dbr_file}')
+            logging.debug(f'No skillDisplayName found in {dbr_file}')
 
         if self.DESC in dbr and texts.has(dbr[self.DESC]):
             # Also load the description, if it's known:
