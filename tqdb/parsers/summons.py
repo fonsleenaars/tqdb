@@ -1,3 +1,7 @@
+"""
+All summons and pet parsers.
+
+"""
 from tqdb import dbr as DBRParser
 from tqdb import storage
 from tqdb.parsers.main import TQDBParser

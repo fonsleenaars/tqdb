@@ -1,3 +1,7 @@
+"""
+Main entry point for parsers, including the abstract base class.
+
+"""
 import abc
 import inspect
 import pkgutil

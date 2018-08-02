@@ -1,3 +1,7 @@
+"""
+All loot table parsers.
+
+"""
 import logging
 import numexpr
 import os

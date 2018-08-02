@@ -1,3 +1,7 @@
+"""
+All skills parsers.
+
+"""
 import logging
 
 from tqdb import dbr as DBRParser

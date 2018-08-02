@@ -1,3 +1,7 @@
+"""
+All wearable/usable equipment parsers.
+
+"""
 import logging
 import math
 import os

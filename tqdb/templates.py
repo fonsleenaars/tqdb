@@ -1,3 +1,7 @@
+"""
+Classes and functionality relating to Templates.
+
+"""
 import glob
 import re
 

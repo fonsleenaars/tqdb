@@ -1,3 +1,7 @@
+"""
+Classes and functionality to store TQ images and styling.
+
+"""
 import glob
 import logging
 import os
