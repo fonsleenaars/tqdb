@@ -205,7 +205,7 @@ class MonsterParser(TQDBParser):
                     self.add_items(
                         result,
                         {loot['tag']: chance * equip_chance})
-                elif 'table' in loot:
+                elif 'loot_table' in loot:
                     # Add all the items (and multiply their chances)
                     items = dict(
                         (k, v * chance * equip_chance)
@@ -216,6 +216,8 @@ class MonsterParser(TQDBParser):
         result = dict(
             (k, float('{0:.4f}'.format(v))) for k, v
             in result.items())
+
+        return result
 
     def add_items(self, result, items):
         # Either set the chance or add it to a previous chance:

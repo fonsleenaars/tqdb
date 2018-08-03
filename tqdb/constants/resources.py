@@ -307,6 +307,7 @@ CHESTS = {
 
 CREATURES = [
     'records/creature/monster/**/*.dbr',
+    # Note that the expansions folder is called 'creatures', not 'creature'
     'records/xpack*/creatures/monster/**/*.dbr',
 ]
 
