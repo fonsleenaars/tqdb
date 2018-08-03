@@ -148,7 +148,7 @@ class FixedItemContainerParser(TQDBParser):
     def parse(self, dbr, dbr_file, result):
         if 'tables' not in dbr:
             logging.debug(f'No table found in {dbr_file}')
-            return
+            raise StopIteration
 
         # Parse the references 'tables' file and set the result:
         loot = DBRParser.parse(dbr['tables'][0])

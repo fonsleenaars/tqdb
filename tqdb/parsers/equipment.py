@@ -40,7 +40,7 @@ class ItemArtifactParser(TQDBParser):
 
         # Skip artifacts with unknown difficulties in which they drop:
         if file_name[0] not in DIFFICULTIES:
-            return
+            raise StopIteration
 
         result.update({
             # Bitmap has a different key name than items here.
@@ -206,7 +206,7 @@ class ItemEquipmentParser(TQDBParser):
         # If no tag exists, skip parsing:
         tag = dbr.get('itemNameTag', None)
         if not tag:
-            return
+            raise StopIteration
 
         # Set the known item properties:
         result.update({
@@ -341,7 +341,7 @@ class ItemSetParser(TQDBParser):
 
         if not tag or texts.get(tag) == tag:
             logging.warning(f'No tag or name for set found in {dbr_file}.')
-            return
+            raise StopIteration
 
         result.update({
             # Prepare the list of set items
@@ -492,7 +492,7 @@ class WeaponParser(TQDBParser):
 
         # Skip shields:
         if (dbr_class.startswith('Weapon') and 'Shield' in dbr_class):
-            return None
+            return
 
         # Set the attack speed
         result['properties']['characterAttackSpeed'] = texts.get(
