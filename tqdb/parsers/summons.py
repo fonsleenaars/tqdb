@@ -70,11 +70,12 @@ class MonsterSkillManager(TQDBParser):
             skill_tag = storage.store_skill(skill)
             level = dbr[levelTag][0]
 
-            # Append the stored skill to the ability list
-            result['abilities'].append({
-                'tag': skill_tag,
-                'level': level,
-            })
+            # Append the stored skill to the ability list (level > 0)
+            if level:
+                result['abilities'].append({
+                    'tag': skill_tag,
+                    'level': level,
+                })
 
 
 class CharacterParser(TQDBParser):
