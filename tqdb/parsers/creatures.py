@@ -17,13 +17,6 @@ class MonsterParser(TQDBParser):
     Parser for `monster.tpl`.
 
     """
-    CLASSIFICATIONS = [
-        'Champion',
-        'Quest',
-        'Hero',
-        'Boss',
-    ]
-
     DIFFICULTIES = [
         'normal',
         'epic',
@@ -69,6 +62,10 @@ class MonsterParser(TQDBParser):
         """
         self.parse_creature(dbr, dbr_file, result)
 
+        # Don't parse any further for tagless creatures:
+        if 'tag' not in result:
+            return
+
         # Iterate over normal, epic & legendary version of the boss:
         difficulties = {}
         for index, difficulty in enumerate(self.DIFFICULTIES):
@@ -113,15 +110,12 @@ class MonsterParser(TQDBParser):
         classification = dbr.get('monsterClassification', 'Common')
         tag = dbr.get('description', None)
 
-        # Skip tagless monsters as well as common ones:
-        if not tag or classification not in self.CLASSIFICATIONS:
-            raise StopIteration
-
         # Set the known properties for this creature
-        result.update({
-            'name': texts.get(tag),
-            'tag': tag,
-        })
+        if tag:
+            result.update({
+                'name': texts.get(tag),
+                'tag': tag,
+            })
 
         # Manually parse the defensive properties, since there's no template
         # tied for it for monsters:

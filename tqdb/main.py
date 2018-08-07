@@ -171,6 +171,12 @@ def parse_creatures():
         parsed = parse(dbr)
 
         try:
+            # Don't include common monsters
+            # XXX - Should 'Champion' be added?
+            if parsed['classification'] not in ['Quest', 'Hero', 'Boss']:
+                continue
+
+            # Store the monster by its tag:
             creatures[parsed['tag']] = parsed
         except KeyError:
             # Skip creatures without tags
