@@ -403,6 +403,14 @@ class SkillSpawnPetParser(TQDBParser):
         for index, spawn_file in enumerate(dbr['spawnObjects']):
             spawn = DBRParser.parse(spawn_file)
 
+            # Keep track of the original properties this summon had:
+            original_properties = {}
+            if 'properties' in spawn:
+                if isinstance(spawn['properties'], list):
+                    original_properties = spawn['properties'][0].copy()
+                else:
+                    original_properties = spawn['properties'].copy()
+
             # We need the raw values from the spawn DBR for hp/mp
             spawn['properties'] = {}
             spawn_dbr = DBRParser.read(spawn_file)
@@ -436,5 +444,12 @@ class SkillSpawnPetParser(TQDBParser):
                     self.TTL,
                     texts.get(self.TTL).format(ttl),
                     spawn)
+
+            # Iterate over the original properties and add some whitelisted
+            # properties to the final result:
+            for key, value in original_properties.items():
+                if key.startswith('character'):
+                    continue
+                spawn['properties'][key] = value
 
             result['summons'].append(spawn)
