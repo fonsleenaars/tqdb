@@ -18,6 +18,7 @@ class MonsterParser(TQDBParser):
 
     """
     CLASSIFICATIONS = [
+        'Champion',
         'Quest',
         'Hero',
         'Boss',
@@ -100,7 +101,8 @@ class MonsterParser(TQDBParser):
                     in loot['loot_table'].items())
 
         # We're done parsing chest loot, store it!
-        result['chest'] = chests
+        if chests:
+            result['chest'] = chests
 
     def parse_creature(self, dbr, dbr_file, result):
         """

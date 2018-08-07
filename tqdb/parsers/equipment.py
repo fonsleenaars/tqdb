@@ -73,7 +73,7 @@ class ItemArtifactFormulaParser(TQDBParser):
     def parse(self, dbr, dbr_file, result):
         # Skip formula without artifacts
         if self.ARTIFACT not in dbr:
-                raise StopIteration
+            raise StopIteration
 
         artifact = DBRParser.parse(dbr[self.ARTIFACT])
 
