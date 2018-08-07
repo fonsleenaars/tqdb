@@ -121,12 +121,6 @@ class MonsterParser(TQDBParser):
             'tag': tag,
         })
 
-        # The Ragnarok DLC bosses don't all have names yet in the txt resources
-        if not result['name'] and tag.startswith('x2tag'):
-            result['name'] = tag.split('_')[-1].title()
-            logging.warning(
-                f'Found a nameless boss with {tag}, using {result["name"]}')
-
         # Manually parse the defensive properties, since there's no template
         # tied for it for monsters:
         ParametersDefensiveParser().parse(dbr, dbr_file, result)
