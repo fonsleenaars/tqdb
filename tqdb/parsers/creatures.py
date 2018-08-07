@@ -113,6 +113,7 @@ class MonsterParser(TQDBParser):
         # Set the known properties for this creature
         if tag:
             result.update({
+                'classification': classification,
                 'name': texts.get(tag),
                 'tag': tag,
             })
