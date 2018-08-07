@@ -49,7 +49,7 @@ class ItemArtifactParser(TQDBParser):
             'classification': dbr.get('artifactClassification', None),
             # Difficulty it starts dropping is based on the file name
             'dropsIn': texts.get(DIFFICULTIES[file_name[0]]).strip(),
-            # For relics the tag is in the Actor.tpl variable 'description'
+            # For artifacts the tag is in the Actor.tpl variable 'description'
             'name': texts.get(dbr['description']),
             'tag': dbr['description'],
         })
@@ -160,7 +160,9 @@ class ItemBaseParser(TQDBParser):
         if (itemClass not in self.ALLOWED and
                 classification not in self.CLASSIFICATIONS.keys()):
             raise StopIteration
-        elif classification in self.CLASSIFICATIONS.keys():
+        elif (classification in self.CLASSIFICATIONS.keys() and
+                'classification' not in result):
+            # Only add the classification if it doesn't exist yet:
             result['classification'] = texts.get(
                 self.CLASSIFICATIONS[classification]).strip()
 
