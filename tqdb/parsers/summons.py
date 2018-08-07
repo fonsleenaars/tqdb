@@ -38,7 +38,12 @@ class MonsterSkillManager(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f'{TQDBParser.base}\\templatebase\\monsterskillmanager.tpl'
+        return [
+            f'{TQDBParser.base}\\templatebase\\monsterskillmanager.tpl',
+            # For some reason the doppel summon template does not extend the
+            # regular monsterskillmanager, but has its own:
+            f'{TQDBParser.base}\\templatebase\\doppelskillmanager.tpl',
+        ]
 
     def parse(self, dbr, dbr_file, result):
         """
