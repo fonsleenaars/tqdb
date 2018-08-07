@@ -3,6 +3,7 @@ All skills parsers.
 
 """
 import logging
+import re
 
 from tqdb import dbr as DBRParser
 from tqdb.parsers.main import TQDBParser
@@ -17,6 +18,9 @@ class SkillBaseParser(TQDBParser):
     FILE = 'FileDescription'
     DESC = 'skillBaseDescription'
     NAME = 'skillDisplayName'
+
+    # Regex to remove ^letter prefixes in the skill tag/name
+    FORMATTER = re.compile(r'\^[a-z]')
 
     # These fields aren't a part of the skill_base.tpl template, but rather
     # are used by multiple skill templates. Instead of implementing a lot of
@@ -83,7 +87,7 @@ class SkillBaseParser(TQDBParser):
 
         if self.NAME in dbr:
             # The tag is the skillDisplayName property
-            result['tag'] = dbr[self.NAME]
+            result['tag'] = self.FORMATTER.sub('', dbr[self.NAME])
 
             # Now try to find a friendly name for the tag:
             result['name'] = texts.get(result['tag'])
