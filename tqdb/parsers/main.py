@@ -1,271 +1,209 @@
 """
-Main parser file.
+Main entry point for parsers, including the abstract base class.
 
 """
-import re
+import abc
+import inspect
+import pkgutil
 
-from tqdb.constants import parsing as pc
-from tqdb.constants import resources
-from tqdb.parsers.util import format_path
-from tqdb.parsers.generic import GenericParser
-from tqdb.storage import records
+from importlib import import_module
+from pathlib import Path
+
+from tqdb.templates import templates_by_path
 
 
-class DBRReader:
+class TQDBParser(metaclass=abc.ABCMeta):
     """
-    Reader class to prepare a DBR file for parsing.
+    Abstract parser class.
 
-    """
-    def read(self, dbr):
-        try:
-            dbr_file = open(dbr)
-        except FileNotFoundError:
-            return [{}]
-
-        # Split DBR file into a list of lines, delimited by a comma + newline:
-        lines = [line.rstrip(',\n') for line in dbr_file]
-
-        # All lines are key-value pairs, delimited by a comma:
-        props = dict([(k, v) for k, v in (dict(properties.split(',')
-                     for properties in lines)).items()
-                     if self.property_isset(v)])
-
-        # The values can be tiered, delimited by a semi-colon:
-        props_tiered = (dict([(key, value.split(';'))
-                        for key, value in props.items()
-                        if ';' in value]))
-
-        # If there are no tiered properties, return here
-        if not props_tiered:
-            return [props]
-
-        # Check occurences where value is set, but first iteration is 0% chance
-        chance_zeroes = {}
-        for key, value in props_tiered.items():
-            if('Chance' in key and float(value[0]) == 0):
-                # Store the prefix to check on another iteration
-                chance_zeroes[key[0:key.index('Chance')]] = len(value)
-
-        # Find longest list of split fields:
-        tiers = len(props_tiered[max(props_tiered,
-                                     key=lambda
-                                     x:len(props_tiered[x]))])
-
-        # Now add all non-tiered properties:
-        props_tiered.update(dict([(key, value)
-                            for key, value
-                            in props.items()
-                            if ';' not in value]))
-
-        # Check the edge case mentioned above
-        for prefix, total in chance_zeroes.items():
-            for key, value in props_tiered.items():
-                if ('Chance' not in key and prefix in key and not
-                   isinstance(value, list)):
-                    # Fix the first occurance by seting it to zero
-                    # and repeating the normal value for the others
-                    props_tiered[key] = ['0.000000'] + ([value] * (total - 1))
-
-        tiered = []
-        for i in range(0, tiers):
-            tier = {}
-
-            # Setup the tier
-            for key, value in props_tiered.items():
-                if key == 'racialBonusRace':
-                    tier[key] = (';'.join(value)
-                                 if isinstance(value, list)
-                                 else value)
-                elif not isinstance(value, list):
-                    tier[key] = value
-                elif i < len(value) and self.property_isset(value[i]):
-                    tier[key] = value[i]
-                elif i >= len(value):
-                    tier[key] = value[len(value) - 1]
-
-            # Append this tier
-            tiered.append(tier)
-
-        return tiered
-
-    def property_isset(self, property):
-        try:
-            float(property)
-            return float(property) != 0
-        except ValueError:
-            return True
-
-
-class DBRParser:
-    """
-    Main TQDB parser for the dbr files.
-
-    This is the main parser that can take a DBR file and return the defined
-    and relevant information for that file. When initialized the class will
-    make sure all its available parsers are registered.
-
-    Upon receiving a file to parse it will attempt to grab the correct parser
-    for the DBR file and pass it along to that parser, and return the value
-    from it.
+    This abstract class is used to identify parsers that are used in TQDB
+    and will ensure that the necessary methods are implemented.
 
     """
-    def __init__(self, parsers, strings):
-        self.parsers = parsers
-        self.strings = strings
-        self.reader = DBRReader()
+    # Base that all subclasses use for their template names.
+    base = 'database\\templates'
 
-    def parse(self, dbr, include_type=False, allow_generic=False):
+    # Priority constants:
+    HIGHEST_PRIORITY = 3
+    DEFAULT_PRIORITY = 2
+    LOWEST_PRIORITY = 1
+
+    def __init__(self):
         """
-        Parse a list of properties.
-
-        Args:
-            dbr - path to the DBR file to parse
-
-        Return:
-            dict - Dictionary with all defined and parsed properties.
+        Initialize by setting the template based on its path.
 
         """
-        # See if this DBR has been parsed before:
-        dbr_key = format_path(dbr)
-        if dbr_key in records:
-            return records[dbr_key]
+        templates = self.get_template_path()
 
-        # Grab the type from this file:
-        props = self.reader.read(dbr)
-        parsed = {}
+        if isinstance(templates, list):
+            # Load all templates
+            self.template = [templates_by_path[t] for t in templates]
+        else:
+            # Just load the one template
+            self.template = templates_by_path[templates]
 
-        # If a parser exists for this type, parse the file:
-        dbr_class = props[0].get('Class', None)
-        if dbr_class in self.parsers:
-            parsed = self.parsers[dbr_class](dbr, props, self.strings).parse()
-        elif allow_generic:
-            parsed = GenericParser(dbr, props, self.strings).parse()
-
-        # Determine whether or not to return the type as well:
-        if include_type:
-            return {
-                'parsed': parsed,
-                'class': dbr_class,
-            }
-
-        # Store this DBR entry to prevent double parsing:
-        records[dbr_key] = parsed
-        return parsed
-
-
-def parse_text_resource(text_file):
-    """
-    Parse a text resource, extracted from the Text_**.arc files.
-
-    """
-    try:
-        # Most files have UTF-16 or RAW encoding
-        lines = [l.rstrip('\n') for l in open(text_file, encoding='utf16')]
-    except UnicodeError:
-        # Some files have ??? encoding (literally)
-        lines = [l.rstrip('\n') for l in open(text_file)]
-
-    # Parse line into a dictionary of key, value properties:
-    return dict(
-        properties.split('=', 1)
-        # Reverse the list to make sure duplicate keys are corrected for
-        for properties in list(reversed(lines))
-        if '=' in properties and not properties.startswith('//'))
-
-
-class PropertyTable:
-    """
-    Table of DBR property keys mapping to string values.
-
-    """
-
-    def __init__(self, props):
+    def get_priority(self):
         """
-        Initialize the table.
+        Return the priority for this parser.
+
+        A higher priority value means it will parse the contents earlier in the
+        parser loop. If there are 3 parsers found for the template hierarchy,
+        the first parser to run will be the one with the highest priority.
+
+        This method is overriden by any subclass that needs to change their
+        priority from the default DEFAULT_PRIORITY.
 
         """
-        self.table = {}
+        return self.DEFAULT_PRIORITY
 
-        # Remove all the (x/x2)tag prefixes:
-        tags = dict((k[3:], v) for (k, v) in props.items()
-                    if k.startswith('tag'))
-        tags.update(dict((k[4:], v) for (k, v) in props.items()
-                    if k.startswith('xtag')))
-        tags.update(dict((k[5:], v) for (k, v) in props.items()
-                    if k.startswith('x2tag')))
-        props.update(tags)
+    @abc.abstractstaticmethod
+    def get_template_path():
+        """
+        Returns the template that this parser implements.
 
-        for key, val in props.items():
-            for repl in pc.PT_REPLACEMENTS:
-                if repl['type'] == 'regex':
-                    # Replace all regex matches:
-                    pattern = re.compile(repl['find'])
-                    if re.match(pattern, key):
-                        self.table[re.sub(pattern, repl['replace'], key)] = val
-                        break
+        """
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def parse(self, dbr, dbr_file, result):
+        """
+        Parses a specific DBR file and updates the result.
+
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    def extract_values(dbr, field, index):
+        """
+        Extract values for a specific field within a DBR.
+
+        Some TQDBParser subclasses will need to iterate over an array of
+        variables, all starting with a field name. However, some of these
+        variables won't be repeated as many times as others.
+
+        For example:
+            offensiveSlowColdMin: [3.0, 6.0, 9.0, 12.0, 15.0]
+            offensiveSlowColdDurationMin: [1.0]
+
+        In this case, this index for the iteration should just clone the value
+        until it matches the same length.
+
+        """
+        result = dbr.copy()
+
+        # First grab all the fields that start with the field prefix:
+        fields = dict(
+            (k, v) for k, v in dbr.items()
+            if k.startswith(field) and isinstance(v, list))
+
+        # Now replace all the field values for this index
+        for k, v in fields.items():
+            result[k] = (
+                # Grab the last possible value for v and repeat it:
+                v[len(v) - 1]
+                if index >= len(v)
+                # Otherwise grab the value at this index:
+                else v[index])
+
+            # If this value turned out to be 0 or False, pop it:
+            if not result[k]:
+                result.pop(k)
+
+        return result
+
+    @staticmethod
+    def highest_tier(dbr, properties):
+        """
+        Find the highest number of tiers within a list of fields.
+
+        For a list of fields, find which field in the DBR has the most
+        tiers (tiers are property values separated by semi-colons (;)).
+
+        For example:
+            offensiveSlowColdMin,12;13;14,
+            offensiveCold,50;60,
+
+        For this set of data, the highest number of tiers is 3.
+
+        """
+        fields = [dbr[p] for p in properties if p in dbr]
+
+        return max((
+            # If properties are lists, grab their length:
+            len(field)
+            if isinstance(field, list)
+            # Regular properties just have a single tier:
+            else 1
+            for field in fields),
+            # If there aren't any properties, default to 1
+            default=1)
+
+    @staticmethod
+    def insert_value(field, value, result):
+        """
+        Insert a value for a parsed field in a DBR.
+
+        The extract_values function in this class allows subclasses to parse
+        over an array of values and this function inserts them into the result.
+
+        If the extracted values only have one entry, the result can be inserted
+        as text for the property. If the extracted value has more than one
+        entry, the results will also be a list.
+
+        For example:
+            Input: offensiveSlowColdMin: [3.0]
+            Parsed: offensiveSlowCold: 3 Cold Damage
+            Output: offensiveSlowCold: 3 Cold Damage
+
+            Input: offensiveSlowColdMin: [3.0, 6.0]
+            Parsed: offensiveSlowCold: 6 Cold Damage
+            Output: offensiveSlowCold: ['3 Cold Damage', '6 Cold Damage']
+
+        """
+        if field not in result['properties']:
+            result['properties'][field] = value
+            return
+
+        current_field = result['properties'][field]
+        if isinstance(current_field, list):
+            result['properties'][field].append(value)
+        else:
+            result['properties'][field] = [current_field, value]
+
+
+def load_parsers():
+    """
+    Load all parsers in this module that are subclasses of TQDBParser.
+
+    """
+    parser_map = {}
+
+    # Run through all sibling modules
+    for (_, name, _) in pkgutil.iter_modules([Path(__file__).parent]):
+        # Import the module so we can check its variables, classes, etc.
+        module = import_module(f'.{name}', package=__package__)
+
+        for attribute in dir(module):
+            parser = getattr(module, attribute)
+
+            # Any subclass of TQDBParser is one that needs to be mapped:
+            if inspect.isclass(parser) and issubclass(parser, TQDBParser):
+                try:
+                    instanced = parser()
+                except TypeError:
+                    # Skip TQDBParser itself (TypeError because of abstracts)
+                    continue
+
+                # Grab all the templates (can also be just one):
+                templates = parser.get_template_path()
+
+                if isinstance(templates, list):
+                    # Insert all the templates this parser handles
+                    parser_map.update(dict(
+                        (template, instanced) for template in templates
+                    ))
                 else:
-                    # Simply replace (if it's a prefix)
-                    prefix = repl['find']
-                    if key.startswith(prefix):
-                        self.table[
-                            key.replace(prefix, repl['replace'], 1)
-                        ] = val
-                        break
+                    # Insert just the single template the parser handles:
+                    parser_map[templates] = instanced
 
-        # Manually add a few keys that are needed:
-        for field in pc.PT_ADD_CUSTOM:
-            self.table[field[0]] = field[1]
-        for field in pc.PT_ADD_CUSTOM_FROM_PROPS:
-            self.table[field[0]] = props[field[1]]
-        for field in pc.PT_ADD_CUSTOM_FROM_TABLE:
-            self.table[field[0]] = self.table[field[1]]
-
-        # Optional ranged keys:
-        ranged = dict()
-
-        # Now format all regex values
-        for key, val in self.table.items():
-            if re.search(pc.PT_VALUE_OLD, val):
-                # Replace the TQ regex with a Python regex:
-                for m in re.finditer(pc.PT_VALUE_OLD, val):
-                    val = val.replace(
-                        m.group(),
-                        pc.PT_VALUE_NEW.format(**m.groupdict()))
-            elif 'second' in val:
-                # Also add a ranged formatter:
-                ranged[key + 'Ranged'] = '{0:.1f} ~ {1:.1f}' + val
-                val = '{0:.1f}' + val
-            elif 'characterAttackSpeed' not in key:
-                # Also add a ranged formatter:
-                ranged[key + 'Ranged'] = '{0:.0f} ~ {1:.0f}' + val
-                val = '{0:.0f}' + val
-
-            self.table[key] = val
-
-        # Merge all the ranged keys into the table
-        self.table.update(ranged)
-
-
-def create_parser():
-    # Load the mapping for keys to parsers:
-    parsers = {}
-    for parser, keys in pc.PARSERS.items():
-        parsers.update(dict((key, parser) for key in keys))
-
-    # Prepare the formatted strings
-    strings_tags = {}
-    for tags in resources.STRINGS_TAGS:
-        strings_tags.update(parse_text_resource(resources.RES + tags))
-
-    strings_ui = {}
-    for tags in resources.STRINGS_UI:
-        strings_ui.update(parse_text_resource(resources.RES + tags))
-
-    # Merge all formatted strings together
-    strings = {**PropertyTable(strings_ui).table, **strings_tags}
-
-    # Create a DBRParser for other modules to import
-    return DBRParser(parsers, strings)
-
-
-parser = create_parser()
+    return parser_map

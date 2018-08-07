@@ -1,0 +1,18 @@
+[scripts]
+test = 'pytest -vvv'
+
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+numexpr = "*"
+Pillow = "*"
+pytest = "*"
+
+[dev-packages]
+"pep8" = "*"
+
+[requires]
+python_version = "3.6"

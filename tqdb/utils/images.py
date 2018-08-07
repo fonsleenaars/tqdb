@@ -1,3 +1,7 @@
+"""
+Classes and functionality to store TQ images and styling.
+
+"""
 import glob
 import logging
 import os
@@ -160,14 +164,18 @@ class SpriteCreator:
 ###############################################################################
 #                              BITMAP UTILITY                                 #
 ###############################################################################
-def save_bitmap(item, item_type, graphics, textures):
-    if 'bitmap' not in item:
-        logging.warning(f'Missing bitmap for {item["tag"]}')
-        return
+# Directory preparations for bitmap
+if not os.path.exists('output/graphics'):
+    os.makedirs('output/graphics')
 
-    bitmap = item['bitmap']
+
+def save_bitmap(item, item_type, graphics):
+    bitmap = item.pop('bitmap', None)
     tag = item['tag']
-    del(item['bitmap'])
+
+    if not tag or not bitmap or not bitmap.is_file():
+        logging.warning(f'Missing tag or bitmap for {item["tag"]}: {bitmap}')
+        return
 
     # Tags for formula's are all the same (lesser, greater, divine)
     if item_type == 'ItemArtifactFormula':
@@ -175,13 +183,14 @@ def save_bitmap(item, item_type, graphics, textures):
     # Skip all non-MI duplicates
     elif (item.get('classification', None) != 'Rare' and
           os.path.isfile(f'{graphics}{tag}.png')):
-            return
+        return
 
     # Run the texture viewer if a bitmap and tag are set:
-    if tag and os.path.isfile(f'{textures}{bitmap}'):
-        command = ['utils/textureviewer/TextureViewer.exe',
-                   f'{textures}{bitmap}',
-                   f'{graphics}{tag}.png']
-        subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    else:
-        logging.warning(f'Missing tag or bitmap for {item["tag"]}: {bitmap}')
+    command = ['utils/textureviewer/TextureViewer.exe',
+               # Convert path to string
+               str(bitmap),
+               # Output to graphics folder, file name being the tag.
+               f'{graphics}{tag}.png']
+    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    return

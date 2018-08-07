@@ -3,13 +3,8 @@ Utility functions.
 
 """
 import argparse
-import glob
 import os
 import sys
-
-from tqdb.constants.resources import DB, TEX
-from tqdb.parsers.util import format_path
-from tqdb.utils.images import save_bitmap
 
 
 ###########################################################################
@@ -62,44 +57,35 @@ def print_progress(label,  i, end_val, bar_length=20):
 ###########################################################################
 #                              PARSE UTILITY                              #
 ###########################################################################
-def index_equipment(resource, parser, label):
-    files = []
-    for equipment_file in resource:
-        # Exclude the /default and /old directories from equipment:
-        equipment_files = glob.glob(DB + equipment_file, recursive=True)
-        files.extend([
-            equipment_file
-            for equipment_file
-            in equipment_files
-            if not ('\\old' in equipment_file or '\\default' in equipment_file)
-        ])
+def get_affix_table_type(file_prefix):
+    """
+    Retrieve the minimal prefix for an affix file name.
 
-    equipment = {}
-    items = {}
+    The result of these is used to i18n the equipment types an affix can
+    occur on in the frontend.
 
-    for index, dbr in enumerate(files):
-        print_progress(f'Parsing {label}', index, len(files))
-        parsed, category = pluck(parser.parse(dbr, include_type=True),
-                                 'parsed',
-                                 'class')
-
-        # The equipment files have some unwanted files, check classification:
-        if not parsed or 'classification' not in parsed or not parsed['name']:
-            continue
-
-        # Save the bitmap and remove the bitmap key
-        save_bitmap(parsed, category, 'output/graphics/', TEX)
-
-        # Add to the global equipment list:
-        equipment[format_path(dbr.replace(DB, ''))] = parsed
-
-        # Organize the equipment based on the category
-        if category and category in items:
-            items[category].append(parsed)
-        elif category:
-            items[category] = [parsed]
-
-    return items, equipment
+    """
+    for prefix in [
+        'armsmage',
+        'armsmelee',
+        'headmage',
+        'headmelee',
+        'legmage',
+        'legmelee',
+        'torsomage',
+        'torsomelee',
+        'amulet',
+        'ring',
+        'shield',
+        'axe',
+        'bow',
+        'club',
+        'spear',
+        'staff',
+        'sword',
+    ]:
+        if file_prefix.startswith(prefix):
+            return prefix
 
 
 def pluck(d, *k):
