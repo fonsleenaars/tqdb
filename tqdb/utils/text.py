@@ -32,7 +32,7 @@ class Texts:
 
     # Regex to remove inline comments in texts:
     INLINE = r'(.*)\/\/(.*)'
-    INLINE_REPLACE = r'\k1'
+    INLINE_REPLACE = r'\1'
 
     # These resources need to be copied from existing ones, under a new name:
     COPY_RESOURCES = [

@@ -29,6 +29,8 @@ class LootRandomizerParser(TQDBParser):
             result['tag'] = dbr['lootRandomizerName']
             # Some names had inline comments, so strip the spaces:
             result['name'] = texts.get(result['tag']).strip()
+            # Add the level requirement:
+            result['levelRequirement'] = dbr['levelRequirement']
 
 
 class LootRandomizerTableParser(TQDBParser):
