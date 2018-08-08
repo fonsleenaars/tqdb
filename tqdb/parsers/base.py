@@ -278,6 +278,22 @@ class ItemSkillAugmentParser(TQDBParser):
         'augmentMasteryName2': 'augmentMasteryLevel2',
     }
 
+    # Auto controller for automatically activated skills
+    CONTROLLER = 'itemSkillAutoController'
+
+    # Mapping from the possible trigger types to a text tag:
+    TRIGGERS = {
+        'OnEquip': 'xtagAutoSkillCondition08',
+        'LowHealth': 'xtagAutoSkillCondition01',
+        'LowMana': 'xtagAutoSkillCondition02',
+        'AttackEnemy': 'xtagAutoSkillCondition07',
+        'CastBuff': 'xtagAutoSkillCondition06',
+        # Missing corresponding text: 'CastDebuf'
+        'HitByEnemy': 'xtagAutoSkillCondition03',
+        'HitByMelee': 'xtagAutoSkillCondition04',
+        'HitByProjectile': 'xtagAutoSkillCondition05',
+    }
+
     def __init__(self):
             super().__init__()
 
@@ -349,6 +365,18 @@ class ItemSkillAugmentParser(TQDBParser):
             'tag': skill_tag,
             'level': level,
         }
+
+        if self.CONTROLLER not in dbr:
+            return
+
+        # Grab the auto controller to see if this skill is activated:
+        controller = DBRParser.read(dbr[self.CONTROLLER])
+
+        # The property 'triggerType' can be converted to a useful text suffix
+        # like 'Activated on attack':
+        result['properties'][self.SKILL_NAME].update({
+            'trigger': texts.get(self.TRIGGERS[controller['triggerType']])
+        })
 
 
 class ParametersOffensiveParser(TQDBParser):
