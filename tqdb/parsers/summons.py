@@ -16,13 +16,15 @@ class MonsterSkillManager(TQDBParser):
     # Skills to ignore when parsing pet buffs/skills:
     IGNORE_SKILLS = list(
         f'data\\database\\records{skill}' for skill in [
-            'skills\\monster skills\\passive_totaldamageabsorption01.dbr',
+            '\\skills\\monster skills\\passive_totaldamageabsorption01.dbr',
             '\\skills\\monster skills\\defense\\armor_passive.dbr',
             '\\skills\\monster skills\\defense\\banner_debuff.dbr',
             '\\skills\\monster skills\\defense\\trap_resists.dbr',
             '\\skills\\monster skills\\defense\\resist_undead.dbr',
+            '\\skills\\monster skills\\defense\\resist_ghost.dbr',
             '\\skills\\monster skills\\defense_undeadresists.dbr',
             '\\skills\\boss skills\\boss_conversionimmunity.dbr',
+            '\\skills\\boss skills\\hero_conversionimmunity.dbr',
         ]) + [
             # Breaking wheel has its skill three times for some reason:
             'data\\database\\records\\xpack\\skills\\scroll skills\\pets\\'

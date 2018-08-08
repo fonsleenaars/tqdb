@@ -46,7 +46,12 @@ class MonsterParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f'{TQDBParser.base}\\monster.tpl'
+        return [
+            f'{TQDBParser.base}\\monster.tpl',
+            # For some reason the doppel summon template does not extend the
+            # regular monster template, but has its own:
+            f'{TQDBParser.base}\\doppelganger.tpl',
+        ]
 
     def get_priority(self):
         """
