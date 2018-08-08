@@ -136,17 +136,17 @@ class MonsterParser(TQDBParser):
                 mp = itr[self.MP]
                 properties[i][self.MP] = texts.get('ManaText').format(mp)
 
-            # Add defensive properties:
+            # Add non-character properties:
             for k, v in result['properties'].items():
-                if not k.startswith('defensive'):
+                if k.startswith('character'):
                     continue
 
-                # Add the defensive property to the correct difficulty index:
+                # Add the property to the correct difficulty index:
                 if isinstance(v, list):
-                    # The defensive property changes per difficulty:
+                    # The property changes per difficulty:
                     properties[i][k] = v[i] if i < len(v) else v[-1]
                 else:
-                    # The defensive property is constant:
+                    # The property is constant:
                     properties[i][k] = v
 
         # Add the base damage, stats, regens, and resistances:

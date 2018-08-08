@@ -117,7 +117,6 @@ def parse_equipment():
     items = {}
     for dbr in files:
         parsed = parse(dbr)
-
         try:
             # Organize the equipment based on the category
             category = parsed.pop('category')

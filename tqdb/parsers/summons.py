@@ -104,7 +104,7 @@ class CharacterParser(TQDBParser):
         dmg_min = dbr[self.MIN]
         dmg_max = dbr.get(self.MAX, dmg_min)
 
-        # Set the damage this summon does as a property:
+        # Set the damage this character does as a property:
         result['properties']['offensivePhysical'] = (
             ParametersOffensiveParser.format(
                 ParametersOffensiveParser.ABSOLUTE,
