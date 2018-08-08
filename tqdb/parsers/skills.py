@@ -112,7 +112,7 @@ class SkillBaseParser(TQDBParser):
             for index in range(base_tiers):
                 itr_dbr = TQDBParser.extract_values(dbr, field, index)
 
-                if field not in itr_dbr:
+                if field not in itr_dbr or itr_dbr[field] <= 0.01:
                     continue
 
                 # Insert this skill property
