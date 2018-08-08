@@ -67,9 +67,9 @@ def parse_affixes():
         # Assign the table types to this affix:
         if dbr not in affix_tables or len(affix_tables[dbr]) == 17:
             # Affix can occur on all equipment:
-            affix['equipment'] = 'All equipment'
+            affix['equipment'] = 'all'
         else:
-            affix['equipment'] = ', '.join(affix_tables[dbr])
+            affix['equipment'] = ','.join(affix_tables[dbr])
 
         # Add affixes to their respective pre- or suffix list:
         affixType = 'prefixes' if 'Prefix' in affix['tag'] else 'suffixes'
