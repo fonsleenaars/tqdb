@@ -111,7 +111,13 @@ def parse_equipment():
             equipment_file
             for equipment_file
             in glob.glob(str(equipment_files), recursive=True)
-            if not ('\\old' in equipment_file or '\\default' in equipment_file)
+            if not (
+                '\\old' in equipment_file or
+                '\\default' in equipment_file or
+                # Rhodian and Electrum sling don't drop:
+                '\\1hranged\\u_e_02.dbr' in equipment_file or
+                '\\1hranged\\u_n_05.dbr' in equipment_file
+            )
         ])
 
     items = {}
