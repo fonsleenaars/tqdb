@@ -52,7 +52,8 @@ class MonsterSkillManager(TQDBParser):
         Parse all the abilities a monster has.
 
         """
-        result['abilities'] = []
+        # Initialize the abilities (to be indexed per level)
+        abilities = []
 
         # Parse all the normal skills (17 max):
         for i in range(1, 18):
@@ -70,14 +71,19 @@ class MonsterSkillManager(TQDBParser):
 
             # Store the skill, which will ensure a unique tag:
             skill_tag = storage.store_skill(skill)
-            level = dbr[levelTag][0]
 
-            # Append the stored skill to the ability list (level > 0)
-            if level:
-                result['abilities'].append({
-                    'tag': skill_tag,
-                    'level': level,
-                })
+            # Add levels per difficulty:
+            for index, level in enumerate(dbr[levelTag]):
+                if len(abilities) - 1 < index:
+                    # Create a new tier if it doesn't exist yet:
+                    abilities.append({})
+
+                if not level:
+                    continue
+
+                abilities[index][skill_tag] = level
+
+        result['abilities'] = abilities
 
 
 class CharacterParser(TQDBParser):
