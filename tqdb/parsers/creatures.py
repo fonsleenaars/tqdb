@@ -6,10 +6,45 @@ import logging
 
 from tqdb import dbr as DBRParser
 from tqdb.constants.resources import DB, CHESTS
-from tqdb.parsers.base import ParametersDefensiveParser
+from tqdb.parsers import base as parsers
 from tqdb.parsers.main import TQDBParser
 from tqdb.storage import db
 from tqdb.utils.text import texts
+
+
+class CharacterParser(TQDBParser):
+    """
+    Parser for `character.tpl`.
+
+    """
+    MAX = 'handHitDamageMax'
+    MIN = 'handHitDamageMin'
+
+    def __init__(self):
+        super().__init__()
+
+    @staticmethod
+    def get_template_path():
+        return f'{TQDBParser.base}\\character.tpl'
+
+    def parse(self, dbr, dbr_file, result):
+        """
+        Parse a character's properties.
+
+        """
+        if self.MIN not in dbr:
+            return
+
+        dmg_min = dbr[self.MIN]
+        dmg_max = dbr.get(self.MAX, dmg_min)
+
+        # Set the damage this character does as a property:
+        result['properties']['offensivePhysical'] = (
+            parsers.ParametersOffensiveParser.format(
+                parsers.ParametersOffensiveParser.ABSOLUTE,
+                'offensivePhysical',
+                dmg_min,
+                dmg_max))
 
 
 class MonsterParser(TQDBParser):
@@ -17,12 +52,6 @@ class MonsterParser(TQDBParser):
     Parser for `monster.tpl`.
 
     """
-    DIFFICULTIES = [
-        'normal',
-        'epic',
-        'legendary',
-    ]
-
     # Equipable slots for monsters to have items in:
     EQUIPMENT_SLOTS = [
         'Head',
@@ -72,38 +101,44 @@ class MonsterParser(TQDBParser):
             return
 
         # Iterate over normal, epic & legendary version of the boss:
-        difficulties = {}
-        for index, difficulty in enumerate(self.DIFFICULTIES):
+        loot = []
+        for index in range(3):
+            # Initialize an empty result:
+            loot.append({})
+
             # Create a DBR that only has the equipment for this difficulty:
-            equipment = TQDBParser.extract_values(dbr, '', index)
+            difficulty_dbr = TQDBParser.extract_values(dbr, '', index)
 
             # Parse all the equipment in this difficulty
-            difficulty_equipment = self.parse_difficulty(equipment, dbr_file)
+            difficulty_dbr = self.parse_difficulty(difficulty_dbr, dbr_file)
 
             # Only store the equipment if there was any:
-            if difficulty_equipment:
-                difficulties[difficulty] = difficulty_equipment
+            if difficulty_dbr:
+                loot[index] = difficulty_dbr
 
-        # We're done parsing equipable loot, store it!
-        if difficulties:
-            result['loot'] = difficulties
+        # If there is any tiered data to store, store it:
+        if any(tier for tier in loot if tier):
+            result['loot'] = loot
 
-        chests = {}
+        chests = []
         tag = result['tag']
 
         # Find the chest for each difficulty:
-        for index, difficulty in enumerate(self.DIFFICULTIES):
+        for index in range(3):
+            # Initialize an empty result:
+            chests.append({})
+
             # Grab the chest to parse:
             if tag in CHESTS and CHESTS[tag][index]:
                 loot = DBRParser.parse(DB / CHESTS[tag][index])
 
                 # Convert all item chances to 4 point precision max:
-                chests[difficulty] = dict(
+                chests[index] = dict(
                     (k, float('{0:.4f}'.format(v))) for k, v
                     in loot['loot_table'].items())
 
-        # We're done parsing chest loot, store it!
-        if chests:
+        # If there is any tiered data to store, store it:
+        if any(tier for tier in chests if tier):
             result['chest'] = chests
 
     def parse_creature(self, dbr, dbr_file, result):
@@ -117,19 +152,22 @@ class MonsterParser(TQDBParser):
 
         # Set the known properties for this creature
         if tag:
+            race = dbr.get('characterRacialProfile', None)
             result.update({
                 'classification': classification,
                 'name': texts.get(tag),
+                'race': race[0] if race else None,
+                'level': [level for level in dbr.get('charLevel', [])],
                 'tag': tag,
             })
 
         # Manually parse the defensive properties, since there's no template
         # tied for it for monsters:
-        ParametersDefensiveParser().parse(dbr, dbr_file, result)
+        parsers.ParametersDefensiveParser().parse(dbr, dbr_file, result)
 
         # Iterate over the properties for each difficulty:
         properties = []
-        for i in range(0, 3):
+        for i in range(3):
             properties.append({})
             itr = TQDBParser.extract_values(dbr, '', i)
 

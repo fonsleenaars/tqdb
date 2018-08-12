@@ -5,7 +5,6 @@ All summons and pet parsers.
 from tqdb import dbr as DBRParser
 from tqdb import storage
 from tqdb.parsers.main import TQDBParser
-from tqdb.parsers.base import ParametersOffensiveParser
 
 
 class MonsterSkillManager(TQDBParser):
@@ -72,50 +71,22 @@ class MonsterSkillManager(TQDBParser):
             # Store the skill, which will ensure a unique tag:
             skill_tag = storage.store_skill(skill)
 
-            # Add levels per difficulty:
-            for index, level in enumerate(dbr[levelTag]):
-                if len(abilities) - 1 < index:
-                    # Create a new tier if it doesn't exist yet:
-                    abilities.append({})
+            # Iterate over the difficulties:
+            for difficulty in range(3):
+                itr = TQDBParser.extract_values(dbr, 'skill', difficulty)
+
+                # If a level is set to 0 for a difficulty, it won't be in the
+                # extracted result, so use the KeyError safe 'get' method:
+                level = itr.get(levelTag, 0)
 
                 if not level:
                     continue
 
-                abilities[index][skill_tag] = level
+                if len(abilities) - 1 < difficulty:
+                    # Create missing tiers:
+                    abilities += ([{}] * (difficulty - len(abilities) + 1))
+
+                abilities[difficulty][skill_tag] = level
+
 
         result['abilities'] = abilities
-
-
-class CharacterParser(TQDBParser):
-    """
-    Parser for `character.tpl`.
-
-    """
-    MAX = 'handHitDamageMax'
-    MIN = 'handHitDamageMin'
-
-    def __init__(self):
-        super().__init__()
-
-    @staticmethod
-    def get_template_path():
-        return f'{TQDBParser.base}\\character.tpl'
-
-    def parse(self, dbr, dbr_file, result):
-        """
-        Parse a character's properties.
-
-        """
-        if self.MIN not in dbr:
-            return
-
-        dmg_min = dbr[self.MIN]
-        dmg_max = dbr.get(self.MAX, dmg_min)
-
-        # Set the damage this character does as a property:
-        result['properties']['offensivePhysical'] = (
-            ParametersOffensiveParser.format(
-                ParametersOffensiveParser.ABSOLUTE,
-                'offensivePhysical',
-                dmg_min,
-                dmg_max))
