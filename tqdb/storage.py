@@ -53,8 +53,8 @@ def store_skill(skill):
         else:
             skill_tag = f'{skill_tag}-{duplicate_suffix(skill_tag)}'
 
-        # Set the unique tag:
-        skill['tag'] = skill_tag
+    # Set the unique tag:
+    skill['tag'] = skill_tag
 
     # Store the skill
     skills[skill_tag] = skill
