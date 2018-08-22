@@ -91,11 +91,11 @@ class Variable:
         if self['type'] == 'real':
             if always_return:
                 return float(value)
-            return float(value) if float(value) > 0 else None
+            return float(value) if float(value) != 0 else None
         elif self['type'] == 'int':
             if always_return:
                 return int(value)
-            return int(value) if int(value) > 0 else None
+            return int(value) if int(value) != 0 else None
         elif self['type'] == 'bool':
             if always_return:
                 return bool(int(value))
