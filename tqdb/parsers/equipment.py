@@ -9,6 +9,7 @@ import os
 import numexpr
 
 from tqdb import dbr as DBRParser
+from tqdb.constants.resources import DB
 from tqdb.parsers.main import TQDBParser
 from tqdb.utils.text import texts
 
@@ -190,6 +191,9 @@ class ItemEquipmentParser(TQDBParser):
         'Strength',
     ]
 
+    # The base requirements cost file, as a fallback:
+    REQUIREMENT_FALLBACK = DB / 'records/game/itemcost.dbr'
+
     def __init__(self):
         super().__init__()
 
@@ -227,30 +231,49 @@ class ItemEquipmentParser(TQDBParser):
             # Only add the set if it has a tag:
             result['set'] = item_set.get(ItemSetParser.NAME, None)
 
-        if 'itemCostName' in dbr:
-            # Cost prefix of this props is determined by its class
-            cost_prefix = dbr['Class'].split('_')[1]
-            cost_prefix = cost_prefix[:1].lower() + cost_prefix[1:]
+        # Stop parsing here if requirement parsing isn't necessary
+        if not self.should_parse_requirements(dbr, result):
+            return
 
-            # Read cost file
-            cost_properties = DBRParser.read(dbr['itemCostName'])
+        # Cost prefix of this props is determined by its class
+        cost_prefix = dbr['Class'].split('_')[1]
+        cost_prefix = cost_prefix[:1].lower() + cost_prefix[1:]
 
-            # Grab the props level (it's a variable in the equations)
-            for requirement in self.REQUIREMENTS:
-                # Create the equation key
-                equation_key = cost_prefix + requirement + 'Equation'
-                req = requirement.lower() + 'Requirement'
+        # Read cost file
+        cost_properties = DBRParser.read(dbr.get(
+            'itemCostName', self.REQUIREMENT_FALLBACK))
 
-                # Existing requirements shouldn't be overriden:
-                if equation_key in cost_properties and req not in result:
-                    equation = cost_properties[equation_key]
+        # Grab the props level (it's a variable in the equations)
+        for requirement in self.REQUIREMENTS:
+            # Create the equation key
+            equation_key = cost_prefix + requirement + 'Equation'
+            req = requirement.lower() + 'Requirement'
 
-                    # camelCased variables are required for the equations:
-                    itemLevel = dbr['itemLevel']  # noqa
-                    totalAttCount = len(result['properties'])  # noqa
+            # Existing requirements shouldn't be overriden:
+            if equation_key in cost_properties and req not in result:
+                equation = cost_properties[equation_key]
 
-                    # Eval the equation:
-                    result[req] = math.ceil(numexpr.evaluate(equation).item())
+                # camelCased variables are required for the equations:
+                itemLevel = dbr['itemLevel']  # noqa
+                totalAttCount = len(result['properties'])  # noqa
+
+                # Eval the equation:
+                result[req] = math.ceil(numexpr.evaluate(equation).item())
+
+    def should_parse_requirements(self, dbr, result):
+        """
+        Check if this parser should parse requirements further.
+
+        If either an requirement equation file is present, or no requirements
+        have been defined statically in the DBR, requirements should be parsed.
+
+        The latter scenario falls back to the generic `itemcost.dbr` file in
+        the game folder.
+
+        """
+        return 'itemCostName' in dbr or not any(
+            f'{requirement.lower}Requirement' in dbr
+            for requirement in self.REQUIREMENTS)
 
 
 class ItemRelicParser(TQDBParser):
