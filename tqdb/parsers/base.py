@@ -131,6 +131,10 @@ class ParametersCharacterParser(TQDBParser):
 
         """
         for value in dbr[field]:
+            # Skip 0 values
+            if not value:
+                continue
+
             formatted = texts.get(field).format(value)
             TQDBParser.insert_value(field, formatted, result)
 

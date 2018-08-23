@@ -383,29 +383,25 @@ class ItemSetParser(TQDBParser):
             # Add the tag to the items list:
             result['items'].append(set_member['tag'])
 
-        # Find the property that has the most tiers
-        highest_tier = TQDBParser.highest_tier(
-            result['properties'],
-            result['properties'].keys())
+        # The number of set bonuses is equal to the number of set items minus 1
+        bonus_number = len(result['items']) - 1
 
         # Because this parser has the lowest priority, all properties will
         # already have been parsed, so they can now be reconstructed to match
         # the set bonuses. Begin by initializing the properties for each set
         # bonus tier to an empty dict:
-        properties = [{} for i in range(highest_tier)]
+        properties = [{} for i in range(bonus_number)]
 
         # Insert the existing properties by adding them to the correct tier:
         for field, values in result['properties'].items():
             if not isinstance(values, list):
-                # Values that aren't repeated should be set for all tiers:
-                for index, _ in enumerate(properties):
-                    properties[index][field] = values
+                properties[bonus_number - 1][field] = values
 
                 # Don't parse any further
                 continue
 
             # The starting tier is determined by the highest tier
-            starting_index = highest_tier - len(values)
+            starting_index = bonus_number - len(values)
 
             # Now just iterate and add the properties to each tier:
             for index, value in enumerate(values):
