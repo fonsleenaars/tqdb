@@ -8,7 +8,6 @@ from tqdb import dbr as DBRParser
 from tqdb.constants.resources import DB, CHESTS
 from tqdb.parsers import base as parsers
 from tqdb.parsers.main import TQDBParser
-from tqdb.storage import db
 from tqdb.utils.text import texts
 
 
@@ -132,7 +131,7 @@ class MonsterParser(TQDBParser):
             if tag in CHESTS and CHESTS[tag][index]:
                 loot = DBRParser.parse(DB / CHESTS[tag][index])
 
-                # Convert all item chances to 4 point precision max:
+                # Convert all item chances to 4 point precision:
                 chests[index] = dict(
                     (k, float('{0:.4f}'.format(v))) for k, v
                     in loot['loot_table'].items())
@@ -246,7 +245,7 @@ class MonsterParser(TQDBParser):
                         for k, v in loot['loot_table'].items())
                     self.add_items(result, items)
 
-        # Convert all item chances to 4 point precision max:
+        # Convert all item chances to 4 point precision:
         result = dict(
             (k, float('{0:.4f}'.format(v))) for k, v
             in result.items())

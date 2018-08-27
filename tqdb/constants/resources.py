@@ -324,6 +324,8 @@ EQUIPMENT = [
     'records/xpack*/item/artifacts/arcaneformulae/*.dbr',
 ]
 
+QUESTS = 'data\\quests\\*.qst'
+
 SETS = [
     'records/item/sets/*.dbr',
     'records/xpack*/item/sets/*.dbr',

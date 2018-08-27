@@ -5,12 +5,15 @@ Main functions to parse the full Titan Quest Database.
 import glob
 import logging
 import os
+import re
+import string
 import time
 
 from tqdb import storage
 from tqdb.constants import resources
 from tqdb.dbr import parse, read
 from tqdb.utils import images
+from tqdb.utils.text import texts
 from tqdb.utils.core import get_affix_table_type
 
 
@@ -191,6 +194,100 @@ def parse_creatures():
     logging.info(f'Parsed creatures in {time.clock() - timer} seconds.')
 
     return creatures
+
+
+def parse_quests():
+    """
+    Parse the Titan Quest quest rewards.
+
+    The quest rewards are indexed by creating a text readable version of the
+    QST files located in the Resources/Quests.arc file. The rewards are
+    extracted by only retrieving rewards prefixed with item[] tags.
+
+    """
+    timer = time.clock()
+
+    # Regex to find item rewards
+    REWARD = re.compile(
+        r'item\[(?P<index>[0-9])\](.{0,1})'
+        r'(?P<file>'
+        'records'
+        r'[\\||\/]'
+        r'(xpack[2]?[\\||\/])?'
+        'quests'
+        r'[\\||\/]'
+        'rewards'
+        r'[\\||\/]'
+        r'([^.]+)\.dbr'
+        r')'
+    )
+
+    # Regex to find the title tag
+    TITLE = re.compile(r'titletag(?P<tag>[^\s]*)')
+
+    files = glob.glob(resources.QUESTS)
+    quests = {}
+
+    for qst in files:
+        with open(qst, 'rb') as quest:
+            # Read the content as printable characters only:
+            content = ''.join(
+                c for c in
+                # Lower case and convert to utf-8
+                quest.read().decode('utf-8', errors='ignore').lower()
+                if c in string.printable
+            )
+
+        # Find the title and skip this file if none is found:
+        title_tag = TITLE.search(content)
+        if not title_tag or not title_tag.group('tag'):
+            continue
+
+        # Grab the quest title tag
+        tag = title_tag.group('tag')
+        if tag not in quests:
+            # Initialize three difficulties:
+            quests[tag] = {
+                'name': texts.get(tag),
+                'rewards': [{}, {}, {}],
+            }
+
+        # Add all the rewards to the quest:
+        for match in REWARD.finditer(content):
+            # The index in the item[index] tag determines the difficulty:
+            difficulty = int(match.group('index'))
+            reward_file = match.group('file')
+
+            # Prepend the path with the database path:
+            rewards = parse(resources.DB / reward_file)
+
+            # Skip quests where the rewards aren't items:
+            if 'loot_table' not in rewards:
+                continue
+
+            # Either set the chance or add it to a previous chance:
+            for item, chance in rewards['loot_table'].items():
+                if item in quests[tag]['rewards'][difficulty]:
+                    quests[tag]['rewards'][difficulty][item] += chance
+                else:
+                    quests[tag]['rewards'][difficulty][item] = chance
+
+        # Don't save quests without item rewards:
+        if not any(reward for reward in quests[tag]['rewards']):
+            quests.pop(tag)
+
+    # Turn all chances into percentages:
+    for tag, quest in quests.items():
+        for index, difficulty in enumerate(quest['rewards']):
+            for item, chance in difficulty.items():
+                # Format into 4 point precision percentages:
+                quests[tag]['rewards'][index][item] = (
+                    float('{0:.4f}'.format(chance * 100)))
+
+    # Log the timer:
+    logging.info(f'Parsed quest rewards in {time.clock() - timer} seconds.')
+
+    return quests
 
 
 def parse_sets():

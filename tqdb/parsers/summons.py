@@ -88,5 +88,4 @@ class MonsterSkillManager(TQDBParser):
 
                 abilities[difficulty][skill_tag] = level
 
-
         result['abilities'] = abilities

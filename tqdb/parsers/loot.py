@@ -121,6 +121,12 @@ class LootMasterTableParser(TQDBParser):
             # Parse the loot file
             loot = DBRParser.parse(loot_file)
 
+            # e.g. xpack2\quests\rewards\loottables\generic_rareweapon_n.dbr
+            # The entry lootName15 has two entries separated by ';'
+            if 'loot_table' not in loot:
+                logging.debug(f'Invalid lootName{i} in {dbr_file}.')
+                continue
+
             # Loot entries will be in 'table', add those:
             for k, v in loot['loot_table'].items():
                 if k in items:
@@ -291,10 +297,9 @@ class LootItemTable_FixedWeightParser(TQDBParser):
             if not weight:
                 continue
 
-            # Grab the item and its chance
-            item = DBRParser.parse(dbr[f'lootName{i}'])
-
             try:
+                # Grab the item and its chance
+                item = DBRParser.parse(dbr[f'lootName{i}'])
                 # Store the chance of this item by its tag:
                 items[item['tag']] = float('{0:.5f}'.format(weight / summed))
             except KeyError:

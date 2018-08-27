@@ -43,6 +43,7 @@ def tqdb():
         'affixes': main.parse_affixes(),
         'creatures': main.parse_creatures(),
         'equipment': main.parse_equipment(),
+        'quests': main.parse_quests(),
         'sets': main.parse_sets(),
         'skills': main.parse_skills(),
     }
