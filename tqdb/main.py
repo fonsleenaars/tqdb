@@ -252,11 +252,20 @@ def parse_quests():
                 'rewards': [{}, {}, {}],
             }
 
+        # Parsed reward files (so we don't duplicate):
+        parsed = []
+
         # Add all the rewards to the quest:
         for match in REWARD.finditer(content):
             # The index in the item[index] tag determines the difficulty:
             difficulty = int(match.group('index'))
             reward_file = match.group('file')
+
+            # Store the file or move on if we've already parsed it
+            if reward_file not in parsed:
+                parsed.append(reward_file)
+            else:
+                continue
 
             # Prepend the path with the database path:
             rewards = parse(resources.DB / reward_file)
