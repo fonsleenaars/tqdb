@@ -141,6 +141,17 @@ class MonsterParser(TQDBParser):
         if any(tier for tier in chests if tier):
             result['chest'] = chests
 
+        # Check if this monster is limited to a difficulty:
+        if len(result['level']) != len(set(result['level'])):
+            # If a level is repeated, it means a creature doesn't spawn in
+            # some difficulties. The 'normal' difficulty level is either
+            # repeated in Epic and Legendary, so find the index and subtract
+            # 1 from that to get all difficulties that should be removed:
+            for i in range(result['level'].count(result['level'][0]) - 1):
+                result['properties'][i] = {}
+                result['abilities'][i] = {}
+                result['level'][i] = None
+
     def parse_creature(self, dbr, dbr_file, result):
         """
         Parse the creature and its properties and skills.
