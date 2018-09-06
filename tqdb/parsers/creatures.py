@@ -96,8 +96,8 @@ class MonsterParser(TQDBParser):
         """
         self.parse_creature(dbr, dbr_file, result)
 
-        # Don't parse any further for tagless creatures:
-        if 'tag' not in result:
+        # Don't parse any further for tagless or level-less creatures:
+        if 'tag' not in result or not result['level']:
             return
 
         # Iterate over normal, epic & legendary version of the boss:
@@ -244,7 +244,7 @@ class MonsterParser(TQDBParser):
                     logging.debug(f'No {loot_key} in {dbr_file}')
                     continue
 
-                loot = DBRParser.parse(loot_file)
+                loot = DBRParser.parse(loot_file, {'level': dbr['charLevel']})
                 if 'tag' in loot:
                     # ADd a single item that was found:
                     self.add_items(

@@ -69,7 +69,7 @@ def read(dbr):
     return result
 
 
-def parse(dbr_file):
+def parse(dbr_file, references={}):
     """
     Parse a DBR file according to its template.
 
@@ -90,7 +90,9 @@ def parse(dbr_file):
     result = {
         # Properties will be filled by all core attribute parsers, like
         # character, offensive, defensive, etc.
-        'properties': {}
+        'properties': {},
+        # Any parser can pass references that another parser can then use:
+        'references': references,
     }
 
     # There are still non-existent references, make sure the DBR isn't empty:
@@ -121,6 +123,9 @@ def parse(dbr_file):
         except StopIteration:
             # One of the parsers has determined this file shouldn't be parsed:
             return {}
+
+    # Pop the helper data references again:
+    result.pop('references')
 
     # Set the parsed result in the storage db:
     storage.db[dbr_file] = result

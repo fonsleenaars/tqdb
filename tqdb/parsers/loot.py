@@ -119,7 +119,11 @@ class LootMasterTableParser(TQDBParser):
                 continue
 
             # Parse the loot file
-            loot = DBRParser.parse(loot_file)
+            loot = DBRParser.parse(
+                loot_file,
+                # Always pass along any references that were set:
+                result['references'],
+            )
 
             # e.g. xpack2\quests\rewards\loottables\generic_rareweapon_n.dbr
             # The entry lootName15 has two entries separated by ';'
@@ -159,7 +163,11 @@ class FixedItemContainerParser(TQDBParser):
             raise StopIteration
 
         # Parse the references 'tables' file and set the result:
-        loot = DBRParser.parse(dbr['tables'][0])
+        loot = DBRParser.parse(
+            dbr['tables'][0],
+            # Always pass along any references that were set:
+            result['references'],
+        )
         result['loot_table'] = loot['loot_table']
 
 
@@ -189,11 +197,11 @@ class FixedItemLootParser(TQDBParser):
 
         # There are 6 loot slots:
         for slot in range(1, 7):
-            self.parse_loot(f'loot{slot}', spawn_number, dbr)
+            self.parse_loot(f'loot{slot}', spawn_number, dbr, result)
 
         result['loot_table'] = self.items
 
-    def parse_loot(self, loot_key, spawn_number, dbr):
+    def parse_loot(self, loot_key, spawn_number, dbr, result):
         chance = dbr.get(f'{loot_key}Chance', 0)
 
         # Skip slots that have 0 chance to drop
@@ -213,7 +221,11 @@ class FixedItemLootParser(TQDBParser):
                 continue
 
             try:
-                loot = DBRParser.parse(dbr[f'{loot_key}Name{i}'][0])
+                loot = DBRParser.parse(
+                    dbr[f'{loot_key}Name{i}'][0],
+                    # Always pass along any references that were set:
+                    result['references'],
+                )
 
                 # Parse the table and multiply the values by the chance:
                 loot_chance = float('{0:.5f}'.format(weight / summed))
@@ -245,11 +257,23 @@ class LootItemTable_DynWeightParser(TQDBParser):
         return f'{TQDBParser.base}\\lootitemtable_dynweight.tpl'
 
     def parse(self, dbr, dbr_file, result):
-        items = {}
+        if 'level' in result['references']:
+            # This camelCased variable is required for the level equations.
+            # Grab the level from the references which has been passed:
+            averagePlayerLevel = result['references']['level'] # noqa
+            parentLevel = result['references']['level'] # noqa
 
-        # Add up all the loot weights:
-        summed = sum(weight for weight in dbr['bellSlope'])
+        # Calculate the minimum and maximum levels:
+        try:
+            min_level = numexpr.evaluate(dbr['minItemLevelEquation']).item()
+            max_level = numexpr.evaluate(dbr['maxItemLevelEquation']).item()
+        except KeyError:
+            # Log the missing variable:
+            logging.info(f'Missing parentLevel in {dbr_file}')
+            return
 
+        filtered_items = []
+        # See which items are in between the min and max levels:
         for index, loot_file in enumerate(dbr.get('itemNames', [])):
             # Grab the item and its chance
             item = DBRParser.parse(loot_file)
@@ -258,16 +282,17 @@ class LootItemTable_DynWeightParser(TQDBParser):
                 logging.debug(f'No tag for {loot_file} in {dbr_file}')
                 continue
 
-            try:
-                weight = dbr['bellSlope'][index]
-            except IndexError:
-                # Grab the last known entry
-                weight = dbr['bellSlope'][-1]
+            # Skip all items outside the range
+            if item['itemLevel'] < min_level or item['itemLevel'] > max_level:
+                continue
 
-            # Store the chance of this item by its tag:
-            items[item['tag']] = float('{0:.5f}'.format(weight / summed))
+            filtered_items.append(item)
 
-        result['loot_table'] = items
+        # Store the chance of this item by its tag:
+        result['loot_table'] = {
+            item['tag']: float('{0:.5f}'.format(1 / len(filtered_items)))
+            for item in filtered_items
+        }
 
 
 class LootItemTable_FixedWeightParser(TQDBParser):
