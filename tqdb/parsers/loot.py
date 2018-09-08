@@ -267,13 +267,19 @@ class LootItemTable_DynWeightParser(TQDBParser):
         try:
             min_level = numexpr.evaluate(dbr['minItemLevelEquation']).item()
             max_level = numexpr.evaluate(dbr['maxItemLevelEquation']).item()
+            target_level = numexpr.evaluate(dbr['targetLevelEquation']).item()
         except KeyError:
             # Log the missing variable:
             logging.info(f'Missing parentLevel in {dbr_file}')
             return
 
-        filtered_items = []
-        # See which items are in between the min and max levels:
+        # Grab the slope and defaultWeight, to use for adjusting values later:
+        slope = dbr['bellSlope']
+        weight = dbr['defaultWeight']
+
+        # Store the drop and their adjusted weights in this dictionary:
+        drops = {}
+
         for index, loot_file in enumerate(dbr.get('itemNames', [])):
             # Grab the item and its chance
             item = DBRParser.parse(loot_file)
@@ -282,16 +288,28 @@ class LootItemTable_DynWeightParser(TQDBParser):
                 logging.debug(f'No tag for {loot_file} in {dbr_file}')
                 continue
 
+            level = item['itemLevel']
+
             # Skip all items outside the range
-            if item['itemLevel'] < min_level or item['itemLevel'] > max_level:
+            if level < min_level or level > max_level:
                 continue
 
-            filtered_items.append(item)
+            # Next compare the item's level to the target level
+            target = int(level - target_level)
+
+            # Grab the adjustment from the slope (or the last one)
+            adjustment = slope[target] if len(slope) > target else slope[-1]
+
+            # The adjusted weight is the default multiplied by the adjustment:
+            drops[item['tag']] = weight * adjustment
+
+        # The sum of all weights can now be calculated
+        summed = sum(v for v in drops.values())
 
         # Store the chance of this item by its tag:
         result['loot_table'] = {
-            item['tag']: float('{0:.5f}'.format(1 / len(filtered_items)))
-            for item in filtered_items
+            tag: float('{0:.5f}'.format(item_weight / summed))
+            for tag, item_weight in drops.items()
         }
 
 

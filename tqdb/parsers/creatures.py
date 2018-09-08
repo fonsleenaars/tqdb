@@ -130,7 +130,17 @@ class MonsterParser(TQDBParser):
 
             # Grab the chest to parse:
             if tag in CHESTS and CHESTS[tag][index]:
-                loot = DBRParser.parse(DB / CHESTS[tag][index])
+                # Grab the level for this index, or the last one:
+                level = (
+                    result['level'][index]
+                    if len(result['level']) > index
+                    else result['level'][-1])
+
+                # Parse the chest and pass the monsters level as a reference:
+                loot = DBRParser.parse(
+                    DB / CHESTS[tag][index],
+                    {'level': level},
+                )
 
                 # Convert all item chances to 4 point precision:
                 chests[index] = dict(
@@ -246,7 +256,7 @@ class MonsterParser(TQDBParser):
 
                 loot = DBRParser.parse(loot_file, {'level': dbr['charLevel']})
                 if 'tag' in loot:
-                    # ADd a single item that was found:
+                    # Add a single item that was found:
                     self.add_items(
                         result,
                         {loot['tag']: chance * equip_chance})
