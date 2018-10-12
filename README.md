@@ -77,7 +77,9 @@ Replace the locale in both the arc file name and the directory to that of your c
 1. Make sure the `data/quests` folder exists in your local repository.
 2. Open up a prompt, change directory to your TQ install.
 3. Run the following command:  
-`ArchiveTool.exe Resources/Quests.arc -extract C:/tqdb/data/quests`
+    - `ArchiveTool.exe Resources/Quests.arc -extract C:/tqdb/data/quests`
+    - `ArchiveTool.exe Resources/XPack/Quests.arc -extract C:/tqdb/data/quests`
+    - `ArchiveTool.exe Resources/XPack2/Quests.arc -extract C:/tqdb/data/quests`
 
 ## Running the parser
 `pipenv run python ./run.py` - Runs the parser with the default english locale  
