@@ -6,7 +6,7 @@ Although the base game Titan Quest was released in 2006 and the expansion Immort
 
 That, and a desire to create a smoother equipment database running on some more modern technologies, prompted me to start breaking down the ARZ and ARC files that make up the in-game content for Titan Quest.
 
-The result is a two files containing all in-game information:
+The result is two files containing all in-game information:
   - A single JSON file containing the data (equipment, sets, skills, boss loot, etc.)
   - A single sprite image along with a CSS sprite sheet containing all the graphics for the equipment available in the JSON file.
 
@@ -40,7 +40,9 @@ Python 3.6 or higher and Pipenv are required to run this project. To get started
 ### 3. Text Resources
 
 1. Make sure the `data/resources` directory exists in your local repository.
-2. Choose a language you want to extract, and create the folder for it in the `resources` directory. For example, english would be: `data/resources/en`. The available locales are:
+2. Choose a language you want to extract, and create the folder for it in the `resources` directory.  
+For example, english would be: `data/resources/en`.  
+The available locales are:
     - `ch` - Simplified Chinese
     - `cz` - Czech
     - `de` - German
@@ -100,8 +102,7 @@ There will also be messages about missing tags, bitmaps, or other unexpected val
 ## Miscellaneous
 
 ### DBR Parser
-Titan Quest works with so called DBR files (Database Records). These files are basically dictionaries of all properties of whatever the file
-is referencing. The file is comma separated, with the following format:
+Titan Quest works with so called DBR files (Database Records). These files are basically dictionaries of all properties of whatever the file is referencing. The file is comma separated, with the following formats:
 
 ```
 key,value1;value2;value3,  
@@ -109,7 +110,7 @@ key,value1,
 key,value1  
 ```
 
-These values can thus easily be parsed into a usable dictionary or collection. It should be noted that a key, value pairing will be inconsistently present, meaning the parser checks for its presence and assumes all present keys, have usable values (i.e. non-zero/non-empty).
+These values can thus easily be parsed into a usable dictionary or collection. The keys for these files are checked based on the Template used for the DBR file, which is defined in the `templateName` key, and indirectly in its `Class` key as well.
 
 ### TextureViewer
 This parser uses the TextureViewer program created by Max McGuire to convert the TEX files into transparent PNGs. I included the program, the DLL and the readme in its entirety in the repo.
