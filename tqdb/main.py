@@ -14,7 +14,7 @@ from tqdb.constants import resources
 from tqdb.dbr import parse, read
 from tqdb.utils import images
 from tqdb.utils.text import texts
-from tqdb.utils.core import get_affix_table_type
+from tqdb.utils.core import get_affix_table_type, is_duplicate_affix
 
 
 def parse_affixes():
@@ -67,19 +67,30 @@ def parse_affixes():
         if not affix['properties']:
             continue
 
+        # Skip the incorrect 'of the Mammoth' prefix entry:
+        if 'prefix' in dbr and affix['tag'] == 'tagPrefix145':
+            continue
+
         # Assign the table types to this affix:
-        if dbr not in affix_tables or len(affix_tables[dbr]) == 17:
+        if dbr not in affix_tables:
             # Affix can occur on all equipment:
-            affix['equipment'] = 'all'
+            affix['equipment'] = 'none'
         else:
             affix['equipment'] = ','.join(affix_tables[dbr])
 
-        # Add affixes to their respective pre- or suffix list:
-        affixType = 'prefixes' if 'Prefix' in affix['tag'] else 'suffixes'
+        # Add affixes to their respective pre- or suffix list.
+        if 'Prefix' in affix['tag'] and 'suffix' not in dbr:
+            affixType = 'prefixes'
+        else:
+            affixType = 'suffixes'
+
         affixTag = affix.pop('tag')
 
         # Either add the affix or add its properties as an alternative
         if affixTag in affixes[affixType]:
+            # Skip duplicate affix properties:
+            if is_duplicate_affix(affixes[affixType][affixTag], affix):
+                continue
             affixes[affixType][affixTag]['properties'].append(
                 affix['properties'])
         else:
