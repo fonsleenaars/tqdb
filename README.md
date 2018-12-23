@@ -10,7 +10,14 @@ The result is two files containing all in-game information:
   - A single JSON file containing the data (equipment, sets, skills, boss loot, etc.)
   - A single sprite image along with a CSS sprite sheet containing all the graphics for the equipment available in the JSON file.
 
-## Setup
+## Automated Setup
+The `prepare.py` module automates most of the setup required, with the exception of the ARZ Database.
+
+This automated setup assumes that you have Titan Quest Anniversary Edition installed through Steam on your system. It will (currently) not work for other installation setups. Please report and issue describing your setup if it doesn't work for you.
+
+To run the automated setup, run `python prepare.py` in a terminal and then follow the ARZ Database instructions (chapter 1 of the Manual Setup) down below. No further setup will be required after.
+
+## Manual Setup
 During the setup we're going to assume the following paths:
 - Repository: `c:/tqdb`
 - TQ Install: `c:/Steam/SteamApps/Common/Titan Quest - Anniversary Edition/`
@@ -18,7 +25,7 @@ During the setup we're going to assume the following paths:
 The `data` directory needs to be created in your repository, so for this setup that would be `c:/tqdb/data`. Every time a directory needs to be created in the `data` directory, and is listed as `data/database` in the instructions, that means the full path would be: `c:/tqdb/data/database.`
 
 ### Python
-Python 3.6 or higher and Pipenv are required to run this project. To get started with a clean setup, open up a shell, navigate to your local repository, and run:  
+Python 3.6 or higher and Pipenv are required to run this project. To get started with a clean setup, open up a shell, navigate to your local repository, and run:
 - `pipenv clean`
 - `pipenv install`
 
@@ -34,14 +41,14 @@ Python 3.6 or higher and Pipenv are required to run this project. To get started
 
 1. Make sure the `data/database` directory exists in your local repository.
 2. Open up a prompt, change directory to your TQ install.
-3. Run the following command:  
+3. Run the following command:
 `ArchiveTool.exe Toolset/Templates.arc -extract C:/tqdb/data/database`
 
 ### 3. Text Resources
 
 1. Make sure the `data/resources` directory exists in your local repository.
-2. Choose a language you want to extract, and create the folder for it in the `resources` directory.  
-For example, english would be: `data/resources/en`.  
+2. Choose a language you want to extract, and create the folder for it in the `resources` directory.
+For example, english would be: `data/resources/en`.
 The available locales are:
     - `ch` - Simplified Chinese
     - `cz` - Czech
@@ -56,8 +63,8 @@ The available locales are:
     - `ru` - Russian
     - `uk` - Ukrainian
 3. Open up a prompt, change directory to your TQ install.
-4. Run the following command:  
-`ArchiveTool.exe Text/Text_EN.arc -extract C:/tqdb/data/resources/en`  
+4. Run the following command:
+`ArchiveTool.exe Text/Text_EN.arc -extract C:/tqdb/data/resources/en`
 Replace the locale in both the arc file name and the directory to that of your choosing.
 
 ### 4. Textures
@@ -76,13 +83,13 @@ Replace the locale in both the arc file name and the directory to that of your c
 
 1. Make sure the `data/quests` folder exists in your local repository.
 2. Open up a prompt, change directory to your TQ install.
-3. Run the following command:  
+3. Run the following command:
     - `ArchiveTool.exe Resources/Quests.arc -extract C:/tqdb/data/quests`
     - `ArchiveTool.exe Resources/XPack/Quests.arc -extract C:/tqdb/data/quests`
     - `ArchiveTool.exe Resources/XPack2/Quests.arc -extract C:/tqdb/data/quests`
 
 ## Running the parser
-`pipenv run python ./run.py` - Runs the parser with the default english locale  
+`pipenv run python ./run.py` - Runs the parser with the default english locale
 `pipenv run python ./run.py --locale fr` - Runs the parser with the french locale
 
 You can specify any of the two letter locales that are mentioned in the setup.
@@ -107,9 +114,9 @@ There will also be messages about missing tags, bitmaps, or other unexpected val
 Titan Quest works with so called DBR files (Database Records). These files are basically dictionaries of all properties of whatever the file is referencing. The file is comma separated, with the following formats:
 
 ```
-key,value1;value2;value3,  
-key,value1,  
-key,value1  
+key,value1;value2;value3,
+key,value1,
+key,value1
 ```
 
 These values can thus easily be parsed into a usable dictionary or collection. The keys for these files are checked based on the Template used for the DBR file, which is defined in the `templateName` key, and indirectly in its `Class` key as well.
