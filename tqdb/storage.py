@@ -61,3 +61,15 @@ def store_skill(skill):
 
     # Return this (now definitely unique) tag.
     return skill_tag
+
+
+def reset():
+    """
+    Reset the storage.
+
+    This is used when parsing multiple locales.
+
+    """
+    global db, skills
+    db = {}
+    skills = {}
