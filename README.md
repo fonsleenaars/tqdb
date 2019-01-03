@@ -50,8 +50,7 @@ Python 3.6 or higher and Pipenv are required to run this project. To get started
 2. Choose a language you want to extract, and create the folder for it in the `resources` directory.
 For example, english would be: `data/resources/en`.
 The available locales are:
-    - `ch` - Simplified Chinese
-    - `cz` - Czech
+    - `cs` - Czech
     - `de` - German
     - `en` - English
     - `es` - Spanish
@@ -62,6 +61,7 @@ The available locales are:
     - `pl` - Polish
     - `ru` - Russian
     - `uk` - Ukrainian
+    - `zh` - Simplified Chinese
 3. Open up a prompt, change directory to your TQ install.
 4. Run the following command:
 `ArchiveTool.exe Text/Text_EN.arc -extract C:/tqdb/data/resources/en`
