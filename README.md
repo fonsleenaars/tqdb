@@ -7,7 +7,7 @@ Although the base game Titan Quest was released in 2006 and the expansion Immort
 That, and a desire to create a smoother equipment database running on some more modern technologies, prompted me to start breaking down the ARZ and ARC files that make up the in-game content for Titan Quest.
 
 The result is two files containing all in-game information:
-  - A single JSON file containing the data (equipment, sets, skills, boss loot, etc.)
+  - A single JSON file (per locale) containing the data (equipment, sets, skills, boss loot, etc.)
   - A single sprite image along with a CSS sprite sheet containing all the graphics for the equipment available in the JSON file.
 
 ## Automated Setup
