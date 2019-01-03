@@ -17,8 +17,8 @@ logging.basicConfig(
 
 # Supported languages
 LANGUAGES = [
-    'ch', 'cz', 'de', 'en', 'es', 'fr',
-    'it', 'ja', 'ko', 'pl', 'ru', 'uk',
+    'cs', 'de', 'en', 'es', 'fr', 'it',
+    'ja', 'ko', 'pl', 'ru', 'uk', 'zh'
 ]
 
 
@@ -53,17 +53,30 @@ def tqdb():
 
     """
     # Parse command line parameters
-    argparser = argparse.ArgumentParser(description='TQ Database parser')
+    argparser = argparse.ArgumentParser(
+        description='TQ Database parser',
+        formatter_class=argparse.RawTextHelpFormatter)
     argparser.add_argument(
         '-l',
         '--locale',
         action='store',
         default='en',
         type=lambda s: s.lower(),
-        choices=['ch', 'cz', 'de', 'en', 'es', 'fr', 'it', 'ja', 'ko', 'pl',
-                 'ru', 'uk'],
-        help=('Specify the two letter locale you want to parse (default: '
-              '%(default))'))
+        choices=['cs', 'de', 'en', 'es', 'fr', 'it', 'ja', 'ko', 'pl',
+                 'ru', 'uk', 'zh'],
+        help=('Specify the two letter locale you want to parse (default: en)\n'
+              'cs - Czech\n'
+              'de - German\n'
+              'en - English\n'
+              'es - Spanish\n'
+              'fr - French\n'
+              'it - Italian\n'
+              'ja - Japanese\n'
+              'ko - Korean\n'
+              'pl - Polish\n'
+              'ru - Russian\n'
+              'uk - Ukrainian\n'
+              'zh - Chinese\n'))
     argparser.add_argument(
         '-a',
         '--all-languages',

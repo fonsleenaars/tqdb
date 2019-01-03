@@ -15,8 +15,8 @@ LOOKUP_KEY = (r'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall'
 # Extract commands to run:
 COMMANDS = [
     ['Toolset/Templates.arc', 'data/database'],
-    ['Text/Text_CH.arc', 'data/resources/ch'],
-    ['Text/Text_CZ.arc', 'data/resources/cz'],
+    ['Text/Text_CH.arc', 'data/resources/zh'],
+    ['Text/Text_CZ.arc', 'data/resources/cs'],
     ['Text/Text_DE.arc', 'data/resources/de'],
     ['Text/Text_EN.arc', 'data/resources/en'],
     ['Text/Text_ES.arc', 'data/resources/es'],
@@ -39,8 +39,7 @@ COMMANDS = [
 DIRECTORIES = [
     'data/database',
     'data/quests',
-    'data/resources/ch',
-    'data/resources/cz',
+    'data/resources/cs',
     'data/resources/de',
     'data/resources/en',
     'data/resources/es',
@@ -51,6 +50,7 @@ DIRECTORIES = [
     'data/resources/pl',
     'data/resources/ru',
     'data/resources/uk',
+    'data/resources/zh',
     'data/textures/XPack2/Items',
     'data/textures/XPack/Items',
     'data/textures/Items',
