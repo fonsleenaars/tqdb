@@ -23,6 +23,12 @@ DIFFICULTIES = {
     'l': 'tagRDifficultyTitle03',
 }
 
+ARTIFACT_CLASSIFICATIONS = {
+    'Lesser': 'xtagArtifactClass01',
+    'Greater': 'xtagArtifactClass02',
+    'Divine': 'xtagArtifactClass03',
+}
+
 
 class ItemArtifactParser(TQDBParser):
     """
@@ -43,11 +49,16 @@ class ItemArtifactParser(TQDBParser):
         if file_name[0] not in DIFFICULTIES:
             raise StopIteration
 
+        # Artifact classification value (always Lesser, Greater or Divine)
+        ac_value = dbr.get('artifactClassification', None)
+        # Translation tag for this classification
+        ac_tag = ARTIFACT_CLASSIFICATIONS[ac_value]
+
         result.update({
             # Bitmap has a different key name than items here.
             'bitmap': dbr.get('artifactBitmap', None),
-            # Classification is either Lesser, Greater or Divine
-            'classification': dbr.get('artifactClassification', None),
+            # Classification is either Lesser, Greater or Divine (translated)
+            'classification': texts.get(ac_tag),
             # Difficulty it starts dropping is based on the file name
             'dropsIn': texts.get(DIFFICULTIES[file_name[0]]).strip(),
             # For artifacts the tag is in the Actor.tpl variable 'description'
