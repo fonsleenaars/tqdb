@@ -260,8 +260,8 @@ class LootItemTable_DynWeightParser(TQDBParser):
         if 'level' in result['references']:
             # This camelCased variable is required for the level equations.
             # Grab the level from the references which has been passed:
-            averagePlayerLevel = result['references']['level'] # noqa
-            parentLevel = result['references']['level'] # noqa
+            averagePlayerLevel = result['references']['level']  # noqa
+            parentLevel = result['references']['level']  # noqa
 
         # Calculate the minimum and maximum levels:
         try:
