@@ -34,6 +34,9 @@ class Texts:
     INLINE = r'(.*)\/\/(.*)'
     INLINE_REPLACE = r'\1'
 
+    # Regex to find declensions:
+    DECLENSIONS = r'\[[a-z]*\]'
+
     # These resources need to be copied from existing ones, under a new name:
     COPY_RESOURCES = [
         # The misspelling of charcteritemglobalreduction is "correct", that's
@@ -351,7 +354,11 @@ class Texts:
         If no friendly name was found, return the string itself.
 
         """
-        return self.texts.get(string.lower(), string)
+        # Grab the text value, falling back on the key string:
+        text_value = self.texts.get(string.lower(), string)
+
+        # Replace any declension occurences ([fs], [ms], [mp], ...):
+        return ', '.join(filter(None, re.split(self.DECLENSIONS, text_value)))
 
     def parse_text_resource(self, text_file):
         """
