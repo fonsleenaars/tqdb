@@ -357,8 +357,15 @@ class Texts:
         # Grab the text value, falling back on the key string:
         text_value = self.texts.get(string.lower(), string)
 
+        # Split any declensions (remove empty start):
+        declensions = filter(None, re.split(self.DECLENSIONS, text_value))
+
+        # Remove duplicates
+        declensions = list(set(declensions))
+
+        # Return comma joined string:
         # Replace any declension occurences ([fs], [ms], [mp], ...):
-        return ', '.join(filter(None, re.split(self.DECLENSIONS, text_value)))
+        return ', '.join(declensions)
 
     def parse_text_resource(self, text_file):
         """
