@@ -44,13 +44,17 @@ def read(dbr):
     except FileNotFoundError:
         logging.debug(f'No file found for {dbr}')
         return {}
+    except PermissionError:
+        logging.debug(f'Tried opening a directory {dbr}')
+        return {}
 
     result = {}
 
-    # All lines (delimited by ,\n) are (key, value) pairs:
-    properties = dict(
-        line.split(',') for line in
-        [line.rstrip(',\n') for line in dbr_file])
+    # Put all the DBR lines (that always end with ,\n) in a list
+    lines = [line.rstrip(',\n') for line in dbr_file]
+
+    # Only add properties that have the correct format per line of: key,value
+    properties = dict(line.split(',') for line in lines if ',' in line)
 
     # The 'templateName' property isn't in any Template, so add manually:
     if 'templateName' in properties:

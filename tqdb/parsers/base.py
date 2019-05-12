@@ -325,7 +325,15 @@ class ItemSkillAugmentParser(TQDBParser):
             if name not in dbr or level not in dbr:
                 continue
 
-            skill = DBRParser.parse(dbr[name])
+            if 'skilltree' in str(dbr[name]):
+                # The atlantis expansion references skilltree instead of
+                # skillmastery, so rebuild the path:
+                mastery_file = str(dbr[name]).replace('skilltree', 'mastery')
+            else:
+                mastery_file = dbr[name]
+
+            # Parse the skill:
+            skill = DBRParser.parse(mastery_file)
             # Store the skill, which will ensure a unique tag:
             skill_tag = storage.store_skill(skill)
             level = dbr[level]

@@ -224,7 +224,7 @@ def parse_quests():
         r'(?P<file>'
         'records'
         r'[\\||\/]'
-        r'(xpack[2]?[\\||\/])?'
+        r'(xpack[2|3]?[\\||\/])?'
         'quests'
         r'[\\||\/]'
         'rewards'

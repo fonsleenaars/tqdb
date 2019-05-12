@@ -30,9 +30,11 @@ COMMANDS = [
     ['Resources/Quests.arc', 'data/quests'],
     ['Resources/XPack/Quests.arc', 'data/quests'],
     ['Resources/XPack2/Quests.arc', 'data/quests'],
+    ['Resources/XPack3/Quests.arc', 'data/quests'],
     ['Resources/Items.arc', 'data/textures/Items'],
     ['Resources/XPack/Items.arc', 'data/textures/XPack/Items'],
     ['Resources/XPack2/Items.arc', 'data/textures/XPack2/Items'],
+    ['Resources/XPack3/Items.arc', 'data/textures/XPack3/Items'],
 ]
 
 # Required directories for this parser:

@@ -391,8 +391,17 @@ class ItemSetParser(TQDBParser):
             # Parse the set member:
             set_member = DBRParser.parse(set_member_path)
 
+            # Some sets are templates that don't have actual members
+            # like (xpack3/items/set/set(00.dbr))
+            if 'tag' not in set_member:
+                continue
+
             # Add the tag to the items list:
             result['items'].append(set_member['tag'])
+
+        # Skip any sets that have no members
+        if len(result['items']) == 0:
+            raise StopIteration
 
         # The number of set bonuses is equal to the number of set items minus 1
         bonus_number = len(result['items']) - 1
@@ -447,6 +456,10 @@ class OneShotScrollParser(TQDBParser):
         Parse the scroll.
 
         """
+        # The new Potion XP items are also considered "scrolls":
+        if 'potion' in str(dbr_file):
+            return result
+
         # Use the file name to determine the difficulty:
         file_name = os.path.basename(dbr_file).split('_')[0][1:]
         # Strip all but digits from the string, then cast to int:

@@ -9,14 +9,14 @@ DB = Path('data/database/')
 RES = Path('data/resources/')
 
 AFFIXES = [
-    'records/item/lootmagicalaffixes/*ix/default/*.dbr',
-    'records/xpack*/item/lootmagicalaffixes/*ix/default/*.dbr',
-    'records/xpack*/item/lootmagicalaffixes/*ix/*.dbr',
+    'records/item*/lootmagicalaffixes/*ix/default/*.dbr',
+    'records/xpack*/item*/lootmagicalaffixes/*ix/default/*.dbr',
+    'records/xpack*/item*/lootmagicalaffixes/*ix/*.dbr',
 ]
 
 AFFIX_TABLES = [
-    'records/item/lootmagicalaffixes/*ix/tables*/*.dbr',
-    'records/xpack*/item/lootmagicalaffixes/*ix/tables*/*.dbr',
+    'records/item*/lootmagicalaffixes/*ix/tables*/*.dbr',
+    'records/xpack*/item*/lootmagicalaffixes/*ix/tables*/*.dbr',
 ]
 
 CHESTS = {
@@ -312,21 +312,25 @@ CREATURES = [
 ]
 
 EQUIPMENT = [
-    'records/xpack*/item/equipment*/**/*.dbr',
-    'records/xpack/item/le_new/*.dbr',
-    'records/item/equipment*/**/*.dbr',
-    'records/item/relics/*.dbr',
-    'records/item/animalrelics/*.dbr',
-    'records/xpack*/item/relics/*.dbr',
-    'records/xpack*/item/charms/*.dbr',
-    'records/xpack*/item/scrolls/*.dbr',
-    'records/xpack*/item/artifacts/*.dbr',
-    'records/xpack*/item/artifacts/arcaneformulae/*.dbr',
+    'records/xpack*/item*/equipment*/**/*.dbr',
+    'records/xpack/item*/le_new/*.dbr',
+    'records/item*/equipment*/**/*.dbr',
+    'records/item*/relics/*.dbr',
+    'records/item*/animalrelics/*.dbr',
+    'records/xpack*/item*/relics/*.dbr',
+    'records/xpack*/item*/charms/*.dbr',
+    'records/xpack*/item*/scrolls/*.dbr',
+    'records/xpack*/item*/artifacts/*.dbr',
+    'records/xpack*/item*/artifacts/arcaneformulae/*.dbr',
 ]
 
 QUESTS = 'data\\quests\\*.qst'
 
 SETS = [
     'records/item/sets/*.dbr',
-    'records/xpack*/item/sets/*.dbr',
+    # Note:
+    # Immortal Throne:  xpack/item/sets
+    # Ragnarok:         xpack2/item/sets
+    # Atlantis:         xpack3/items/set
+    'records/xpack*/item*/set*/*.dbr',
 ]
