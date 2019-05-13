@@ -131,6 +131,7 @@ class Texts:
         'x2monsters.txt',
         'x3mainquest.txt',
         'x3mainquest_nonvoiced.txt',
+        'x3misctags_nonvoiced.txt',
         'x3nametags_nonvoiced.txt',
         'npc.txt',
         'xnpc.txt',
