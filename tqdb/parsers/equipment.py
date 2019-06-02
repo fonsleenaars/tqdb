@@ -58,7 +58,7 @@ class ItemArtifactParser(TQDBParser):
             # Bitmap has a different key name than items here.
             'bitmap': dbr.get('artifactBitmap', None),
             # Classification is either Lesser, Greater or Divine (translated)
-            'classification': texts.get(ac_tag),
+            'classification': texts.get(ac_tag).strip(),
             # Difficulty it starts dropping is based on the file name
             'dropsIn': texts.get(DIFFICULTIES[file_name[0]]).strip(),
             # For artifacts the tag is in the Actor.tpl variable 'description'
