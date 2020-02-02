@@ -88,5 +88,6 @@ def tqdb_prepare():
             str(Path(c[1]).absolute()),
         ])
 
+
 if __name__ == '__main__':
     tqdb_prepare()
