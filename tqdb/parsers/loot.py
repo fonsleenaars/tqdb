@@ -8,7 +8,7 @@ import os
 import re
 
 from tqdb import dbr as DBRParser
-from tqdb.parsers.main import TQDBParser
+from tqdb.parsers.main import TQDBParser, InvalidItemError
 from tqdb.utils.text import texts
 
 
@@ -119,11 +119,15 @@ class LootMasterTableParser(TQDBParser):
                 continue
 
             # Parse the loot file
-            loot = DBRParser.parse(
-                loot_file,
-                # Always pass along any references that were set:
-                result['references'],
-            )
+            try:
+                loot = DBRParser.parse(
+                    loot_file,
+                    # Always pass along any references that were set:
+                    result['references'],
+                )
+            except InvalidItemError as e:
+                logging.debug(f"Invalid lootName{i} in {loot_file} referenced by {dbr_file}.")
+                continue
 
             # e.g. xpack2\quests\rewards\loottables\generic_rareweapon_n.dbr
             # The entry lootName15 has two entries separated by ';'
@@ -160,7 +164,7 @@ class FixedItemContainerParser(TQDBParser):
     def parse(self, dbr, dbr_file, result):
         if 'tables' not in dbr:
             logging.debug(f'No table found in {dbr_file}')
-            raise StopIteration
+            raise InvalidItemError(f"No table found in {dbr_file}")
 
         # Parse the references 'tables' file and set the result:
         loot = DBRParser.parse(
@@ -233,7 +237,7 @@ class FixedItemLootParser(TQDBParser):
                     (k, v * loot_chance * chance * spawn_number)
                     for k, v in loot['loot_table'].items()
                 )
-            except KeyError:
+            except (KeyError, InvalidItemError):
                 # Skip files that weren't found/parsed (no loot_table)
                 continue
 
@@ -282,7 +286,11 @@ class LootItemTable_DynWeightParser(TQDBParser):
 
         for index, loot_file in enumerate(dbr.get('itemNames', [])):
             # Grab the item and its chance
-            item = DBRParser.parse(loot_file)
+            try:
+                item = DBRParser.parse(loot_file)
+            except InvalidItemError as e:
+                logging.debug(f'Invalid loot file {loot_file} in {dbr_file}. {e}')
+                continue
 
             if 'tag' not in item:
                 logging.debug(f'No tag for {loot_file} in {dbr_file}')
@@ -345,7 +353,7 @@ class LootItemTable_FixedWeightParser(TQDBParser):
                 item = DBRParser.parse(dbr[f'lootName{i}'])
                 # Store the chance of this item by its tag:
                 items[item['tag']] = float('{0:.5f}'.format(weight / summed))
-            except KeyError:
+            except (KeyError, InvalidItemError):
                 # Skip items that have no tag:
                 continue
 

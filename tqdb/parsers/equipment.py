@@ -10,7 +10,7 @@ import numexpr
 
 from tqdb import dbr as DBRParser
 from tqdb.constants.resources import DB
-from tqdb.parsers.main import TQDBParser
+from tqdb.parsers.main import TQDBParser, InvalidItemError
 from tqdb.utils.text import texts
 
 # Shared constant to determine what difficulty an item drops in:
@@ -47,7 +47,7 @@ class ItemArtifactParser(TQDBParser):
 
         # Skip artifacts with unknown difficulties in which they drop:
         if file_name[0] not in DIFFICULTIES:
-            raise StopIteration
+            raise InvalidItemError(f"File {file_name} has unknown difficulty.")
 
         # Artifact classification value (always Lesser, Greater or Divine)
         ac_value = dbr.get('artifactClassification', None)
@@ -85,7 +85,7 @@ class ItemArtifactFormulaParser(TQDBParser):
     def parse(self, dbr, dbr_file, result):
         # Skip formula without artifacts
         if self.ARTIFACT not in dbr:
-            raise StopIteration
+            raise InvalidItemError(f"Artifact {dbr_file} has no {self.ARTIFACT}.")
 
         artifact = DBRParser.parse(dbr[self.ARTIFACT])
 
@@ -106,7 +106,12 @@ class ItemArtifactFormulaParser(TQDBParser):
             result[reagent_key] = reagent['tag']
 
         # Add the potential completion bonuses
-        bonuses = DBRParser.parse(dbr['artifactBonusTableName'])
+        bonuses = {}
+        try:
+            bonuses = DBRParser.parse(dbr['artifactBonusTableName'])
+        except InvalidItemError as e:
+            logging.debug(f"Could not parse artifact completion bonus information for {result['name']} in {dbr_file}. {e}")
+
         result['bonus'] = bonuses.get('table', [])
 
         # Last but not least, pop the 'properties' from this result, since
@@ -171,7 +176,7 @@ class ItemBaseParser(TQDBParser):
 
         if (itemClass not in self.ALLOWED and
                 classification not in self.CLASSIFICATIONS.keys()):
-            raise StopIteration
+            raise InvalidItemError(f"Item {dbr_file} is excluded due to Class {itemClass} with itemClassification {classification}.")
         elif (classification in self.CLASSIFICATIONS.keys() and
                 'classification' not in result):
             # Only add the classification if it doesn't exist yet:
@@ -182,7 +187,9 @@ class ItemBaseParser(TQDBParser):
             if classification == 'Rare':
                 file_name = os.path.basename(dbr_file).split('_')
                 if len(file_name) < 2 or file_name[1] not in DIFFICULTIES:
-                    raise StopIteration
+                    raise InvalidItemError(f"File name {file_name} does not "
+                                        f"specify difficulty, or difficulty "
+                                        f"not recognized.")
 
                 # Set the difficulty for which this MI drops:
                 result['dropsIn'] = texts.get(
@@ -223,7 +230,7 @@ class ItemEquipmentParser(TQDBParser):
         # If no tag exists, skip parsing:
         tag = dbr.get('itemNameTag', None)
         if not tag:
-            raise StopIteration
+            raise InvalidItemError(f"Item {dbr_file} has no itemNameTag.")
 
         # Set the known item properties:
         result.update({
@@ -327,7 +334,12 @@ class ItemRelicParser(TQDBParser):
         })
 
         # The possible completion bonuses are in bonusTableName:
-        bonuses = DBRParser.parse(dbr['bonusTableName'])
+        bonuses = {}
+        try:
+            bonuses = DBRParser.parse(dbr['bonusTableName'])
+        except InvalidItemError as e:
+            logging.debug(f"Could not parse relic completion bonus information for {result['name']} in {dbr_file}. {e}")
+
         result['bonus'] = bonuses.get('table', [])
 
         # Find how many pieces this relic has
@@ -377,7 +389,7 @@ class ItemSetParser(TQDBParser):
 
         if not tag or texts.get(tag) == tag:
             logging.warning(f'No tag or name for set found in {dbr_file}.')
-            raise StopIteration
+            raise InvalidItemError(f'No tag or name for set found in {dbr_file}.')
 
         result.update({
             # Prepare the list of set items
@@ -389,7 +401,11 @@ class ItemSetParser(TQDBParser):
         # Add the set members:
         for set_member_path in dbr['setMembers']:
             # Parse the set member:
-            set_member = DBRParser.parse(set_member_path)
+            try:
+                set_member = DBRParser.parse(set_member_path)
+            except InvalidItemError as e:
+                logging.debug(f"Could not parse set member {set_member_path} in {result['name']}. {e}")
+                continue
 
             # Some sets are templates that don't have actual members
             # like (xpack3/items/set/set(00.dbr))
@@ -401,7 +417,7 @@ class ItemSetParser(TQDBParser):
 
         # Skip any sets that have no members
         if len(result['items']) == 0:
-            raise StopIteration
+            raise InvalidItemError(f"ItemSet {dbr_file} has no members.")
 
         # The number of set bonuses is equal to the number of set items minus 1
         bonus_number = len(result['items']) - 1
@@ -484,7 +500,11 @@ class OneShotScrollParser(TQDBParser):
             result['bitmap'] = dbr['bitmap']
 
         # Grab the skill file:
-        skill = DBRParser.parse(dbr['skillName'])
+        skill = {}
+        try:
+            skill = DBRParser.parse(dbr['skillName'])
+        except InvalidItemError as e:
+            logging.debug(f"Could not parse skill {dbr['skillName']} from scroll {result['name']}. {e}")
 
         # Add the first tier of properties if there are any:
         if 'properties' in skill and skill['properties']:

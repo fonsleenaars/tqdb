@@ -2,9 +2,11 @@
 Base templates that are often included by other templates.
 
 """
+import logging
+
 from tqdb import dbr as DBRParser
 from tqdb import storage
-from tqdb.parsers.main import TQDBParser
+from tqdb.parsers.main import TQDBParser, InvalidItemError
 from tqdb.utils.text import texts
 
 # Some shared core constants:
@@ -359,12 +361,16 @@ class ItemSkillAugmentParser(TQDBParser):
         Parse a granted skill.
 
         """
-        # Skip files without both granted skill name and level:
+        # If it doesn't have a granted skill name and level, it grants no skills:
         if self.SKILL_NAME not in dbr or self.SKILL_LEVEL not in dbr:
             return
 
         level = dbr[self.SKILL_LEVEL]
-        skill = DBRParser.parse(dbr[self.SKILL_NAME])
+        try:
+            skill = DBRParser.parse(dbr[self.SKILL_NAME])
+        except InvalidItemError as e:
+            logging.debug(f"Skipping granted skill record in {dbr[self.SKILL_NAME]}. {e}")
+            return
 
         if 'name' not in skill:
             return

@@ -8,10 +8,14 @@ import os
 import re
 import string
 import time
+from collections import defaultdict
+
+from pathlib import Path
 
 from tqdb import storage
 from tqdb.constants import resources
 from tqdb.dbr import parse, read
+from tqdb.parsers.main import InvalidItemError
 from tqdb.utils import images
 from tqdb.utils.text import texts
 from tqdb.utils.core import get_affix_table_type, is_duplicate_affix
@@ -27,7 +31,7 @@ def parse_affixes():
     indexed and parsed in this function.
 
     """
-    timer = time.clock()
+    start_time = time.time()
 
     files = []
     for resource in resources.AFFIX_TABLES:
@@ -100,7 +104,7 @@ def parse_affixes():
             affixes[affixType][affixTag] = affix
 
     # Log and reset the timer:
-    logging.info(f'Parsed affixes in {time.clock() - timer} seconds.')
+    logging.info(f'Parsed affixes in {time.time() - start_time:.2f} seconds.')
 
     return affixes
 
@@ -113,32 +117,49 @@ def parse_equipment():
     categories are defined by the Class property of each piece of equipment
     which is mapped to the 'category' key in the parsed result.
 
+    :return: dictionary keyed by equipment category string, value is a list of
+        dicts, one for each item in that category. Common items are omitted.
+
     """
-    timer = time.clock()
+    start_time = time.time()
 
     files = []
     for resource in resources.EQUIPMENT:
-        equipment_files = resources.DB / resource
+        equipment_files_globpath = resources.DB / resource
 
-        # Exclude all files in 'old' and 'default'
-        files.extend([
-            equipment_file
-            for equipment_file
-            in glob.glob(str(equipment_files), recursive=True)
+        for equipment_filename in glob.glob(str(equipment_files_globpath), recursive=True):
+            equipment_path = Path(equipment_filename)
+            posix_path = equipment_path.as_posix()
             if not (
-                '\\old' in equipment_file or
-                '\\default' in equipment_file or
+                # Exclude all files in 'old' and 'default'
+                'old' in equipment_path.parts or
+                'default' in equipment_path.parts or
                 # Rhodian and Electrum sling don't drop:
-                '\\1hranged\\u_e_02.dbr' in equipment_file or
-                '\\1hranged\\u_n_05.dbr' in equipment_file
-            )
-        ])
+                posix_path.endswith('/1hranged/u_e_02.dbr') or
+                posix_path.endswith('/1hranged/u_n_05.dbr')
+            ):
+                files.append(equipment_filename)
 
-    items = {}
+    logging.info(f"Found {len(files)} equipment files to process.")
+
+    # TODO: add multithreading!
+
+    items = defaultdict(list)
     for dbr in files:
-        parsed = parse(dbr)
         try:
-            # Organize the equipment based on the category
+            parsed = parse(dbr)
+        except InvalidItemError as e:
+            exception_messages = exception_messages_with_causes(e)
+
+            logging.debug(f"Ignoring item in {dbr}. {exception_messages}")
+            continue
+
+        try:
+            # Skip items without a category
+            if 'category' not in parsed:
+                continue
+
+            # Organize the equipment based on its category
             category = parsed.pop('category')
 
             # Skip items without rarities
@@ -147,8 +168,10 @@ def parse_equipment():
 
             # Save the bitmap and remove the bitmap key
             images.save_bitmap(parsed, category, 'output/graphics/')
-        except KeyError:
+        except KeyError as e:
             # Skip equipment that couldn't be parsed:
+            logging.warning(f"DBR {dbr} parse result unacceptable. Parse result: {parsed}. Error: {e}")
+            # raise e
             continue
 
         # Pop off the properties key off any item without properties:
@@ -156,15 +179,21 @@ def parse_equipment():
             parsed.pop('properties')
 
         # Now save the parsed item in the category:
-        if category and category in items:
+        if category:
             items[category].append(parsed)
-        elif category:
-            items[category] = [parsed]
 
     # Log the timer:
-    logging.info(f'Parsed equipment in {time.clock() - timer} seconds.')
+    logging.info(f'Parsed equipment in {time.time() - start_time:.2f} seconds.')
 
     return items
+
+
+def exception_messages_with_causes(e):
+    exception_messages = [str(e)]
+    while e.__cause__:
+        e = e.__cause__
+        exception_messages.append(str(e))
+    return exception_messages
 
 
 def parse_creatures():
@@ -178,7 +207,7 @@ def parse_creatures():
     sorted.
 
     """
-    timer = time.clock()
+    start_time = time.time()
 
     files = []
     for resource in resources.CREATURES:
@@ -192,6 +221,7 @@ def parse_creatures():
         try:
             # Don't include common monsters
             # XXX - Should 'Champion' be added?
+            # Should this be moved to MonsterParser to save work? The equipment parser does that.
             if parsed['classification'] not in ['Quest', 'Hero', 'Boss']:
                 continue
 
@@ -202,7 +232,7 @@ def parse_creatures():
             continue
 
     # Log the timer:
-    logging.info(f'Parsed creatures in {time.clock() - timer} seconds.')
+    logging.info(f'Parsed creatures in {time.time() - start_time:.2f} seconds.')
 
     return creatures
 
@@ -216,19 +246,19 @@ def parse_quests():
     extracted by only retrieving rewards prefixed with item[] tags.
 
     """
-    timer = time.clock()
+    start_time = time.time()
 
     # Regex to find item rewards
     REWARD = re.compile(
         r'item\[(?P<index>[0-9])\](.{0,1})'
         r'(?P<file>'
         'records'
-        r'[\\||\/]'
-        r'(xpack[2|3]?[\\||\/])?'
+        r'[\\|/]'
+        r'(xpack[2|3]?[\\|/])?'
         'quests'
-        r'[\\||\/]'
+        r'[\\|/]'
         'rewards'
-        r'[\\||\/]'
+        r'[\\|/]'
         r'([^.]+)\.dbr'
         r')'
     )
@@ -279,7 +309,12 @@ def parse_quests():
                 continue
 
             # Prepend the path with the database path:
-            rewards = parse(resources.DB / reward_file)
+            try:
+                rewards = parse(resources.DB / reward_file)
+            except InvalidItemError as e:
+                messages = exception_messages_with_causes(e)
+                logging.debug(f"Skipping quest reward {reward_file} of {qst}. {messages}")
+                continue
 
             # Skip quests where the rewards aren't items:
             if 'loot_table' not in rewards:
@@ -305,7 +340,7 @@ def parse_quests():
                     float('{0:.4f}'.format(chance * 100)))
 
     # Log the timer:
-    logging.info(f'Parsed quest rewards in {time.clock() - timer} seconds.')
+    logging.info(f'Parsed quest rewards in {time.time() - start_time:.2f} seconds.')
 
     return quests
 
@@ -318,7 +353,7 @@ def parse_sets():
     bonuses you receive for wearing multiple set pieces at once.
 
     """
-    timer = time.clock()
+    start_time = time.time()
 
     files = []
     for resource in resources.SETS:
@@ -327,7 +362,12 @@ def parse_sets():
 
     sets = {}
     for dbr in files:
-        parsed = parse(dbr)
+        try:
+            parsed = parse(dbr)
+        except InvalidItemError as e:
+            exception_messages = exception_messages_with_causes(e)
+            logging.debug(f"Ignoring item in {dbr}. {exception_messages}")
+            continue
 
         try:
             # Add the set by its tag to the dictionary of sets:
@@ -337,7 +377,7 @@ def parse_sets():
             continue
 
     # Log the timer:
-    logging.info(f'Parsed sets in {time.clock() - timer} seconds.')
+    logging.info(f'Parsed sets in {time.time() - start_time:.2f} seconds.')
 
     return sets
 

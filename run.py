@@ -2,6 +2,8 @@ import argparse
 import json
 import logging
 
+import time
+
 from tqdb import __version__ as tqdb_version
 from tqdb import main
 from tqdb import storage
@@ -12,8 +14,8 @@ from tqdb.utils.text import texts
 logging.getLogger('PIL').setLevel(logging.WARNING)
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s %(message)s',
-    datefmt='%H:%M')
+    format='%(asctime)s %(levelname)s %(message)s',
+    datefmt='%H:%M:%S')
 
 # Supported languages
 LANGUAGES = [
@@ -87,12 +89,17 @@ def tqdb():
     # Grab the arguments:
     args = argparser.parse_args()
 
+    def create_sprite_sheet():
+        start_time = time.time()
+        images.SpriteCreator('output/graphics/', 'output')
+        logging.info(f"Sprite sheet took {time.time() - start_time:.2f}s")
+
     if not args.all_languages:
         # Parse the specified language:
         tqdb_language(args.locale)
 
-        # Create the sprite for a single language
-        images.SpriteCreator('output/graphics/', 'output')
+        # Create the sprite sheet for a single language
+        create_sprite_sheet()
 
         # Stop here
         return
@@ -102,8 +109,8 @@ def tqdb():
         tqdb_language(language)
         storage.reset()
 
-    # Create the sprite after all languages have been parsed:
-    images.SpriteCreator('output/graphics/', 'output')
+    # Create the sprite sheet after all languages have been parsed:
+    create_sprite_sheet()
 
 if __name__ == '__main__':
     tqdb()
