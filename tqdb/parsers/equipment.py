@@ -110,7 +110,9 @@ class ItemArtifactFormulaParser(TQDBParser):
         try:
             bonuses = DBRParser.parse(dbr['artifactBonusTableName'])
         except InvalidItemError as e:
-            logging.debug(f"Could not parse artifact completion bonus information for {result['name']} in {dbr_file}. {e}")
+            logging.debug("Could not parse artifact completion bonus "
+                          f"information for {result['name']} in {dbr_file}. "
+                          f"{e}")
 
         result['bonus'] = bonuses.get('table', [])
 
@@ -176,7 +178,9 @@ class ItemBaseParser(TQDBParser):
 
         if (itemClass not in self.ALLOWED and
                 classification not in self.CLASSIFICATIONS.keys()):
-            raise InvalidItemError(f"Item {dbr_file} is excluded due to Class {itemClass} with itemClassification {classification}.")
+            raise InvalidItemError(f"Item {dbr_file} is excluded due to Class "
+                                   f"{itemClass} with itemClassification "
+                                   f"{classification}.")
         elif (classification in self.CLASSIFICATIONS.keys() and
                 'classification' not in result):
             # Only add the classification if it doesn't exist yet:
@@ -188,8 +192,8 @@ class ItemBaseParser(TQDBParser):
                 file_name = os.path.basename(dbr_file).split('_')
                 if len(file_name) < 2 or file_name[1] not in DIFFICULTIES:
                     raise InvalidItemError(f"File name {file_name} does not "
-                                        f"specify difficulty, or difficulty "
-                                        f"not recognized.")
+                                           "specify difficulty, or difficulty "
+                                           "not recognized.")
 
                 # Set the difficulty for which this MI drops:
                 result['dropsIn'] = texts.get(
@@ -338,7 +342,8 @@ class ItemRelicParser(TQDBParser):
         try:
             bonuses = DBRParser.parse(dbr['bonusTableName'])
         except InvalidItemError as e:
-            logging.debug(f"Could not parse relic completion bonus information for {result['name']} in {dbr_file}. {e}")
+            logging.debug("Could not parse relic completion bonus information "
+                          f"for {result['name']} in {dbr_file}. {e}")
 
         result['bonus'] = bonuses.get('table', [])
 
@@ -404,7 +409,8 @@ class ItemSetParser(TQDBParser):
             try:
                 set_member = DBRParser.parse(set_member_path)
             except InvalidItemError as e:
-                logging.debug(f"Could not parse set member {set_member_path} in {result['name']}. {e}")
+                logging.debug(f"Could not parse set member {set_member_path} "
+                              f"in {result['name']}. {e}")
                 continue
 
             # Some sets are templates that don't have actual members
@@ -504,7 +510,8 @@ class OneShotScrollParser(TQDBParser):
         try:
             skill = DBRParser.parse(dbr['skillName'])
         except InvalidItemError as e:
-            logging.debug(f"Could not parse skill {dbr['skillName']} from scroll {result['name']}. {e}")
+            logging.debug(f"Could not parse skill {dbr['skillName']} from "
+                          f"scroll {result['name']}. {e}")
 
         # Add the first tier of properties if there are any:
         if 'properties' in skill and skill['properties']:
@@ -556,7 +563,7 @@ class WeaponParser(TQDBParser):
         dbr_class = dbr['Class']
 
         # Skip shields:
-        if (dbr_class.startswith('Weapon') and 'Shield' in dbr_class):
+        if dbr_class.startswith('Weapon') and 'Shield' in dbr_class:
             return
 
         # Set the attack speed

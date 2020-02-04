@@ -2,6 +2,7 @@
 Utility module to prepare the data for the parser.
 
 """
+import logging
 import subprocess
 import winreg
 
@@ -73,21 +74,24 @@ def tqdb_prepare():
         elif bitness == '64bit':
             other_view_flag = winreg.KEY_WOW64_32KEY
         else:
-            raise RuntimeError("Platform architecture not recognized: " + bitness)
+            raise RuntimeError("Platform architecture not recognized: " +
+                               bitness)
 
         try:
             tqae_key = winreg.OpenKey(
-                winreg.HKEY_LOCAL_MACHINE, LOOKUP_KEY, access = winreg.KEY_READ | other_view_flag)
+                winreg.HKEY_LOCAL_MACHINE, LOOKUP_KEY,
+                access = winreg.KEY_READ | other_view_flag)
         except WindowsError as err:
-            raise RuntimeError('Could not find installation directory for Titan Quest.') from err
+            raise RuntimeError('Could not find installation directory for '
+                               'Titan Quest.') from err
 
     try:
         install = winreg.QueryValueEx(tqae_key, 'InstallLocation')[0]
     except WindowsError as err:
-        print('Could not find installation directory for Titan Quest.', err)
-        return
+        raise RuntimeError('Could not find installation directory for Titan '
+                           'Quest.') from err
 
-    print("Found TQ installation directory: " + install)
+    logging.info("Found TQ installation directory: " + install)
 
     # Create the required directories if necessary
     for d in DIRECTORIES:
