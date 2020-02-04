@@ -11,7 +11,7 @@ the DBR and then parse it according to all properties in that template.
 import logging
 
 from tqdb import storage
-from tqdb.parsers.main import load_parsers
+from tqdb.parsers.main import load_parsers, InvalidItemError
 from tqdb.templates import templates, templates_by_path
 
 
@@ -22,6 +22,10 @@ def get_template(dbr, dbr_file):
     """
     Attempts to retrieve a template for a DBR.
 
+    :param dbr: a dict with key 'templateName' referring to a template file,
+        or with key 'Class' referring to a template with a "Class" variable with
+        that "defaultValue"
+    :param dbr_file: the file the dbr came from, for logging purposes
     """
     if 'templateName' in dbr:
         # The template path is set, retrieve it from the collection:
@@ -37,47 +41,56 @@ def get_template(dbr, dbr_file):
 def read(dbr):
     """
     Read a DBR file and split its contents into key, value properties.
+    May return an empty dict if certain errors occur.
 
     """
     try:
-        dbr_file = open(dbr)
+        with open(dbr) as dbr_file:
+            result = {}
+
+            # DBR lines always end with ',\n' which we remove
+            lines = (line.rstrip(',\n') for line in dbr_file)
+
+            # Only add properties that have the correct format per line
+            # of: key,value
+            properties = dict(tuple(line.split(',', 1)) for line in lines
+                              if ',' in line)
     except FileNotFoundError:
-        logging.debug(f'No file found for {dbr}')
+        logging.exception(f'No file found for {dbr}. ')
         return {}
-    except PermissionError:
-        logging.debug(f'Tried opening a directory {dbr}')
+    except PermissionError as e:
+        logging.exception(f'Could not open {dbr}')
         return {}
 
-    result = {}
-
-    # Put all the DBR lines (that always end with ,\n) in a list
-    lines = [line.rstrip(',\n') for line in dbr_file]
-
-    # Only add properties that have the correct format per line of: key,value
-    properties = dict(line.split(',') for line in lines if ',' in line)
-
-    # The 'templateName' property isn't in any Template, so add manually:
+    # The 'templateName' property isn't in any Template, so add
+    # manually:
     if 'templateName' in properties:
         result['templateName'] = properties['templateName']
 
     # Get the template for this DBR
     template = get_template(properties, dbr)
 
+    def parse_vars_to_tuples(variables_dict):
+        for name, variable in variables_dict.items():
+            if name in properties:
+                parsed_value = variable.parse_value(properties[name])
+                # Omit None, False, zero, and empty collections
+                if parsed_value:
+                    yield name, parsed_value
+
     # Now parse all properties using the Template:
-    result.update(dict(
-        (name, variable.parse_value(properties[name])) for
-        name, variable in template.variables.items()
-        if name in properties and
-        variable.parse_value(properties[name])))
+    result.update(dict(parse_vars_to_tuples(template.variables)))
 
     return result
 
 
-def parse(dbr_file, references={}):
+def parse(dbr_file, references=None):
     """
     Parse a DBR file according to its template.
 
     """
+    if references is None:
+        references = {}
     # Initialize the parsers map if necessary:
     global parsers
     if not parsers:
@@ -124,14 +137,17 @@ def parse(dbr_file, references={}):
     for prioritized_parser in prioritized:
         try:
             prioritized_parser.parse(dbr, dbr_file, result)
-        except StopIteration:
+        except InvalidItemError as e:
             # One of the parsers has determined this file shouldn't be parsed:
-            return {}
+            raise InvalidItemError(f"Parser {prioritized_parser} for template "
+                                   f"key {prioritized_parser.template.key} "
+                                   "tells us this item is invalid and should "
+                                   "be ignored.") from e
 
     # Pop the helper data references again:
     result.pop('references')
 
-    # Set the parsed result in the storage db:
+    # Retain the parsed result in memory, for reuse:
     storage.db[dbr_file] = result
 
     return result

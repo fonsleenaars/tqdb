@@ -11,6 +11,14 @@ from pathlib import Path
 
 from tqdb.templates import templates_by_path
 
+class InvalidItemError(Exception):
+    """
+    Raised by parser when it identifies that the item being parsed is invalid
+    and should be ignored. This may be because it is missing crucial information,
+    or because it's filtered out because it's uninteresting, for example if it
+    is a common item.
+    """
+    pass
 
 class TQDBParser(metaclass=abc.ABCMeta):
     """

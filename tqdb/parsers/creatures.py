@@ -8,7 +8,7 @@ from tqdb import dbr as DBRParser
 from tqdb import storage
 from tqdb.constants.resources import DB, CHESTS
 from tqdb.parsers import base as parsers
-from tqdb.parsers.main import TQDBParser
+from tqdb.parsers.main import TQDBParser, InvalidItemError
 from tqdb.utils.text import texts
 
 
@@ -254,7 +254,12 @@ class MonsterParser(TQDBParser):
                     logging.debug(f'No {loot_key} in {dbr_file}')
                     continue
 
-                loot = DBRParser.parse(loot_file, {'level': dbr['charLevel']})
+                try:
+                    loot = DBRParser.parse(loot_file, {'level': dbr['charLevel']})
+                except InvalidItemError as e:
+                    logging.debug(f"Skipping loot item in {loot_file} because it's invalid. {e}")
+                    continue
+
                 if 'tag' in loot:
                     # Add a single item that was found:
                     self.add_items(
@@ -342,7 +347,11 @@ class MonsterSkillManager(TQDBParser):
                     str(dbr[nameTag]).lower() in self.IGNORE_SKILLS):
                 continue
 
-            skill = DBRParser.parse(dbr[nameTag])
+            try:
+                skill = DBRParser.parse(dbr[nameTag])
+            except InvalidItemError as e:
+                logging.debug(f"Skipping creature skill {nameTag} in {dbr_file} because it's invalid. {e}")
+                continue
             if not skill['properties']:
                 continue
 
