@@ -38,6 +38,8 @@ def parse_affixes():
         table_files = resources.DB / resource
         files.extend(glob.glob(str(table_files), recursive=True))
 
+    logging.info(f"Found {len(files)} affix table files.")
+
     # The affix tables will determine what gear an affix can be applied to.
     affix_tables = {}
     for dbr in files:
@@ -62,6 +64,8 @@ def parse_affixes():
     for resource in resources.AFFIXES:
         affix_files = resources.DB / resource
         files.extend(glob.glob(str(affix_files), recursive=True))
+
+    logging.info(f"Found {len(files)} affix files.")
 
     affixes = {'prefixes': {}, 'suffixes': {}}
     for dbr in files:
@@ -214,14 +218,22 @@ def parse_creatures():
         boss_files = resources.DB / resource
         files.extend(glob.glob(str(boss_files), recursive=True))
 
+    logging.info(f"Found {len(files)} creature files.")
+
     creatures = {}
     for dbr in files:
-        parsed = parse(dbr)
+        try:
+            logging.debug(f"Attempting to parse creature in {dbr}.")
+            parsed = parse(dbr)
+        except InvalidItemError as e:
+            logging.debug(f"Ignoring creature in {dbr}. {e}")
+            continue
 
         try:
             # Don't include common monsters
             # XXX - Should 'Champion' be added?
-            # Should this be moved to MonsterParser to save work? The equipment parser does that.
+            # Should this be moved to MonsterParser to save work? The equipment
+            # parser does that.
             if parsed['classification'] not in ['Quest', 'Hero', 'Boss']:
                 continue
 
@@ -229,6 +241,8 @@ def parse_creatures():
             creatures[parsed['tag']] = parsed
         except KeyError:
             # Skip creatures without tags
+            logging.debug(f"Ignoring creature in {dbr}. No classification "
+                          "present.")
             continue
 
     # Log the timer:
@@ -267,8 +281,10 @@ def parse_quests():
     TITLE = re.compile(r'titletag(?P<tag>[^\s]*)')
 
     files = glob.glob(resources.QUESTS)
-    quests = {}
 
+    logging.info(f"Found {len(files)} quest files.")
+
+    quests = {}
     for qst in files:
         with open(qst, 'rb') as quest:
             # Read the content as printable characters only:
