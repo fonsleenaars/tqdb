@@ -32,10 +32,12 @@ COMMANDS = [
     ['Resources/XPack/Quests.arc', 'data/quests'],
     ['Resources/XPack2/Quests.arc', 'data/quests'],
     ['Resources/XPack3/Quests.arc', 'data/quests'],
+    ['Resources/XPack4/Quests.arc', 'data/quests'],
     ['Resources/Items.arc', 'data/textures/Items'],
     ['Resources/XPack/Items.arc', 'data/textures/XPack/Items'],
     ['Resources/XPack2/Items.arc', 'data/textures/XPack2/Items'],
     ['Resources/XPack3/Items.arc', 'data/textures/XPack3/Items'],
+    ['Resources/XPack4/Item.arc', 'data/textures/XPack4/Item'],
 ]
 
 # Required directories for this parser:
@@ -54,6 +56,8 @@ DIRECTORIES = [
     'data/resources/ru',
     'data/resources/uk',
     'data/resources/zh',
+    'data/textures/xpack4/Item',
+    'data/textures/xpack3/Items',
     'data/textures/XPack2/Items',
     'data/textures/XPack/Items',
     'data/textures/Items',

@@ -6,6 +6,7 @@ import glob
 import logging
 import os
 import subprocess
+import sys
 
 from PIL import Image
 from shutil import rmtree
@@ -195,12 +196,30 @@ def save_bitmap(item, item_type, graphics):
           os.path.isfile(f'{graphics}{tag}.png')):
         return
 
+    filename = str(bitmap)
+    h = open(bitmap,"rb")
+    alls = h.read()
+    h.close()
+    magic = b'TEX'+b'\x02'
+    magicpos = alls.find(magic)
+
+    if magicpos == 0:
+        ba = bytearray(alls)
+        ba[3] = 1
+        ba.pop(8)
+        alls2 = bytes(ba)
+        basename, file_extension = os.path.splitext(bitmap)
+        filename = basename + ".fixed" + file_extension
+        h2 = open(filename,"wb")
+        h2.write(alls2)
+        h2.close()
+
     # Run the texture viewer if a bitmap and tag are set:
     command = ['utils/textureviewer/TextureViewer.exe',
-               # Convert path to string
-               str(bitmap),
-               # Output to graphics folder, file name being the tag.
-               f'{graphics}{tag}.png']
-    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # Convert path to string
+            str(filename),
+            # Output to graphics folder, file name being the tag.
+            f'{graphics}{tag}.png']
+    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     return

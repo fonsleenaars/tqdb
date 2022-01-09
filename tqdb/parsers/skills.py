@@ -153,7 +153,7 @@ class SkillBaseParser(TQDBParser):
                         result)
 
         # Prepare two variables to determine the max number of tiers:
-        skill_cap = dbr.get('skillUltimateLevel', dbr.get('skillMaxLevel'))
+        skill_cap = dbr.get('skillUltimateLevel', dbr.get('skillMaxLevel')) or 99
         props = result['properties']
 
         # The maximum number of properties is now the minimum between the skill

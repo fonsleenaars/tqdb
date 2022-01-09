@@ -158,9 +158,12 @@ class MonsterParser(TQDBParser):
             # repeated in Epic and Legendary, so find the index and subtract
             # 1 from that to get all difficulties that should be removed:
             for i in range(result['level'].count(result['level'][0]) - 1):
-                result['properties'][i] = {}
-                result['abilities'][i] = {}
-                result['level'][i] = None
+                if len(result['properties']) > i:
+                    result['properties'][i] = {}
+                if len(result['abilities']) > i:
+                    result['abilities'][i] = {}
+                if len(result['level']) > i:
+                    result['level'][i] = None
 
     def parse_creature(self, dbr, dbr_file, result):
         """
@@ -256,7 +259,7 @@ class MonsterParser(TQDBParser):
 
                 try:
                     loot = DBRParser.parse(loot_file, {'level': dbr['charLevel']})
-                except InvalidItemError as e:
+                except (KeyError, InvalidItemError) as e:
                     logging.debug(f"Skipping loot item in {loot_file} because it's invalid. {e}")
                     continue
 

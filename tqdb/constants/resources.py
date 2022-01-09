@@ -322,6 +322,7 @@ EQUIPMENT = [
     'records/xpack*/item*/scrolls/*.dbr',
     'records/xpack*/item*/artifacts/*.dbr',
     'records/xpack*/item*/artifacts/arcaneformulae/*.dbr',
+    'records/xpack4/item/equipment*/**/*.dbr'
 ]
 
 QUESTS = 'data\\quests\\*.qst'
@@ -332,5 +333,6 @@ SETS = [
     # Immortal Throne:  xpack/item/sets
     # Ragnarok:         xpack2/item/sets
     # Atlantis:         xpack3/items/set
+    # Eternal Embers:   xpack4/item/sets
     'records/xpack*/item*/set*/*.dbr',
 ]

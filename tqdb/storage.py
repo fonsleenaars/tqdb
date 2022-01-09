@@ -24,7 +24,7 @@ def duplicate_suffix(needle):
         if '-' not in haystack:
             continue
 
-        prefix, suffix = haystack.split('-')
+        prefix, suffix = haystack.split('-', maxsplit=1)
         if prefix == needle and int(suffix) >= result:
             result += 1
 

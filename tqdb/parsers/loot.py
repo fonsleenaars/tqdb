@@ -299,7 +299,7 @@ class LootItemTable_DynWeightParser(TQDBParser):
             level = item['itemLevel']
 
             # Skip all items outside the range
-            if level < min_level or level > max_level:
+            if level is None or level < min_level or level > max_level:
                 continue
 
             # Next compare the item's level to the target level
