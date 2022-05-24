@@ -8,8 +8,9 @@ name = "pypi"
 
 [packages]
 numexpr = "*"
-Pillow = "*"
+Pillow = "~=9.1.1"
 pytest = "*"
+numpy = "~=1.22.4"
 
 [dev-packages]
 "pep8" = "*"

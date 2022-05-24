@@ -35,6 +35,7 @@ class ItemArtifactParser(TQDBParser):
     Parser for `itemartifact.tpl`.
 
     """
+
     def __init__(self):
         super().__init__()
 
@@ -85,7 +86,8 @@ class ItemArtifactFormulaParser(TQDBParser):
     def parse(self, dbr, dbr_file, result):
         # Skip formula without artifacts
         if self.ARTIFACT not in dbr:
-            raise InvalidItemError(f"Artifact {dbr_file} has no {self.ARTIFACT}.")
+            raise InvalidItemError(
+                f"Artifact {dbr_file} has no {self.ARTIFACT}.")
 
         artifact = DBRParser.parse(dbr[self.ARTIFACT])
 
@@ -321,7 +323,9 @@ class ItemRelicParser(TQDBParser):
 
     def parse(self, dbr, dbr_file, result):
         file_name = os.path.basename(dbr_file).split('_')
-        difficulty = self.DIFFICULTIES_LIST[int(file_name[0][1:]) - 1]
+        difficulty_idx = int(file_name[0][1:]) - 1
+        difficulty = self.DIFFICULTIES_LIST[difficulty_idx] if difficulty_idx < len(
+            self.DIFFICULTIES_LIST) else 'UNKNOWN'
 
         result.update({
             # The act it starts dropping in is also listed in the file name
@@ -394,7 +398,8 @@ class ItemSetParser(TQDBParser):
 
         if not tag or texts.get(tag) == tag:
             logging.warning(f'No tag or name for set found in {dbr_file}.')
-            raise InvalidItemError(f'No tag or name for set found in {dbr_file}.')
+            raise InvalidItemError(
+                f'No tag or name for set found in {dbr_file}.')
 
         result.update({
             # Prepare the list of set items
@@ -552,6 +557,7 @@ class WeaponParser(TQDBParser):
     Parser for `templatebase/weapon.tpl`.
 
     """
+
     def __init__(self):
         super().__init__()
 

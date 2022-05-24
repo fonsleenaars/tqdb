@@ -157,6 +157,10 @@ def parse_equipment():
 
             logging.debug(f"Ignoring item in {dbr}. {exception_messages}")
             continue
+        except Exception as e:
+            logging.info(f"Error in {dbr}")
+            logging.exception(e)
+            continue
 
         try:
             # Skip items without a category
