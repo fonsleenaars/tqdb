@@ -2,7 +2,6 @@
 Classes and functionality to store TQ images and styling.
 
 """
-import glob
 import logging
 import os
 import subprocess
@@ -30,13 +29,13 @@ class SpriteCreator:
 
         try:
             # Iterate through all the files and make a list of the image objects
-            for file in glob.glob(paths.graphics / "*.png"):
+            for file in paths.GRAPHICS.glob('*.png'):
                 image = Image.open(file)
                 image.filename = os.path.basename(file).split(".")[0]
                 images.append(image)
 
             if len(images) <= 0:
-                logging.warning(f"No images found in {paths.graphics}. Skipping creation of sprite sheet.")
+                logging.warning(f"No images found in {paths.GRAPHICS}. Skipping creation of sprite sheet.")
                 return
 
             logging.info(f"Combining {len(images)} images into a sprite sheet.")
@@ -199,7 +198,7 @@ def save_bitmap(item, item_type: str, graphics: Path):
         # Convert path to string
         str(filename),
         # Output to graphics folder, file name being the tag.
-        f"{graphics}{tag}.png",
+        str(graphics / f"{tag}.png"),
     ]
     subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 

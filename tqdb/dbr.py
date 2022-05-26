@@ -55,7 +55,7 @@ def read(dbr):
             # of: key,value
             properties = dict(tuple(line.split(",", 1)) for line in lines if "," in line)
     except FileNotFoundError:
-        logging.exception(f"No file found for {dbr}. ")
+        logging.debug(f"No file found for {dbr}. ")
         return {}
     except PermissionError as e:
         logging.exception(f"Could not open {dbr}")

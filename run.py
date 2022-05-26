@@ -128,7 +128,7 @@ def tqdb():
 
     def create_sprite_sheet():
         start_time = time.time()
-        images.SpriteCreator(paths.OUTPUT)
+        images.SpriteCreator()
         logging.info(f"Sprite sheet took {time.time() - start_time:.2f}s")
 
     # Ensure required directories exist:

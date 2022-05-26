@@ -132,15 +132,10 @@ def parse_equipment():
 
         for equipment_filename in glob.glob(str(equipment_files_globpath), recursive=True):
             equipment_path = Path(equipment_filename)
-            posix_path = equipment_path.as_posix()
             if not (
                 # Exclude all files in 'old' and 'default'
                 "old" in equipment_path.parts
                 or "default" in equipment_path.parts
-                or
-                # Rhodian and Electrum sling don't drop:
-                posix_path.endswith("/1hranged/u_e_02.dbr")
-                or posix_path.endswith("/1hranged/u_n_05.dbr")
             ):
                 files.append(equipment_filename)
 
