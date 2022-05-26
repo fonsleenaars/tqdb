@@ -22,6 +22,7 @@ class SpriteCreator:
     single sprite image and the corresponding sprite stylesheet.
 
     """
+
     def __init__(self):
         # Image map will be used to categorize by sizes
         images_map = {}
@@ -29,9 +30,9 @@ class SpriteCreator:
 
         try:
             # Iterate through all the files and make a list of the image objects
-            for file in glob.glob(paths.graphics / '*.png'):
+            for file in glob.glob(paths.graphics / "*.png"):
                 image = Image.open(file)
-                image.filename = os.path.basename(file).split('.')[0]
+                image.filename = os.path.basename(file).split(".")[0]
                 images.append(image)
 
             if len(images) <= 0:
@@ -48,7 +49,7 @@ class SpriteCreator:
                 width, height = image.size
 
                 # Append this image to its size list, or create a new size list
-                key = f'{width}x{height}'
+                key = f"{width}x{height}"
                 if key in images_map:
                     images_map[key].append(image)
                 else:
@@ -56,15 +57,12 @@ class SpriteCreator:
 
             # Keep a sorted list of the keys (descending by height):
             sorted_keys = list(images_map.keys())
-            sorted_keys.sort(key=lambda x: int(x.split('x')[1]))
+            sorted_keys.sort(key=lambda x: int(x.split("x")[1]))
 
             # Maximum width of the sprite is 768px
             sprite_width = 768
             sprite_height = 0
-            sprite_css = ('.{0} {{\n'
-                          '  background-position: {1} {2};\n'
-                          '  width: {3};\n'
-                          '  height: {4};\n}}\n')
+            sprite_css = ".{0} {{\n" "  background-position: {1} {2};\n" "  width: {3};\n" "  height: {4};\n}}\n"
 
             # Keep track of the canvases (per size) and css (per image)
             css = []
@@ -72,11 +70,9 @@ class SpriteCreator:
 
             # Run through the keys (sorted by descending height)
             for key in sorted_keys:
-                canvas_width, canvas_height = tuple(map(int, key.split('x')))
+                canvas_width, canvas_height = tuple(map(int, key.split("x")))
 
-                canvas = Image.new(mode='RGBA',
-                                   size=(sprite_width, canvas_height),
-                                   color=(0, 0, 0, 0))
+                canvas = Image.new(mode="RGBA", size=(sprite_width, canvas_height), color=(0, 0, 0, 0))
                 x = 0
 
                 # Iterate over all the images in this size:
@@ -84,34 +80,28 @@ class SpriteCreator:
                     image_width, image_height = image.size
                     if x + image_width < sprite_width:
                         canvas.paste(image, (x, 0))
-                        css.append(sprite_css.format(
-                            image.filename,
-                            f'{0 - x}px' if 0 - x != 0 else 0 - x,
-                            (f'{0 - sprite_height}px'
-                             if 0 - sprite_height != 0
-                             else 0 - sprite_height),
-                            (f'{image_width}px'
-                             if image_width != 0
-                             else image_width),
-                            (f'{image_height}px'
-                             if image_height != 0
-                             else image_height)))
+                        css.append(
+                            sprite_css.format(
+                                image.filename,
+                                f"{0 - x}px" if 0 - x != 0 else 0 - x,
+                                (f"{0 - sprite_height}px" if 0 - sprite_height != 0 else 0 - sprite_height),
+                                (f"{image_width}px" if image_width != 0 else image_width),
+                                (f"{image_height}px" if image_height != 0 else image_height),
+                            )
+                        )
                         x += image_width
 
                     elif x + image_width == sprite_width:
                         canvas.paste(image, (x, 0))
-                        css.append(sprite_css.format(
-                            image.filename,
-                            f'{0 - x}px' if 0 - x != 0 else 0 - x,
-                            (f'{0 - sprite_height}px'
-                             if 0 - sprite_height != 0
-                             else 0 - sprite_height),
-                            (f'{image_width}px'
-                                if image_width != 0
-                                else image_width),
-                            (f'{image_height}px'
-                             if image_height != 0
-                             else image_height)))
+                        css.append(
+                            sprite_css.format(
+                                image.filename,
+                                f"{0 - x}px" if 0 - x != 0 else 0 - x,
+                                (f"{0 - sprite_height}px" if 0 - sprite_height != 0 else 0 - sprite_height),
+                                (f"{image_width}px" if image_width != 0 else image_width),
+                                (f"{image_height}px" if image_height != 0 else image_height),
+                            )
+                        )
 
                         if index == len(images_map[key]) - 1:
                             # Last image, append canvas:
@@ -122,25 +112,20 @@ class SpriteCreator:
                             x += image_width
                     else:
                         canvases.append(canvas)
-                        canvas = Image.new(mode='RGBA',
-                                           size=(sprite_width, canvas_height),
-                                           color=(0, 0, 0, 0))
+                        canvas = Image.new(mode="RGBA", size=(sprite_width, canvas_height), color=(0, 0, 0, 0))
                         canvas.paste(image, (0, 0))
                         x = image_width
                         sprite_height += canvas_height
 
-                        css.append(sprite_css.format(
-                            image.filename,
-                            0,
-                            (f'{0 - sprite_height}px'
-                             if 0 - sprite_height != 0
-                             else 0 - sprite_height),
-                            (f'{image_width}px'
-                             if image_width != 0
-                             else image_width),
-                            (f'{image_height}px'
-                             if image_height != 0
-                             else image_height)))
+                        css.append(
+                            sprite_css.format(
+                                image.filename,
+                                0,
+                                (f"{0 - sprite_height}px" if 0 - sprite_height != 0 else 0 - sprite_height),
+                                (f"{image_width}px" if image_width != 0 else image_width),
+                                (f"{image_height}px" if image_height != 0 else image_height),
+                            )
+                        )
 
                 # Append last row
                 if x < sprite_width:
@@ -151,9 +136,7 @@ class SpriteCreator:
                 image.close()
 
         # Create the new sprite image
-        sprite_image = Image.new(mode='RGBA',
-                                 size=(sprite_width, sprite_height),
-                                 color=(0, 0, 0, 0))
+        sprite_image = Image.new(mode="RGBA", size=(sprite_width, sprite_height), color=(0, 0, 0, 0))
         sprite_y = 0
 
         # Paste all the canvases on the sprite image
@@ -162,13 +145,13 @@ class SpriteCreator:
             sprite_y += canvas.size[1]
 
         # Save the sprite
-        sprite_image.save(paths.OUTPUT / 'sprite.png', optimize=True)
+        sprite_image.save(paths.OUTPUT / "sprite.png", optimize=True)
 
         # Save the CSS
         css.sort()
-        with open(paths.OUTPUT / 'sprite.css', 'w') as css_file:
+        with open(paths.OUTPUT / "sprite.css", "w") as css_file:
             for line in css:
-                css_file.write(f'{line}\n')
+                css_file.write(f"{line}\n")
 
         # Remove all the images
         rmtree(paths.GRAPHICS)
@@ -178,26 +161,25 @@ class SpriteCreator:
 #                              BITMAP UTILITY                                 #
 ###############################################################################
 def save_bitmap(item, item_type: str, graphics: Path):
-    bitmap = item.pop('bitmap', None)
-    tag = item['tag']
+    bitmap = item.pop("bitmap", None)
+    tag = item["tag"]
 
     if not tag or not bitmap or not bitmap.is_file():
         logging.warning(f'Missing tag or bitmap for {item["tag"]}: {bitmap}')
         return
 
     # Tags for formula's are all the same (lesser, greater, divine)
-    if item_type == 'ItemArtifactFormula':
-        tag = item['classification'].lower()
+    if item_type == "ItemArtifactFormula":
+        tag = item["classification"].lower()
     # Skip all non-MI duplicates
-    elif (item.get('classification', None) != 'Rare' and
-          os.path.isfile(graphics / f'{tag}.png')):
+    elif item.get("classification", None) != "Rare" and os.path.isfile(graphics / f"{tag}.png"):
         return
 
     filename = str(bitmap)
-    h = open(bitmap,"rb")
+    h = open(bitmap, "rb")
     alls = h.read()
     h.close()
-    magic = b'TEX'+b'\x02'
+    magic = b"TEX" + b"\x02"
     magicpos = alls.find(magic)
 
     if magicpos == 0:
@@ -207,16 +189,18 @@ def save_bitmap(item, item_type: str, graphics: Path):
         alls2 = bytes(ba)
         basename, file_extension = os.path.splitext(bitmap)
         filename = basename + ".fixed" + file_extension
-        h2 = open(filename,"wb")
+        h2 = open(filename, "wb")
         h2.write(alls2)
         h2.close()
 
     # Run the texture viewer if a bitmap and tag are set:
-    command = ['utils/textureviewer/TextureViewer.exe',
-            # Convert path to string
-            str(filename),
-            # Output to graphics folder, file name being the tag.
-            f'{graphics}{tag}.png']
+    command = [
+        "utils/textureviewer/TextureViewer.exe",
+        # Convert path to string
+        str(filename),
+        # Output to graphics folder, file name being the tag.
+        f"{graphics}{tag}.png",
+    ]
     subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     return

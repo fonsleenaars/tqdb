@@ -12,9 +12,9 @@ templates_by_path = {}
 templates = {}
 
 # Global directory constants
-TEMPLATE_DIR = paths.DB / 'templates/**/*.tpl'
-TEMPLATE_PREFIX = '%TEMPLATE_DIR%'
-TEXTURES = Path('data/textures/')
+TEMPLATE_DIR = paths.DB / "templates/**/*.tpl"
+TEMPLATE_PREFIX = "%TEMPLATE_DIR%"
+TEXTURES = Path("data/textures/")
 
 
 class Variable:
@@ -39,9 +39,10 @@ class Variable:
         # Create a dictionary with all properties from this variable
         self.properties = dict(
             # Remove all quotes, split the line from a key = value format
-            [i.replace('"', '').strip() for i in line.split('=', 1)]
+            [i.replace('"', "").strip() for i in line.split("=", 1)]
             # For all the lines (split them by newline character)
-            for line in content)
+            for line in content
+        )
 
         # Store the full ancestry of group names:
         self.groups = groups
@@ -62,16 +63,16 @@ class Variable:
         Checks whether or not this Variable is a reference to another template.
 
         """
-        return self['class'] == 'static' and self['type'] == 'include'
+        return self["class"] == "static" and self["type"] == "include"
 
     def parse_value(self, value):
         """
         Parse a given value for this Variable.
 
         """
-        if self['class'] == 'array':
+        if self["class"] == "array":
             # Return a list of parsed values
-            values = value.split(';')
+            values = value.split(";")
 
             if len(values) == 1:
                 return [self._parse(v) for v in values if self._parse(v)]
@@ -87,22 +88,22 @@ class Variable:
         Internal parse function used in list comprehension.
 
         """
-        if self['type'] == 'real':
+        if self["type"] == "real":
             if always_return:
                 return float(value)
             return float(value) if float(value) != 0 else None
-        elif self['type'] == 'int':
+        elif self["type"] == "int":
             if always_return:
                 return int(value)
             return int(value) if int(value) != 0 else None
-        elif self['type'] == 'bool':
+        elif self["type"] == "bool":
             if always_return:
                 return bool(int(value))
             return bool(int(value)) if bool(int(value)) else None
-        elif self['type'] == 'file_dbr':
+        elif self["type"] == "file_dbr":
             # Prepare the DBR reference fully
             return paths.DB / value.lower()
-        elif self['type'] == 'file_tex':
+        elif self["type"] == "file_tex":
             # Prepare the TEX reference fully
             return TEXTURES / value
         return value
@@ -113,17 +114,18 @@ class Template:
     Template class representing a TPL file.
 
     """
+
     # Regex to match all Group or Variable lines, with a bracket on the next
     # line
-    BRACKET_REGEX = re.compile(r'(Group|Variable)\s+{')
+    BRACKET_REGEX = re.compile(r"(Group|Variable)\s+{")
     # Regex to place the bracket on the same line as the Group or Variable
-    BRACKET_REPLACE = r'\1 {'
+    BRACKET_REPLACE = r"\1 {"
     # Regex to find all tabs
-    TAB_REGEX = re.compile(r'\t')
+    TAB_REGEX = re.compile(r"\t")
     # Regex to find empty lines
-    EMPTY_LINE_REGEX = re.compile(r'\n\n')
+    EMPTY_LINE_REGEX = re.compile(r"\n\n")
     # Replace empty lines with a single linebreak
-    EMPTY_LINE_REPLACE = r'\n'
+    EMPTY_LINE_REPLACE = r"\n"
 
     def __init__(self, tpl_file):
         template_file = Path(tpl_file)
@@ -139,7 +141,7 @@ class Template:
         self.key = str(template_file.relative_to(paths.DATA)).lower()
 
         # Open and read the file:
-        content = open(self.file, 'r').read()
+        content = open(self.file, "r").read()
 
         # Variables will be the full map of variables (key = variable name)
         self.variables = {}
@@ -150,17 +152,16 @@ class Template:
         content = self.BRACKET_REGEX.sub(self.BRACKET_REPLACE, content)
 
         # Remove all tab indentation:
-        content = self.TAB_REGEX.sub('', content)
+        content = self.TAB_REGEX.sub("", content)
 
         # Remove all unnecessary newlines:
         content = self.EMPTY_LINE_REGEX.sub(self.EMPTY_LINE_REPLACE, content)
 
         # Split the content by line and recursively build the groups:
-        self.parse_content(content.split('\n'), [])
+        self.parse_content(content.split("\n"), [])
 
         # Set the name of this template according to its Class:
-        self.name = (self.variables['Class']['defaultValue'].lower()
-                     if 'Class' in self.variables else None)
+        self.name = self.variables["Class"]["defaultValue"].lower() if "Class" in self.variables else None
 
     def parse_content(self, content, ancestry):
         """
@@ -175,7 +176,7 @@ class Template:
             line = content[index]
 
             # Check if this a new group:
-            if line == 'Group {':
+            if line == "Group {":
                 # Find the closing bracket for this group:
                 bracket_count = 1
                 closing_index = index
@@ -183,10 +184,10 @@ class Template:
                     closing_index += 1
 
                     # Increment count for all new open brackets
-                    if content[closing_index] in ['Variable {', 'Group {']:
+                    if content[closing_index] in ["Variable {", "Group {"]:
                         bracket_count += 1
                     # Decrement for all we close
-                    if content[closing_index] == '}':
+                    if content[closing_index] == "}":
                         bracket_count -= 1
 
                 # Grab the group name, we don't care about type:
@@ -194,27 +195,27 @@ class Template:
                     # Grab the next line
                     content[index + 1]
                     # Remove the quotes
-                    .replace('"', '')
+                    .replace('"', "")
                     # Split into key, value
-                    .split('=', 1)
+                    .split("=", 1)
                     # Just grab the value
                     [1]
                     # Remove the whitespace
-                    .strip())
+                    .strip()
+                )
                 self.parse_content(
-                    content[index + 1:closing_index],
+                    content[index + 1 : closing_index],
                     # Add this groups name to the current ancestry
-                    ancestry + [name])
+                    ancestry + [name],
+                )
 
                 # Update the index to skip:
                 index = closing_index
-            elif line == 'Variable {':
+            elif line == "Variable {":
                 # Find the next closing bracket:
-                closing_index = content.index('}', index + 1)
+                closing_index = content.index("}", index + 1)
 
-                self.parse_variable(
-                    content[index + 1: closing_index],
-                    ancestry)
+                self.parse_variable(content[index + 1 : closing_index], ancestry)
 
                 # Skip to the closing_index:
                 index = closing_index
@@ -226,14 +227,12 @@ class Template:
 
         if variable.is_template_reference():
             # Strip %TEMPLATE_DIR% from the file path if it's present:
-            template_path = (variable['defaultValue']
-                             .replace(TEMPLATE_PREFIX, '')
-                             .lower())
+            template_path = variable["defaultValue"].replace(TEMPLATE_PREFIX, "").lower()
 
             # Either parse or grab the previously parsed Template:
-            template = (templates_by_path[template_path]
-                        if template_path in templates_by_path
-                        else Template(template_path))
+            template = (
+                templates_by_path[template_path] if template_path in templates_by_path else Template(template_path)
+            )
 
             # Store this included template path and all of its templates
             self.templates.append(template_path)
@@ -241,12 +240,12 @@ class Template:
 
             # Parse any template references, and only add variables of type
             # 'variable' or 'array' to this Template.
-            self.variables.update(dict(
-                (k, v) for k, v in template.variables.items()
-                if v['class'] in ['array', 'picklist', 'variable']))
+            self.variables.update(
+                dict((k, v) for k, v in template.variables.items() if v["class"] in ["array", "picklist", "variable"])
+            )
         else:
             # Add the variable to the list:
-            self.variables[variable['name']] = variable
+            self.variables[variable["name"]] = variable
 
 
 def load_templates():

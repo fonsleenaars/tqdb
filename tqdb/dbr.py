@@ -27,15 +27,15 @@ def get_template(dbr, dbr_file):
         that "defaultValue"
     :param dbr_file: the file the dbr came from, for logging purposes
     """
-    if 'templateName' in dbr:
+    if "templateName" in dbr:
         # The template path is set, retrieve it from the collection:
-        return templates_by_path[dbr['templateName'].lower()]
-    elif 'Class' in dbr and dbr['Class'].lower() in templates:
+        return templates_by_path[dbr["templateName"].lower()]
+    elif "Class" in dbr and dbr["Class"].lower() in templates:
         # The name of the template is set:
-        return templates[dbr['Class'].lower()]
+        return templates[dbr["Class"].lower()]
 
     # Unknown template, or template is not in our collection:
-    raise Exception(f'Template could not be found for {dbr_file}')
+    raise Exception(f"Template could not be found for {dbr_file}")
 
 
 def read(dbr):
@@ -49,23 +49,22 @@ def read(dbr):
             result = {}
 
             # DBR lines always end with ',\n' which we remove
-            lines = (line.rstrip(',\n') for line in dbr_file)
+            lines = (line.rstrip(",\n") for line in dbr_file)
 
             # Only add properties that have the correct format per line
             # of: key,value
-            properties = dict(tuple(line.split(',', 1)) for line in lines
-                              if ',' in line)
+            properties = dict(tuple(line.split(",", 1)) for line in lines if "," in line)
     except FileNotFoundError:
-        logging.exception(f'No file found for {dbr}. ')
+        logging.exception(f"No file found for {dbr}. ")
         return {}
     except PermissionError as e:
-        logging.exception(f'Could not open {dbr}')
+        logging.exception(f"Could not open {dbr}")
         return {}
 
     # The 'templateName' property isn't in any Template, so add
     # manually:
-    if 'templateName' in properties:
-        result['templateName'] = properties['templateName']
+    if "templateName" in properties:
+        result["templateName"] = properties["templateName"]
 
     # Get the template for this DBR
     template = get_template(properties, dbr)
@@ -100,16 +99,16 @@ def parse(dbr_file, references=None):
     if dbr_file in storage.db:
         return storage.db[dbr_file]
 
-    logging.debug(f'Parsing {dbr_file}')
+    logging.debug(f"Parsing {dbr_file}")
     dbr = read(dbr_file)
 
     # Initialize an empty result, this variable will be updated by the parsers.
     result = {
         # Properties will be filled by all core attribute parsers, like
         # character, offensive, defensive, etc.
-        'properties': {},
+        "properties": {},
         # Any parser can pass references that another parser can then use:
-        'references': references,
+        "references": references,
     }
 
     # There are still non-existent references, make sure the DBR isn't empty:
@@ -139,13 +138,15 @@ def parse(dbr_file, references=None):
             prioritized_parser.parse(dbr, dbr_file, result)
         except InvalidItemError as e:
             # One of the parsers has determined this file shouldn't be parsed:
-            raise InvalidItemError(f"Parser {prioritized_parser} for template "
-                                   f"key {prioritized_parser.template.key} "
-                                   "tells us this item is invalid and should "
-                                   "be ignored.") from e
+            raise InvalidItemError(
+                f"Parser {prioritized_parser} for template "
+                f"key {prioritized_parser.template.key} "
+                "tells us this item is invalid and should "
+                "be ignored."
+            ) from e
 
     # Pop the helper data references again:
-    result.pop('references')
+    result.pop("references")
 
     # Retain the parsed result in memory, for reuse:
     storage.db[dbr_file] = result

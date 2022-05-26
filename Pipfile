@@ -13,5 +13,4 @@ pytest = "*"
 numpy = "~=1.22.4"
 
 [dev-packages]
-"pep8" = "*"
-pycodestyle = "*"
+black = "*"

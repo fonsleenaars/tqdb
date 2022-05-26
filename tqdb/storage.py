@@ -21,10 +21,10 @@ def duplicate_suffix(needle):
     result = 1
 
     for haystack in skills.keys():
-        if '-' not in haystack:
+        if "-" not in haystack:
             continue
 
-        prefix, suffix = haystack.split('-', maxsplit=1)
+        prefix, suffix = haystack.split("-", maxsplit=1)
         if prefix == needle and int(suffix) >= result:
             result += 1
 
@@ -44,17 +44,17 @@ def store_skill(skill):
 
     """
     # Retrieve the tag for the skill, or fall back to 'unnamed'.
-    skill_tag = skill.get('tag', 'unnamed')
+    skill_tag = skill.get("tag", "unnamed")
 
-    if skill_tag in skills and skills[skill_tag]['path'] != skill['path']:
-        if '-' in skill_tag:
-            prefix, _ = skill_tag.split('-')
-            skill_tag = f'{prefix}-{duplicate_suffix(prefix)}'
+    if skill_tag in skills and skills[skill_tag]["path"] != skill["path"]:
+        if "-" in skill_tag:
+            prefix, _ = skill_tag.split("-")
+            skill_tag = f"{prefix}-{duplicate_suffix(prefix)}"
         else:
-            skill_tag = f'{skill_tag}-{duplicate_suffix(skill_tag)}'
+            skill_tag = f"{skill_tag}-{duplicate_suffix(skill_tag)}"
 
     # Set the unique tag:
-    skill['tag'] = skill_tag
+    skill["tag"] = skill_tag
 
     # Store the skill
     skills[skill_tag] = skill

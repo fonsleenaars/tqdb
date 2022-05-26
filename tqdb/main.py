@@ -46,12 +46,12 @@ def parse_affixes():
         table = read(dbr)
 
         # Use the filename to determine what equipment this table is for:
-        file_name = os.path.basename(dbr).split('_')
+        file_name = os.path.basename(dbr).split("_")
         table_type = get_affix_table_type(file_name[0])
 
         # For each affix in this table, create an entry:
         for field, affix_dbr in table.items():
-            if not field.startswith('randomizerName') or not table_type:
+            if not field.startswith("randomizerName") or not table_type:
                 continue
 
             affix_dbr = str(affix_dbr)
@@ -67,48 +67,47 @@ def parse_affixes():
 
     logging.info(f"Found {len(files)} affix files.")
 
-    affixes = {'prefixes': {}, 'suffixes': {}}
+    affixes = {"prefixes": {}, "suffixes": {}}
     for dbr in files:
         affix = parse(dbr)
 
         # Skip affixes without properties (first one will be empty):
-        if not affix['properties']:
+        if not affix["properties"]:
             continue
 
         # Skip the incorrect 'of the Mammoth' prefix entry:
-        if 'prefix' in dbr and affix['tag'] == 'tagPrefix145':
+        if "prefix" in dbr and affix["tag"] == "tagPrefix145":
             continue
 
         # Assign the table types to this affix:
         if dbr not in affix_tables:
             # Affix can occur on all equipment:
-            affix['equipment'] = 'none'
+            affix["equipment"] = "none"
         else:
-            affix['equipment'] = ','.join(affix_tables[dbr])
+            affix["equipment"] = ",".join(affix_tables[dbr])
 
         # Add affixes to their respective pre- or suffix list.
-        if 'Prefix' in affix['tag'] and 'suffix' not in dbr:
-            affixType = 'prefixes'
+        if "Prefix" in affix["tag"] and "suffix" not in dbr:
+            affixType = "prefixes"
         else:
-            affixType = 'suffixes'
+            affixType = "suffixes"
 
-        affixTag = affix.pop('tag')
+        affixTag = affix.pop("tag")
 
         # Either add the affix or add its properties as an alternative
         if affixTag in affixes[affixType]:
             # Skip duplicate affix properties:
             if is_duplicate_affix(affixes[affixType][affixTag], affix):
                 continue
-            affixes[affixType][affixTag]['properties'].append(
-                affix['properties'])
+            affixes[affixType][affixTag]["properties"].append(affix["properties"])
         else:
             # Place the affix properties into a list that can be extended by
             # alternatives during this parsing.
-            affix['properties'] = [affix['properties']]
+            affix["properties"] = [affix["properties"]]
             affixes[affixType][affixTag] = affix
 
     # Log and reset the timer:
-    logging.info(f'Parsed affixes in {time.time() - start_time:.2f} seconds.')
+    logging.info(f"Parsed affixes in {time.time() - start_time:.2f} seconds.")
 
     return affixes
 
@@ -136,11 +135,12 @@ def parse_equipment():
             posix_path = equipment_path.as_posix()
             if not (
                 # Exclude all files in 'old' and 'default'
-                'old' in equipment_path.parts or
-                'default' in equipment_path.parts or
+                "old" in equipment_path.parts
+                or "default" in equipment_path.parts
+                or
                 # Rhodian and Electrum sling don't drop:
-                posix_path.endswith('/1hranged/u_e_02.dbr') or
-                posix_path.endswith('/1hranged/u_n_05.dbr')
+                posix_path.endswith("/1hranged/u_e_02.dbr")
+                or posix_path.endswith("/1hranged/u_n_05.dbr")
             ):
                 files.append(equipment_filename)
 
@@ -164,14 +164,14 @@ def parse_equipment():
 
         try:
             # Skip items without a category
-            if 'category' not in parsed:
+            if "category" not in parsed:
                 continue
 
             # Organize the equipment based on its category
-            category = parsed.pop('category')
+            category = parsed.pop("category")
 
             # Skip items without rarities
-            if 'classification' not in parsed:
+            if "classification" not in parsed:
                 continue
 
             # Save the bitmap and remove the bitmap key
@@ -183,15 +183,15 @@ def parse_equipment():
             continue
 
         # Pop off the properties key off any item without properties:
-        if 'properties' in parsed and not parsed['properties']:
-            parsed.pop('properties')
+        if "properties" in parsed and not parsed["properties"]:
+            parsed.pop("properties")
 
         # Now save the parsed item in the category:
         if category:
             items[category].append(parsed)
 
     # Log the timer:
-    logging.info(f'Parsed equipment in {time.time() - start_time:.2f} seconds.')
+    logging.info(f"Parsed equipment in {time.time() - start_time:.2f} seconds.")
 
     return items
 
@@ -238,19 +238,18 @@ def parse_creatures():
             # XXX - Should 'Champion' be added?
             # Should this be moved to MonsterParser to save work? The equipment
             # parser does that.
-            if parsed['classification'] not in ['Quest', 'Hero', 'Boss']:
+            if parsed["classification"] not in ["Quest", "Hero", "Boss"]:
                 continue
 
             # Store the monster by its tag:
-            creatures[parsed['tag']] = parsed
+            creatures[parsed["tag"]] = parsed
         except KeyError:
             # Skip creatures without tags
-            logging.debug(f"Ignoring creature in {dbr}. No classification "
-                          "present.")
+            logging.debug(f"Ignoring creature in {dbr}. No classification " "present.")
             continue
 
     # Log the timer:
-    logging.info(f'Parsed creatures in {time.time() - start_time:.2f} seconds.')
+    logging.info(f"Parsed creatures in {time.time() - start_time:.2f} seconds.")
 
     return creatures
 
@@ -268,21 +267,21 @@ def parse_quests():
 
     # Regex to find item rewards
     REWARD = re.compile(
-        r'item\[(?P<index>[0-9])\](.{0,1})'
-        r'(?P<file>'
-        'records'
-        r'[\\|/]'
-        r'(xpack[2|3]?[\\|/])?'
-        'quests'
-        r'[\\|/]'
-        'rewards'
-        r'[\\|/]'
-        r'([^.]+)\.dbr'
-        r')'
+        r"item\[(?P<index>[0-9])\](.{0,1})"
+        r"(?P<file>"
+        "records"
+        r"[\\|/]"
+        r"(xpack[2|3]?[\\|/])?"
+        "quests"
+        r"[\\|/]"
+        "rewards"
+        r"[\\|/]"
+        r"([^.]+)\.dbr"
+        r")"
     )
 
     # Regex to find the title tag
-    TITLE = re.compile(r'titletag(?P<tag>[^\s]*)')
+    TITLE = re.compile(r"titletag(?P<tag>[^\s]*)")
 
     files = glob.glob(resources.QUESTS)
 
@@ -290,27 +289,28 @@ def parse_quests():
 
     quests = {}
     for qst in files:
-        with open(qst, 'rb') as quest:
+        with open(qst, "rb") as quest:
             # Read the content as printable characters only:
-            content = ''.join(
-                c for c in
+            content = "".join(
+                c
+                for c in
                 # Lower case and convert to utf-8
-                quest.read().decode('utf-8', errors='ignore').lower()
+                quest.read().decode("utf-8", errors="ignore").lower()
                 if c in string.printable
             )
 
         # Find the title and skip this file if none is found:
         title_tag = TITLE.search(content)
-        if not title_tag or not title_tag.group('tag'):
+        if not title_tag or not title_tag.group("tag"):
             continue
 
         # Grab the quest title tag
-        tag = title_tag.group('tag')
+        tag = title_tag.group("tag")
         if tag not in quests:
             # Initialize three difficulties:
             quests[tag] = {
-                'name': texts.get(tag),
-                'rewards': [{}, {}, {}],
+                "name": texts.get(tag),
+                "rewards": [{}, {}, {}],
             }
 
         # Parsed reward files (so we don't duplicate):
@@ -319,8 +319,8 @@ def parse_quests():
         # Add all the rewards to the quest:
         for match in REWARD.finditer(content):
             # The index in the item[index] tag determines the difficulty:
-            difficulty = int(match.group('index'))
-            reward_file = match.group('file')
+            difficulty = int(match.group("index"))
+            reward_file = match.group("file")
 
             # Store the file or move on if we've already parsed it
             if reward_file not in parsed:
@@ -337,30 +337,29 @@ def parse_quests():
                 continue
 
             # Skip quests where the rewards aren't items:
-            if 'loot_table' not in rewards:
+            if "loot_table" not in rewards:
                 continue
 
             # Either set the chance or add it to a previous chance:
-            for item, chance in rewards['loot_table'].items():
-                if item in quests[tag]['rewards'][difficulty]:
-                    quests[tag]['rewards'][difficulty][item] += chance
+            for item, chance in rewards["loot_table"].items():
+                if item in quests[tag]["rewards"][difficulty]:
+                    quests[tag]["rewards"][difficulty][item] += chance
                 else:
-                    quests[tag]['rewards'][difficulty][item] = chance
+                    quests[tag]["rewards"][difficulty][item] = chance
 
         # Don't save quests without item rewards:
-        if not any(reward for reward in quests[tag]['rewards']):
+        if not any(reward for reward in quests[tag]["rewards"]):
             quests.pop(tag)
 
     # Turn all chances into percentages:
     for tag, quest in quests.items():
-        for index, difficulty in enumerate(quest['rewards']):
+        for index, difficulty in enumerate(quest["rewards"]):
             for item, chance in difficulty.items():
                 # Format into 4 point precision percentages:
-                quests[tag]['rewards'][index][item] = (
-                    float('{0:.4f}'.format(chance * 100)))
+                quests[tag]["rewards"][index][item] = float("{0:.4f}".format(chance * 100))
 
     # Log the timer:
-    logging.info(f'Parsed quest rewards in {time.time() - start_time:.2f} seconds.')
+    logging.info(f"Parsed quest rewards in {time.time() - start_time:.2f} seconds.")
 
     return quests
 
@@ -391,13 +390,13 @@ def parse_sets():
 
         try:
             # Add the set by its tag to the dictionary of sets:
-            sets[parsed['tag']] = parsed
+            sets[parsed["tag"]] = parsed
         except KeyError:
             # Skip sets with no tag:
             continue
 
     # Log the timer:
-    logging.info(f'Parsed sets in {time.time() - start_time:.2f} seconds.')
+    logging.info(f"Parsed sets in {time.time() - start_time:.2f} seconds.")
 
     return sets
 
@@ -416,6 +415,6 @@ def parse_skills():
     for skill in skills.values():
         # Pop the 'path' property, it was used during parsing to ensure correct
         # skill tag references for requipment.
-        skill.pop('path')
+        skill.pop("path")
 
     return skills

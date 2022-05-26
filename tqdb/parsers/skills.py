@@ -15,47 +15,48 @@ class SkillBaseParser(TQDBParser):
     Parser for `templatebase/skill_base.tpl`.
 
     """
-    FILE = 'FileDescription'
-    DESC = 'skillBaseDescription'
-    NAME = 'skillDisplayName'
+
+    FILE = "FileDescription"
+    DESC = "skillBaseDescription"
+    NAME = "skillDisplayName"
 
     # Regex to remove ^letter prefixes in the skill tag/name
-    FORMATTER = re.compile(r'\^[a-z]')
+    FORMATTER = re.compile(r"\^[a-z]")
 
     # These fields aren't a part of the skill_base.tpl template, but rather
     # are used by multiple skill templates. Instead of implementing a lot of
     # template parsers that each do almost the same thing, the one thing they
     # have in common is that they all include skill_base.tpl.
     FIELDS = [
-        'skillActiveDuration',
-        'skillActiveLifeCost',
-        'skillActiveManaCost',
-        'skillCooldownTime',
-        'skillLifeBonus',
-        'skillManaCost',
-        'skillProjectileNumber',
-        'skillTargetAngle',
-        'skillTargetNumber',
-        'skillTargetRadius',
+        "skillActiveDuration",
+        "skillActiveLifeCost",
+        "skillActiveManaCost",
+        "skillCooldownTime",
+        "skillLifeBonus",
+        "skillManaCost",
+        "skillProjectileNumber",
+        "skillTargetAngle",
+        "skillTargetNumber",
+        "skillTargetRadius",
     ]
 
     # Damage absorption fields:
     ABSORPTIONS = [
-        'damageAbsorption',
-        'damageAbsorptionPercent',
+        "damageAbsorption",
+        "damageAbsorptionPercent",
     ]
 
     # Damage absorption qualifier types:
     QUALIFIERS = {
-        'bleedingDamageQualifier': 'tagQualifyingDamageBleeding',
-        'coldDamageQualifier': 'tagQualifyingDamageCold',
-        'elementalDamageQualifier': 'tagQualifyingDamageElemental',
-        'fireDamageQualifier': 'tagQualifyingDamageFire',
-        'lifeDamageQualifier': 'tagQualifyingDamageLife',
-        'lightningDamageQualifier': 'tagQualifyingDamageLightning',
-        'pierceDamageQualifier': 'tagQualifyingDamagePierce',
-        'physicalDamageQualifier': 'tagQualifyingDamagePhysical',
-        'poisonDamageQualifier': 'tagQualifyingDamagePoison',
+        "bleedingDamageQualifier": "tagQualifyingDamageBleeding",
+        "coldDamageQualifier": "tagQualifyingDamageCold",
+        "elementalDamageQualifier": "tagQualifyingDamageElemental",
+        "fireDamageQualifier": "tagQualifyingDamageFire",
+        "lifeDamageQualifier": "tagQualifyingDamageLife",
+        "lightningDamageQualifier": "tagQualifyingDamageLightning",
+        "pierceDamageQualifier": "tagQualifyingDamagePierce",
+        "physicalDamageQualifier": "tagQualifyingDamagePhysical",
+        "poisonDamageQualifier": "tagQualifyingDamagePoison",
     }
 
     def __init__(self):
@@ -71,7 +72,7 @@ class SkillBaseParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f'{TQDBParser.base}\\templatebase\\skill_base.tpl'
+        return f"{TQDBParser.base}\\templatebase\\skill_base.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -83,27 +84,27 @@ class SkillBaseParser(TQDBParser):
         """
         # Store the path to this skill, it is used in tqdb.storage to ensure
         # all tags are unique.
-        result['path'] = dbr_file
+        result["path"] = dbr_file
 
         if self.NAME in dbr:
             # The tag is the skillDisplayName property
-            result['tag'] = self.FORMATTER.sub('', dbr[self.NAME])
+            result["tag"] = self.FORMATTER.sub("", dbr[self.NAME])
 
             # Now try to find a friendly name for the tag:
-            result['name'] = texts.get(result['tag'])
+            result["name"] = texts.get(result["tag"])
 
-            if result['name'] == result['tag']:
+            if result["name"] == result["tag"]:
                 # If the tag wasn't returned, a friendly name weas found:
                 logging.debug(f'No skill name found for {result["tag"]}')
         else:
-            logging.debug(f'No skillDisplayName found in {dbr_file}')
+            logging.debug(f"No skillDisplayName found in {dbr_file}")
 
         if self.DESC in dbr and texts.has(dbr[self.DESC]):
             # Also load the description, if it's known:
-            result['description'] = texts.get(dbr[self.DESC])
+            result["description"] = texts.get(dbr[self.DESC])
         elif self.FILE in dbr:
             # Use the FileDescription instead:
-            result['description'] = dbr['FileDescription']
+            result["description"] = dbr["FileDescription"]
 
         # Check the skill base fields:
         base_tiers = TQDBParser.highest_tier(dbr, self.FIELDS)
@@ -130,43 +131,35 @@ class SkillBaseParser(TQDBParser):
                     continue
 
                 # Add 'skill' prefix and capitalize first letter:
-                field_prefixed = 'skill' + field[:1].upper() + field[1:]
+                field_prefixed = "skill" + field[:1].upper() + field[1:]
                 value = itr_dbr[field]
 
                 # Find qualifier damage type(s):
-                damage_types = ', '.join([
-                    texts.get(text_key)
-                    for dmg_type, text_key in self.QUALIFIERS.items()
-                    if dmg_type in dbr])
+                damage_types = ", ".join(
+                    [texts.get(text_key) for dmg_type, text_key in self.QUALIFIERS.items() if dmg_type in dbr]
+                )
 
                 if damage_types:
                     TQDBParser.insert_value(
-                        field_prefixed,
-                        f'{texts.get(field_prefixed).format(value)} '
-                        f'({damage_types})',
-                        result)
+                        field_prefixed, f"{texts.get(field_prefixed).format(value)} " f"({damage_types})", result
+                    )
                 else:
                     # If there is no qualifier, it's all damage:
-                    TQDBParser.insert_value(
-                        field_prefixed,
-                        texts.get(field_prefixed).format(value),
-                        result)
+                    TQDBParser.insert_value(field_prefixed, texts.get(field_prefixed).format(value), result)
 
         # Prepare two variables to determine the max number of tiers:
-        skill_cap = dbr.get('skillUltimateLevel', dbr.get('skillMaxLevel')) or 99
-        props = result['properties']
+        skill_cap = dbr.get("skillUltimateLevel", dbr.get("skillMaxLevel")) or 99
+        props = result["properties"]
 
         # The maximum number of properties is now the minimum between the skill
         # cap and the highest number of tiers available in the properties:
-        max_tiers = min(
-            TQDBParser.highest_tier(props, props.keys()),
-            skill_cap)
+        max_tiers = min(TQDBParser.highest_tier(props, props.keys()), skill_cap)
 
         # After all skill properties have been set, index them by level:
         properties = [{} for i in range(max_tiers)]
 
         # Insert the existing properties by adding them to the correct tier:
-        for field, values in result['properties'].items():
+        for field, values in result["properties"].items():
             for index in range(max_tiers):
                 # Each value is either a list or a flat value to repeat:
                 if isinstance(values, list):
@@ -184,7 +177,7 @@ class SkillBaseParser(TQDBParser):
         properties = [tier for tier in properties if tier]
 
         # Now set the reindexed properties:
-        result['properties'] = properties
+        result["properties"] = properties
 
 
 class SkillBuffParser(TQDBParser):
@@ -192,7 +185,8 @@ class SkillBuffParser(TQDBParser):
     Parser for all templates that just reference a buff.
 
     """
-    BUFF = 'buffSkillName'
+
+    BUFF = "buffSkillName"
 
     def __init__(self):
         super().__init__()
@@ -200,13 +194,13 @@ class SkillBuffParser(TQDBParser):
     @staticmethod
     def get_template_path():
         return [
-            f'{TQDBParser.base}\\skill_attackbuffradius.tpl',
-            f'{TQDBParser.base}\\skill_attackbuff.tpl',
-            f'{TQDBParser.base}\\skill_attackprojectiledebuf.tpl',
-            f'{TQDBParser.base}\\skill_buffradius.tpl',
-            f'{TQDBParser.base}\\skill_buffradiustoggled.tpl',
-            f'{TQDBParser.base}\\skill_buffother.tpl',
-            f'{TQDBParser.base}\\skillsecondary_buffradius.tpl',
+            f"{TQDBParser.base}\\skill_attackbuffradius.tpl",
+            f"{TQDBParser.base}\\skill_attackbuff.tpl",
+            f"{TQDBParser.base}\\skill_attackprojectiledebuf.tpl",
+            f"{TQDBParser.base}\\skill_buffradius.tpl",
+            f"{TQDBParser.base}\\skill_buffradiustoggled.tpl",
+            f"{TQDBParser.base}\\skill_buffother.tpl",
+            f"{TQDBParser.base}\\skillsecondary_buffradius.tpl",
         ]
 
     def parse(self, dbr, dbr_file, result):
@@ -224,14 +218,15 @@ class SkillModifierParser(TQDBParser):
     Parser for `skill_modifier.tpl`.
 
     """
-    FIELD = 'projectilePiercing'
+
+    FIELD = "projectilePiercing"
 
     def __init__(self):
         super().__init__()
 
     @staticmethod
     def get_template_path():
-        return f'{TQDBParser.base}\\skill_modifier.tpl'
+        return f"{TQDBParser.base}\\skill_modifier.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -239,9 +234,7 @@ class SkillModifierParser(TQDBParser):
 
         """
         if self.FIELD in dbr:
-            result['properties'][self.FIELD] = [
-                texts.get(self.FIELD).format(value)
-                for value in dbr[self.FIELD]]
+            result["properties"][self.FIELD] = [texts.get(self.FIELD).format(value) for value in dbr[self.FIELD]]
 
 
 class SkillPetModifier(TQDBParser):
@@ -249,14 +242,15 @@ class SkillPetModifier(TQDBParser):
     Parser for `skillsecondary_petmodifier.tpl`.
 
     """
-    PET_SKILL = 'petSkillName'
+
+    PET_SKILL = "petSkillName"
 
     def __init__(self):
         super().__init__()
 
     @staticmethod
     def get_template_path():
-        return f'{TQDBParser.base}\\skillsecondary_petmodifier.tpl'
+        return f"{TQDBParser.base}\\skillsecondary_petmodifier.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -273,14 +267,15 @@ class SkillPassiveOnLifeBuffSelfParser(TQDBParser):
     Parser for `skill_passiveonlifebuffself.tpl`.
 
     """
-    FIELD = 'lifeMonitorPercent'
+
+    FIELD = "lifeMonitorPercent"
 
     def __init__(self):
         super().__init__()
 
     @staticmethod
     def get_template_path():
-        return f'{TQDBParser.base}\\skill_passiveonlifebuffself.tpl'
+        return f"{TQDBParser.base}\\skill_passiveonlifebuffself.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -288,9 +283,7 @@ class SkillPassiveOnLifeBuffSelfParser(TQDBParser):
 
         """
         if self.FIELD in dbr:
-            result['properties'][self.FIELD] = [
-                texts.get(self.FIELD).format(value)
-                for value in dbr[self.FIELD]]
+            result["properties"][self.FIELD] = [texts.get(self.FIELD).format(value) for value in dbr[self.FIELD]]
 
 
 class SkillProjectileBaseParser(TQDBParser):
@@ -298,10 +291,11 @@ class SkillProjectileBaseParser(TQDBParser):
     Parser for `templatebase/skill_projectilebase.tpl`
 
     """
+
     FIELDS = [
-        'projectileExplosionRadius',
-        'projectileLaunchNumber',
-        'projectilePiercingChance',
+        "projectileExplosionRadius",
+        "projectileLaunchNumber",
+        "projectilePiercingChance",
     ]
 
     def __init__(self):
@@ -309,7 +303,7 @@ class SkillProjectileBaseParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f'{TQDBParser.base}\\templatebase\\skill_projectilebase.tpl'
+        return f"{TQDBParser.base}\\templatebase\\skill_projectilebase.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -320,9 +314,7 @@ class SkillProjectileBaseParser(TQDBParser):
             if field not in dbr:
                 continue
 
-            result['properties'][field] = [
-                texts.get(field).format(value)
-                for value in dbr[field]]
+            result["properties"][field] = [texts.get(field).format(value) for value in dbr[field]]
 
 
 class SkillRefreshCooldownParser(TQDBParser):
@@ -332,14 +324,15 @@ class SkillRefreshCooldownParser(TQDBParser):
     Note: the only skill that implements this seems to be Renewal from Nature.
 
     """
-    FIELD = 'refreshTime'
+
+    FIELD = "refreshTime"
 
     def __init__(self):
         super().__init__()
 
     @staticmethod
     def get_template_path():
-        return f'{TQDBParser.base}\\skill_refreshcooldown.tpl'
+        return f"{TQDBParser.base}\\skill_refreshcooldown.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -347,24 +340,23 @@ class SkillRefreshCooldownParser(TQDBParser):
 
         """
         if self.FIELD in dbr:
-            result['properties'][self.FIELD] = [
-                texts.get(self.FIELD).format(value)
-                for value in dbr[self.FIELD]]
+            result["properties"][self.FIELD] = [texts.get(self.FIELD).format(value) for value in dbr[self.FIELD]]
 
 
 class SkillWeaponAttackParser(TQDBParser):
     """
-    Parser for `templatebase\skill_wpattack.tpl.tpl`.
+    Parser for `templatebase\\skill_wpattack.tpl.tpl`.
 
     """
-    FIELD = 'skillChanceWeight'
+
+    FIELD = "skillChanceWeight"
 
     def __init__(self):
         super().__init__()
 
     @staticmethod
     def get_template_path():
-        return f'{TQDBParser.base}\\templatebase\\skill_wpattack.tpl'
+        return f"{TQDBParser.base}\\templatebase\\skill_wpattack.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -372,17 +364,16 @@ class SkillWeaponAttackParser(TQDBParser):
 
         """
         if self.FIELD in dbr:
-            result['properties'][self.FIELD] = [
-                texts.get(self.FIELD).format(value)
-                for value in dbr[self.FIELD]]
+            result["properties"][self.FIELD] = [texts.get(self.FIELD).format(value) for value in dbr[self.FIELD]]
 
 
 class SkillSpawnPetParser(TQDBParser):
     """
-    Parser for `templatebase\skill_spawnpet.tpl.tpl`.
+    Parser for `templatebase\\skill_spawnpet.tpl.tpl`.
 
     """
-    TTL = 'spawnObjectsTimeToLive'
+
+    TTL = "spawnObjectsTimeToLive"
 
     def __init__(self):
         super().__init__()
@@ -390,8 +381,8 @@ class SkillSpawnPetParser(TQDBParser):
     @staticmethod
     def get_template_path():
         return [
-            f'{TQDBParser.base}\\skill_spawnpet.tpl',
-            f'{TQDBParser.base}\\skill_defensivewall.tpl',
+            f"{TQDBParser.base}\\skill_spawnpet.tpl",
+            f"{TQDBParser.base}\\skill_defensivewall.tpl",
         ]
 
     def parse(self, dbr, dbr_file, result):
@@ -403,57 +394,39 @@ class SkillSpawnPetParser(TQDBParser):
         ttl_list = dbr.get(self.TTL, None)
 
         # Parse all the summons and set them as a list:
-        result['summons'] = []
-        for index, spawn_file in enumerate(dbr['spawnObjects']):
+        result["summons"] = []
+        for index, spawn_file in enumerate(dbr["spawnObjects"]):
             spawn = DBRParser.parse(spawn_file)
 
             # Keep track of the original properties this summon had:
             original_properties = {}
-            if 'properties' in spawn:
-                if isinstance(spawn['properties'], list):
-                    original_properties = spawn['properties'][0].copy()
+            if "properties" in spawn:
+                if isinstance(spawn["properties"], list):
+                    original_properties = spawn["properties"][0].copy()
                 else:
-                    original_properties = spawn['properties'].copy()
+                    original_properties = spawn["properties"].copy()
 
             # We need the raw values from the spawn DBR for hp/mp
-            spawn['properties'] = {}
+            spawn["properties"] = {}
             spawn_dbr = DBRParser.read(spawn_file)
 
-            if 'characterLife' in spawn_dbr:
-                hp_list = spawn_dbr['characterLife']
-                hp = (
-                    hp_list[index]
-                    if index < len(hp_list)
-                    else hp_list[len(hp_list) - 1])
-                TQDBParser.insert_value(
-                    'characterLife',
-                    texts.get('LifeText').format(hp),
-                    spawn)
-            if 'characterMana' in spawn_dbr:
-                mp_list = spawn_dbr['characterMana']
-                mp = (
-                    mp_list[index]
-                    if index < len(mp_list)
-                    else mp_list[len(mp_list) - 1])
-                TQDBParser.insert_value(
-                    'characterMana',
-                    texts.get('ManaText').format(mp),
-                    spawn)
+            if "characterLife" in spawn_dbr:
+                hp_list = spawn_dbr["characterLife"]
+                hp = hp_list[index] if index < len(hp_list) else hp_list[len(hp_list) - 1]
+                TQDBParser.insert_value("characterLife", texts.get("LifeText").format(hp), spawn)
+            if "characterMana" in spawn_dbr:
+                mp_list = spawn_dbr["characterMana"]
+                mp = mp_list[index] if index < len(mp_list) else mp_list[len(mp_list) - 1]
+                TQDBParser.insert_value("characterMana", texts.get("ManaText").format(mp), spawn)
             if ttl_list:
-                ttl = (
-                    ttl_list[index]
-                    if index < len(ttl_list)
-                    else ttl_list[len(ttl_list) - 1])
-                TQDBParser.insert_value(
-                    self.TTL,
-                    texts.get(self.TTL).format(ttl),
-                    spawn)
+                ttl = ttl_list[index] if index < len(ttl_list) else ttl_list[len(ttl_list) - 1]
+                TQDBParser.insert_value(self.TTL, texts.get(self.TTL).format(ttl), spawn)
 
             # Iterate over the original properties and add some whitelisted
             # properties to the final result:
             for key, value in original_properties.items():
-                if key.startswith('character'):
+                if key.startswith("character"):
                     continue
-                spawn['properties'][key] = value
+                spawn["properties"][key] = value
 
-            result['summons'].append(spawn)
+            result["summons"].append(spawn)

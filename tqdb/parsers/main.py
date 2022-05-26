@@ -11,6 +11,7 @@ from pathlib import Path
 
 from tqdb.templates import templates_by_path
 
+
 class InvalidItemError(Exception):
     """
     Raised by parser when it identifies that the item being parsed is invalid
@@ -18,7 +19,9 @@ class InvalidItemError(Exception):
     or because it's filtered out because it's uninteresting, for example if it
     is a common item.
     """
+
     pass
+
 
 class TQDBParser(metaclass=abc.ABCMeta):
     """
@@ -28,8 +31,9 @@ class TQDBParser(metaclass=abc.ABCMeta):
     and will ensure that the necessary methods are implemented.
 
     """
+
     # Base that all subclasses use for their template names.
-    base = 'database\\templates'
+    base = "database\\templates"
 
     # Priority constants:
     HIGHEST_PRIORITY = 3
@@ -100,9 +104,7 @@ class TQDBParser(metaclass=abc.ABCMeta):
         result = dbr.copy()
 
         # First grab all the fields that start with the field prefix:
-        fields = dict(
-            (k, v) for k, v in dbr.items()
-            if k.startswith(field) and isinstance(v, list))
+        fields = dict((k, v) for k, v in dbr.items() if k.startswith(field) and isinstance(v, list))
 
         # Now replace all the field values for this index
         for k, v in fields.items():
@@ -111,7 +113,8 @@ class TQDBParser(metaclass=abc.ABCMeta):
                 v[len(v) - 1]
                 if index >= len(v)
                 # Otherwise grab the value at this index:
-                else v[index])
+                else v[index]
+            )
 
             # If this value turned out to be 0 or False, pop it:
             if not result[k]:
@@ -136,15 +139,17 @@ class TQDBParser(metaclass=abc.ABCMeta):
         """
         fields = [dbr[p] for p in properties if p in dbr]
 
-        return max((
-            # If properties are lists, grab their length:
-            len(field)
-            if isinstance(field, list)
-            # Regular properties just have a single tier:
-            else 1
-            for field in fields),
+        return max(
+            (
+                # If properties are lists, grab their length:
+                len(field) if isinstance(field, list)
+                # Regular properties just have a single tier:
+                else 1
+                for field in fields
+            ),
             # If there aren't any properties, default to 1
-            default=1)
+            default=1,
+        )
 
     @staticmethod
     def insert_value(field, value, result):
@@ -168,15 +173,15 @@ class TQDBParser(metaclass=abc.ABCMeta):
             Output: offensiveSlowCold: ['3 Cold Damage', '6 Cold Damage']
 
         """
-        if field not in result['properties']:
-            result['properties'][field] = value
+        if field not in result["properties"]:
+            result["properties"][field] = value
             return
 
-        current_field = result['properties'][field]
+        current_field = result["properties"][field]
         if isinstance(current_field, list):
-            result['properties'][field].append(value)
+            result["properties"][field].append(value)
         else:
-            result['properties'][field] = [current_field, value]
+            result["properties"][field] = [current_field, value]
 
 
 def load_parsers():
@@ -189,7 +194,7 @@ def load_parsers():
     # Run through all sibling modules
     for (_, name, _) in pkgutil.iter_modules([Path(__file__).parent]):
         # Import the module so we can check its variables, classes, etc.
-        module = import_module(f'.{name}', package=__package__)
+        module = import_module(f".{name}", package=__package__)
 
         for attribute in dir(module):
             parser = getattr(module, attribute)
@@ -207,9 +212,7 @@ def load_parsers():
 
                 if isinstance(templates, list):
                     # Insert all the templates this parser handles
-                    parser_map.update(dict(
-                        (template, instanced) for template in templates
-                    ))
+                    parser_map.update(dict((template, instanced) for template in templates))
                 else:
                     # Insert just the single template the parser handles:
                     parser_map[templates] = instanced

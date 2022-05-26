@@ -84,7 +84,7 @@ def tqdb_prepare():
         try:
             tqae_key = winreg.OpenKey(
                 winreg.HKEY_LOCAL_MACHINE, LOOKUP_KEY,
-                access = winreg.KEY_READ | other_view_flag)
+                access=winreg.KEY_READ | other_view_flag)
         except WindowsError as err:
             raise RuntimeError('Could not find installation directory for '
                                'Titan Quest.') from err

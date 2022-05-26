@@ -49,6 +49,37 @@ def tqdb_language(language):
         json.dump(data, data_file, ensure_ascii=False, sort_keys=True)
 
 
+def tqdb_parse():
+    """
+    Run the parser to create the intermediate format.
+
+    This will create the intermediate format of the data from the database
+    which will allow faster parsing into the individual languages.
+
+    """
+    logging.info('Parsing database into its intermediate format…')
+
+    if not os.path.exists(paths.CACHE):
+        os.makedirs(paths.CACHE)
+
+    data = {
+        'affixes': main.parse_affixes,
+        'creatures': main.parse_creatures,
+        'equipment': main.parse_equipment,
+        'quests': main.parse_quests,
+        'sets': main.parse_sets,
+        'skills': main.parse_skills,
+    }
+
+    for category, fn in data.items():
+        logging.info(f'Parsing {data}')
+        data = fn()
+        output_name = paths.CACHE / f'tqdb.{category}.json'
+        with open(output_name, 'w', encoding='utf8') as data_file:
+            json.dump(data, data_file, ensure_ascii=False, sort_keys=True)
+
+
+
 def tqdb():
     """
     Run the Titan Quest Database parser.
@@ -79,6 +110,12 @@ def tqdb():
               'ru - Russian\n'
               'uk - Ukrainian\n'
               'zh - Chinese\n'))
+    argparser.add_argument(
+        '-f',
+        '--force',
+        action='store',
+        default=False,
+        dest='force_parsing')
     argparser.add_argument(
         '-a',
         '--all-languages',
