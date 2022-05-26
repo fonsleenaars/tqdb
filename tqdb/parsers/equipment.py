@@ -9,7 +9,7 @@ import os
 import numexpr
 
 from tqdb import dbr as DBRParser
-from tqdb.constants.resources import DB
+from tqdb.constants.paths import DB
 from tqdb.parsers.main import TQDBParser, InvalidItemError
 from tqdb.utils.text import texts
 

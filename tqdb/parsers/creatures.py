@@ -6,7 +6,8 @@ import logging
 
 from tqdb import dbr as DBRParser
 from tqdb import storage
-from tqdb.constants.resources import DB, CHESTS
+from tqdb.constants.paths import DB
+from tqdb.constants.resources import CHESTS
 from tqdb.parsers import base as parsers
 from tqdb.parsers.main import TQDBParser, InvalidItemError
 from tqdb.utils.text import texts

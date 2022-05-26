@@ -1,12 +1,12 @@
 import argparse
 import json
 import logging
-
+import os
 import time
 
 from tqdb import __version__ as tqdb_version
-from tqdb import main
-from tqdb import storage
+from tqdb import main, storage
+from tqdb.constants import paths
 from tqdb.utils import images
 from tqdb.utils.text import texts
 
@@ -44,7 +44,7 @@ def tqdb_language(language):
 
     logging.info('Writing output to files...')
 
-    output_name = f'output/tqdb.{language.lower()}.{tqdb_version}.json'
+    output_name = paths.OUTPUT / f'tqdb.{language.lower()}.{tqdb_version}.json'
     with open(output_name, 'w', encoding='utf8') as data_file:
         json.dump(data, data_file, ensure_ascii=False, sort_keys=True)
 
@@ -91,8 +91,16 @@ def tqdb():
 
     def create_sprite_sheet():
         start_time = time.time()
-        images.SpriteCreator('output/graphics/', 'output')
+        images.SpriteCreator(paths.OUTPUT)
         logging.info(f"Sprite sheet took {time.time() - start_time:.2f}s")
+
+    # Ensure required directories exist:
+    if not os.path.exists(paths.GRAPHICS):
+        os.makedirs(paths.GRAPHICS)
+
+    # Only parse the database into its intermediate form if forced or not yet done
+    # if args.force_parsing or not os.path.exists(paths.CACHE):
+    #     tqdb_parse()
 
     if not args.all_languages:
         # Parse the specified language:
@@ -111,6 +119,7 @@ def tqdb():
 
     # Create the sprite sheet after all languages have been parsed:
     create_sprite_sheet()
+
 
 if __name__ == '__main__':
     tqdb()

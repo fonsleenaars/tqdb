@@ -4,10 +4,6 @@ All resource constants.
 """
 from pathlib import Path
 
-# Input files and directories
-DB = Path('data/database/')
-RES = Path('data/resources/')
-
 AFFIXES = [
     'records/item*/lootmagicalaffixes/*ix/default/*.dbr',
     'records/xpack*/item*/lootmagicalaffixes/*ix/default/*.dbr',

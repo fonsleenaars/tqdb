@@ -13,7 +13,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from tqdb import storage
-from tqdb.constants import resources
+from tqdb.constants import resources, paths
 from tqdb.dbr import parse, read
 from tqdb.parsers.main import InvalidItemError
 from tqdb.utils import images
@@ -35,7 +35,7 @@ def parse_affixes():
 
     files = []
     for resource in resources.AFFIX_TABLES:
-        table_files = resources.DB / resource
+        table_files = paths.DB / resource
         files.extend(glob.glob(str(table_files), recursive=True))
 
     logging.info(f"Found {len(files)} affix table files.")
@@ -62,7 +62,7 @@ def parse_affixes():
 
     files = []
     for resource in resources.AFFIXES:
-        affix_files = resources.DB / resource
+        affix_files = paths.DB / resource
         files.extend(glob.glob(str(affix_files), recursive=True))
 
     logging.info(f"Found {len(files)} affix files.")
@@ -129,7 +129,7 @@ def parse_equipment():
 
     files = []
     for resource in resources.EQUIPMENT:
-        equipment_files_globpath = resources.DB / resource
+        equipment_files_globpath = paths.DB / resource
 
         for equipment_filename in glob.glob(str(equipment_files_globpath), recursive=True):
             equipment_path = Path(equipment_filename)
@@ -175,7 +175,7 @@ def parse_equipment():
                 continue
 
             # Save the bitmap and remove the bitmap key
-            images.save_bitmap(parsed, category, 'output/graphics/')
+            images.save_bitmap(parsed, category, paths.GRAPHICS)
         except KeyError as e:
             # Skip equipment that couldn't be parsed:
             logging.warning(f"DBR {dbr} parse result unacceptable. Parse result: {parsed}. Error: {e}")
@@ -219,7 +219,7 @@ def parse_creatures():
 
     files = []
     for resource in resources.CREATURES:
-        boss_files = resources.DB / resource
+        boss_files = paths.DB / resource
         files.extend(glob.glob(str(boss_files), recursive=True))
 
     logging.info(f"Found {len(files)} creature files.")
@@ -330,7 +330,7 @@ def parse_quests():
 
             # Prepend the path with the database path:
             try:
-                rewards = parse(resources.DB / reward_file)
+                rewards = parse(paths.DB / reward_file)
             except InvalidItemError as e:
                 messages = exception_messages_with_causes(e)
                 logging.debug(f"Skipping quest reward {reward_file} of {qst}. {messages}")
@@ -377,7 +377,7 @@ def parse_sets():
 
     files = []
     for resource in resources.SETS:
-        set_files = resources.DB / resource
+        set_files = paths.DB / resource
         files.extend(glob.glob(str(set_files), recursive=True))
 
     sets = {}

@@ -6,10 +6,12 @@ import glob
 import logging
 import os
 import subprocess
-import sys
+from pathlib import Path
+from shutil import rmtree
 
 from PIL import Image
-from shutil import rmtree
+
+from tqdb.constants import paths
 
 
 class SpriteCreator:
@@ -20,20 +22,20 @@ class SpriteCreator:
     single sprite image and the corresponding sprite stylesheet.
 
     """
-    def __init__(self, sprite_dir, output_dir):
+    def __init__(self):
         # Image map will be used to categorize by sizes
         images_map = {}
         images = []
 
         try:
             # Iterate through all the files and make a list of the image objects
-            for file in glob.glob(f'{sprite_dir}\\*.png'):
+            for file in glob.glob(paths.graphics / '*.png'):
                 image = Image.open(file)
                 image.filename = os.path.basename(file).split('.')[0]
                 images.append(image)
 
             if len(images) <= 0:
-                logging.warning(f"No images found in {sprite_dir}. Skipping creation of sprite sheet.")
+                logging.warning(f"No images found in {paths.graphics}. Skipping creation of sprite sheet.")
                 return
 
             logging.info(f"Combining {len(images)} images into a sprite sheet.")
@@ -160,27 +162,22 @@ class SpriteCreator:
             sprite_y += canvas.size[1]
 
         # Save the sprite
-        sprite_image.save(f'{output_dir}/sprite.png', optimize=True)
+        sprite_image.save(paths.OUTPUT / 'sprite.png', optimize=True)
 
         # Save the CSS
         css.sort()
-        with open(f'{output_dir}/sprite.css', 'w') as css_file:
+        with open(paths.OUTPUT / 'sprite.css', 'w') as css_file:
             for line in css:
                 css_file.write(f'{line}\n')
 
         # Remove all the images
-        rmtree(sprite_dir)
+        rmtree(paths.GRAPHICS)
 
 
 ###############################################################################
 #                              BITMAP UTILITY                                 #
 ###############################################################################
-# Directory preparations for bitmap
-if not os.path.exists('output/graphics'):
-    os.makedirs('output/graphics')
-
-
-def save_bitmap(item, item_type, graphics):
+def save_bitmap(item, item_type: str, graphics: Path):
     bitmap = item.pop('bitmap', None)
     tag = item['tag']
 
@@ -193,7 +190,7 @@ def save_bitmap(item, item_type, graphics):
         tag = item['classification'].lower()
     # Skip all non-MI duplicates
     elif (item.get('classification', None) != 'Rare' and
-          os.path.isfile(f'{graphics}{tag}.png')):
+          os.path.isfile(graphics / f'{tag}.png')):
         return
 
     filename = str(bitmap)

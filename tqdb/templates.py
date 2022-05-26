@@ -4,17 +4,15 @@ Classes and functionality relating to Templates.
 """
 import glob
 import re
-
 from pathlib import Path
+
+from tqdb.constants import paths
 
 templates_by_path = {}
 templates = {}
 
 # Global directory constants
-DATA_DIR = Path('data')
-DATABASE_DIR = DATA_DIR / 'database'
-OUTPUT_DIR = Path('output/parsing')
-TEMPLATE_DIR = DATABASE_DIR / 'templates/**/*.tpl'
+TEMPLATE_DIR = paths.DB / 'templates/**/*.tpl'
 TEMPLATE_PREFIX = '%TEMPLATE_DIR%'
 TEXTURES = Path('data/textures/')
 
@@ -36,6 +34,7 @@ class Variable:
     }
 
     """
+
     def __init__(self, content, groups):
         # Create a dictionary with all properties from this variable
         self.properties = dict(
@@ -102,7 +101,7 @@ class Variable:
             return bool(int(value)) if bool(int(value)) else None
         elif self['type'] == 'file_dbr':
             # Prepare the DBR reference fully
-            return DATABASE_DIR / value.lower()
+            return paths.DB / value.lower()
         elif self['type'] == 'file_tex':
             # Prepare the TEX reference fully
             return TEXTURES / value
@@ -131,13 +130,13 @@ class Template:
 
         try:
             # Make sure the path DATA_DIR is present
-            template_file.relative_to(DATA_DIR)
+            template_file.relative_to(paths.DATA)
         except ValueError:
-            template_file = DATA_DIR / template_file
+            template_file = paths.DATA / template_file
 
         # Prepare the path of this template as a key for the templates mapping
         self.file = template_file
-        self.key = str(template_file.relative_to(DATA_DIR)).lower()
+        self.key = str(template_file.relative_to(paths.DATA)).lower()
 
         # Open and read the file:
         content = open(self.file, 'r').read()

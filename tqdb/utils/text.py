@@ -12,18 +12,14 @@ import re
 
 from pathlib import Path
 
+from tqdb.constants import paths
+
 
 class Texts:
     """
     Class holding all TQ equipment, skill, and attribute texts.
 
     """
-    # Directory holding all the resources:
-    BASE_DIR = Path('data/resources')
-
-    # Output path
-    OUTPUT_DIR = Path('output/parsing')
-
     # Regex to remove the {} prefixes in texts:
     BRACKETS = re.compile(r'\{[^)]*\}')
 
@@ -182,8 +178,8 @@ class Texts:
         Prepare directory for parsing output.
 
         """
-        if not os.path.exists('output/parsing'):
-            os.makedirs('output/parsing')
+        if not os.path.exists(paths.PARSING):
+            os.makedirs(paths.PARSING)
 
     def load_locale(self, locale):
         self.locale = locale.lower()
@@ -348,7 +344,7 @@ class Texts:
         self.texts = {**self.tags, **self.strings}
 
         # Output the dictionary so it can be reviewed during parsings:
-        output_name = self.OUTPUT_DIR / f'texts.{self.locale}.json'
+        output_name = paths.OUTPUT / f'texts.{self.locale}.json'
         with open(output_name, 'w', encoding='utf8') as texts_file:
             json.dump(
                 self.texts,
@@ -388,7 +384,7 @@ class Texts:
         Parse a text resource file, for a certain locale.
 
         """
-        f = self.BASE_DIR / self.locale / text_file
+        f = paths.RES / self.locale / text_file
 
         try:
             # Most files have UTF-16 or RAW encoding
