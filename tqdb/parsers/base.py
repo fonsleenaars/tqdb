@@ -234,14 +234,16 @@ class ParametersDefensiveParser(TQDBParser):
         Parse all values for a given defensive field that is in the DBR.
 
         """
-        for i in range(len(dbr[field])):
+        max_length = max(len(dbr[field]), len(dbr.get(f"{field}Chance", [])))
+
+        for i in range(max_length):
             iteration = TQDBParser.extract_values(dbr, field, i)
 
             # It's possible some values aren't set in this iteration:
             if field not in iteration:
                 continue
 
-            chance = iteration.get(f"{field}Chance", 0)
+            chance = iteration.get(f"{field}Chance", i)
             value = iteration[field]
 
             # Format the value using the texts:
