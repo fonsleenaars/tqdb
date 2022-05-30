@@ -42,6 +42,7 @@ def parse_affixes():
 
     # The affix tables will determine what gear an affix can be applied to.
     affix_tables = {}
+    affix_files = set()
     for dbr in files:
         table = read(dbr)
 
@@ -51,33 +52,26 @@ def parse_affixes():
 
         # For each affix in this table, create an entry:
         for field, affix_dbr in table.items():
-            if not field.startswith("randomizerName") or not table_type:
+            if not field.startswith("randomizerName") or not affix_dbr.exists():
                 continue
 
-            affix_dbr = str(affix_dbr)
+            # Add this file as discovered, this will determine what affixes are actually parsed
+            affix_files.add(affix_dbr)
+
             if affix_dbr not in affix_tables:
                 affix_tables[affix_dbr] = [table_type]
             elif table_type not in affix_tables[affix_dbr]:
                 affix_tables[affix_dbr].append(table_type)
 
-    files = []
-    for resource in resources.AFFIXES:
-        affix_files = paths.DB / resource
-        files.extend(glob.glob(str(affix_files), recursive=True))
-
-    logging.info(f"Found {len(files)} affix files.")
+    logging.info(f"Found {len(affix_files)} affix files.")
 
     affixes = {"prefixes": {}, "suffixes": {}}
-    for dbr in files:
+    for dbr in affix_files:
         affix = parse(dbr)
 
-        # Skip affixes without properties (first one will be empty):
-        if not affix["properties"]:
-            continue
-
-        # Skip the incorrect 'of the Mammoth' prefix entry:
-        if "prefix" in dbr and affix["tag"] == "tagPrefix145":
-            continue
+        # Tinkerer needs a little custom love because it has no properties, but a special text:
+        if affix['tag'] == 'x3tagSuffix01':
+            affix['properties'] = { 'description': texts.get('x3tagextrarelic') }
 
         # Assign the table types to this affix:
         if dbr not in affix_tables:
@@ -87,7 +81,7 @@ def parse_affixes():
             affix["equipment"] = ",".join(affix_tables[dbr])
 
         # Add affixes to their respective pre- or suffix list.
-        if "Prefix" in affix["tag"] and "suffix" not in dbr:
+        if "Prefix" in affix["tag"] and "suffix" not in str(dbr):
             affixType = "prefixes"
         else:
             affixType = "suffixes"

@@ -4,11 +4,14 @@ All resource constants.
 """
 from pathlib import Path
 
-AFFIXES = [
-    "records/item*/lootmagicalaffixes/*ix/default/*.dbr",
-    "records/xpack*/item*/lootmagicalaffixes/*ix/default/*.dbr",
-    "records/xpack*/item*/lootmagicalaffixes/*ix/*.dbr",
-]
+# This is being replaced by only parsing loot affixes that appear in
+# the `randomizerName` properties of the AFFIX_TABLES.
+# This way we know for sure those affixes can occur
+# AFFIXES = [
+#     "records/item*/lootmagicalaffixes/*ix/default/*.dbr",
+#     "records/xpack*/item*/lootmagicalaffixes/*ix/default/*.dbr",
+#     "records/xpack*/item*/lootmagicalaffixes/*ix/*.dbr",
+# ]
 
 AFFIX_TABLES = [
     "records/item*/lootmagicalaffixes/*ix/tables*/*.dbr",
@@ -189,91 +192,91 @@ CHESTS = {
         "records/xpack/item/containers/bosschest05_hades_03.dbr",
     ],
     "x2tagMonsterName096": [
-        "records/xpack2/item/containers/boss containers/" "bosschest01_porcus_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest01_porcus_02.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest01_porcus_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest01_porcus_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest01_porcus_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest01_porcus_03.dbr",
     ],
     "x2tagMonsterName184": [
-        "records/xpack2/item/containers/boss containers/" "bosschest03_mineghost_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest03_mineghost_02.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest03_mineghost_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest03_mineghost_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest03_mineghost_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest03_mineghost_03.dbr",
     ],
     "x2tagMonsterName147": [
-        "records/xpack2/item/containers/boss containers/" "bosschest05_ancients_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest05_ancients_02.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest05_ancients_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest05_ancients_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest05_ancients_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest05_ancients_03.dbr",
     ],
     "x2tagMonsterName148": [
-        "records/xpack2/item/containers/boss containers/" "bosschest05_ancients_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest05_ancients_02.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest05_ancients_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest05_ancients_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest05_ancients_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest05_ancients_03.dbr",
     ],
     "x2tagMonsterName149": [
-        "records/xpack2/item/containers/boss containers/" "bosschest05_ancients_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest05_ancients_02.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest05_ancients_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest05_ancients_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest05_ancients_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest05_ancients_03.dbr",
     ],
     "x2tagMonsterName150": [
-        "records/xpack2/item/containers/boss containers/" "bosschest05_ancients_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest05_ancients_02.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest05_ancients_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest05_ancients_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest05_ancients_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest05_ancients_03.dbr",
     ],
     "x2tagMonsterName011": [
-        "records/xpack2/item/containers/boss containers/" "bosschest07_hildisvini_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest07_hildisvini_02.dbr",
-        "records/xpack2/item/containers/boss containers" "/bosschest07_hildisvini_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest07_hildisvini_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest07_hildisvini_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest07_hildisvini_03.dbr",
     ],
     "x2tagMonsterName121": [
-        "records/xpack2/item/containers/boss containers/" "bosschest09_shroomking_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest09_shroomking_02.dbr",
-        "records/xpack2/item/containers/boss containers" "/bosschest09_shroomking_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest09_shroomking_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest09_shroomking_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest09_shroomking_03.dbr",
     ],
     "x2tagasgard_odin": [
-        "records/xpack2/item/containers/boss containers/" "bosschest10_aesir_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest10_aesir_02.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest10_aesir_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest10_aesir_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest10_aesir_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest10_aesir_03.dbr",
     ],
     "x2tagasgard_freyja": [
-        "records/xpack2/item/containers/boss containers/" "bosschest10_aesir_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest10_aesir_02.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest10_aesir_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest10_aesir_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest10_aesir_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest10_aesir_03.dbr",
     ],
     "x2tagasgard_baldr": [
-        "records/xpack2/item/containers/boss containers/" "bosschest10_aesir_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest10_aesir_02.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest10_aesir_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest10_aesir_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest10_aesir_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest10_aesir_03.dbr",
     ],
     "x2tagasgard_tyr": [
-        "records/xpack2/item/containers/boss containers/" "bosschest10_aesir_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest10_aesir_02.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest10_aesir_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest10_aesir_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest10_aesir_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest10_aesir_03.dbr",
     ],
     "x2tagutgard_mimer": [
-        "records/xpack2/item/containers/boss containers/" "bosschest12_mimir_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest12_mimir_02.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest12_mimir_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest12_mimir_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest12_mimir_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest12_mimir_03.dbr",
     ],
     "x2tagMonsterName093": [
-        "records/xpack2/item/containers/boss containers/" "bosschest14_loki_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest14_loki_02.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest14_loki_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest14_loki_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest14_loki_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest14_loki_03.dbr",
     ],
     "x2tagmuspelheim_loki": [
-        "records/xpack2/item/containers/boss containers/" "bosschest14_loki_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest14_loki_02.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest14_loki_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest14_loki_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest14_loki_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest14_loki_03.dbr",
     ],
     "x2tagMonsterName058": [
-        "records/xpack2/item/containers/boss containers/" "bosschest15_surtr_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest15_surtr_02.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest15_surtr_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest15_surtr_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest15_surtr_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest15_surtr_03.dbr",
     ],
     "x2tagMonsterName059": [
-        "records/xpack2/item/containers/boss containers/" "bosschest15_surtr_01.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest15_surtr_02.dbr",
-        "records/xpack2/item/containers/boss containers/" "bosschest15_surtr_03.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest15_surtr_01.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest15_surtr_02.dbr",
+        "records/xpack2/item/containers/boss containers/bosschest15_surtr_03.dbr",
     ],
-    "x2tagMonsterName094": ["", "", "records/xpack2/item/containers/boss containers/" "bosschest17_fafnir_03.dbr"],
+    "x2tagMonsterName094": ["", "", "records/xpack2/item/containers/boss containers/bosschest17_fafnir_03.dbr"],
 }
 
 CREATURES = [

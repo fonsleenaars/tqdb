@@ -14,3 +14,6 @@ numpy = "~=1.22.4"
 
 [dev-packages]
 black = "*"
+
+[pipenv]
+allow_prereleases = true
