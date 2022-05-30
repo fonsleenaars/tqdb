@@ -267,6 +267,9 @@ class ItemEquipmentParser(TQDBParser):
         cost_prefix = dbr["Class"].split("_")[1]
         cost_prefix = cost_prefix[:1].lower() + cost_prefix[1:]
 
+        if cost_prefix == 'rangedOneHand':
+            cost_prefix = 'bow'
+
         # Read cost file
         cost_properties = DBRParser.read(dbr.get("itemCostName", self.REQUIREMENT_FALLBACK))
 
