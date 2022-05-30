@@ -41,7 +41,7 @@ def parse_affixes():
     logging.info(f"Found {len(files)} affix table files.")
 
     # The affix tables will determine what gear an affix can be applied to.
-    affix_tables = {}
+    affix_tables: dict[str, set] = {}
     affix_files = set()
     for dbr in files:
         table = read(dbr)
@@ -59,9 +59,9 @@ def parse_affixes():
             affix_files.add(affix_dbr)
 
             if affix_dbr not in affix_tables:
-                affix_tables[affix_dbr] = [table_type]
+                affix_tables[affix_dbr] = {table_type}
             elif table_type not in affix_tables[affix_dbr]:
-                affix_tables[affix_dbr].append(table_type)
+                affix_tables[affix_dbr].add(table_type)
 
     logging.info(f"Found {len(affix_files)} affix files.")
 
@@ -76,9 +76,9 @@ def parse_affixes():
         # Assign the table types to this affix:
         if dbr not in affix_tables:
             # Affix can occur on all equipment:
-            affix["equipment"] = "none"
+            affix["equipment"] = {"none"}
         else:
-            affix["equipment"] = ",".join(affix_tables[dbr])
+            affix["equipment"] = affix_tables[dbr]
 
         # Add affixes to their respective pre- or suffix list.
         if "Prefix" in affix["tag"] and "suffix" not in str(dbr):
@@ -94,11 +94,17 @@ def parse_affixes():
             if is_duplicate_affix(affixes[affixType][affixTag], affix):
                 continue
             affixes[affixType][affixTag]["properties"].append(affix["properties"])
+            affixes[affixType][affixTag]["equipment"].update(affix['equipment'])
         else:
             # Place the affix properties into a list that can be extended by
             # alternatives during this parsing.
             affix["properties"] = [affix["properties"]]
             affixes[affixType][affixTag] = affix
+
+    # Parse the equipment one last time:
+    for _, v in affixes.items():
+        for _, affix in v.items():
+            affix['equipment'] = ','.join(list(affix['equipment']))
 
     # Log and reset the timer:
     logging.info(f"Parsed affixes in {time.time() - start_time:.2f} seconds.")

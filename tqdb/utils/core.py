@@ -85,6 +85,8 @@ def get_affix_table_type(file_prefix):
         "spear",
         "staff",
         "sword",
+        # Ranged one-hand; throwing weapons
+        "roh"
     ]:
         if file_prefix.startswith(prefix):
             return prefix
