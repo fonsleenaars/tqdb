@@ -3,7 +3,6 @@ All wearable/usable equipment parsers.
 
 """
 import logging
-import math
 import os
 
 import numexpr
@@ -288,7 +287,7 @@ class ItemEquipmentParser(TQDBParser):
                 totalAttCount = len(result["properties"])  # noqa
 
                 # Eval the equation:
-                result[req] = math.ceil(numexpr.evaluate(equation).item())
+                result[req] = round(numexpr.evaluate(equation).item())
 
     def should_parse_requirements(self, dbr, result):
         """
