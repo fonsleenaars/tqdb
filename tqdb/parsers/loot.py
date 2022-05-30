@@ -69,13 +69,13 @@ class LootRandomizerTableParser(TQDBParser):
 
         # Add all the weights together to determined % later
         total_weight = sum(weights.values())
-        for key, dbr_file in tables.items():
+        for key, randomizer_file in tables.items():
             # Skip entries without chance or without a file
-            if key not in weights or not os.path.exists(dbr_file):
+            if key not in weights or not os.path.exists(randomizer_file):
                 continue
 
             # Parse the table entry
-            randomizer = DBRParser.parse(dbr_file)
+            randomizer = DBRParser.parse(randomizer_file)
 
             # Append the parsed bonus with its chance:
             result["table"].append(

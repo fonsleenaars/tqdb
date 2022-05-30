@@ -363,7 +363,7 @@ class ItemRelicParser(TQDBParser):
         max_pieces = TQDBParser.highest_tier(result["properties"], result["properties"].keys())
 
         # Initialize a list of tiers
-        properties = [{} for i in range(max_pieces)]
+        properties = [{} for _ in range(max_pieces)]
 
         # Setup properties as list to correspond to adding pieces of a relic:
         for key, values in result["properties"].items():

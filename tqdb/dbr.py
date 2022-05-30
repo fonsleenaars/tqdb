@@ -139,10 +139,8 @@ def parse(dbr_file, references=None):
         except InvalidItemError as e:
             # One of the parsers has determined this file shouldn't be parsed:
             raise InvalidItemError(
-                f"Parser {prioritized_parser} for template "
-                f"key {prioritized_parser.template.key} "
-                "tells us this item is invalid and should "
-                "be ignored."
+                f"Parser {prioritized_parser} for template key {prioritized_parser.template.key} "
+                "tells us this item is invalid and should be ignored."
             ) from e
 
     # Pop the helper data references again:

@@ -42,7 +42,7 @@ def parse_affixes():
 
     # The affix tables will determine what gear an affix can be applied to.
     affix_tables: dict[str, set] = {}
-    affix_files = set()
+    affix_files: set[Path] = set()
     for dbr in files:
         table = read(dbr)
 
@@ -70,8 +70,8 @@ def parse_affixes():
         affix = parse(dbr)
 
         # Tinkerer needs a little custom love because it has no properties, but a special text:
-        if affix['tag'] == 'x3tagSuffix01':
-            affix['properties'] = { 'description': texts.get('x3tagextrarelic') }
+        if affix["tag"] == "x3tagSuffix01":
+            affix["properties"] = {"description": texts.get("x3tagextrarelic")}
 
         # Assign the table types to this affix:
         if dbr not in affix_tables:
@@ -81,7 +81,7 @@ def parse_affixes():
             affix["equipment"] = affix_tables[dbr]
 
         # Add affixes to their respective pre- or suffix list.
-        if "Prefix" in affix["tag"] and "suffix" not in str(dbr):
+        if "Prefix" in affix["tag"] and "suffix" not in dbr.parts:
             affixType = "prefixes"
         else:
             affixType = "suffixes"
@@ -90,21 +90,28 @@ def parse_affixes():
 
         # Either add the affix or add its properties as an alternative
         if affixTag in affixes[affixType]:
+            affix_result = affixes[affixType][affixTag]
             # Skip duplicate affix properties:
-            if is_duplicate_affix(affixes[affixType][affixTag], affix):
+            if is_duplicate_affix(affix_result, affix):
                 continue
-            affixes[affixType][affixTag]["properties"].append(affix["properties"])
-            affixes[affixType][affixTag]["equipment"].update(affix['equipment'])
-        else:
-            # Place the affix properties into a list that can be extended by
-            # alternatives during this parsing.
-            affix["properties"] = [affix["properties"]]
-            affixes[affixType][affixTag] = affix
 
-    # Parse the equipment one last time:
+            # Create a list if it wasn't already one
+            if not isinstance(affix_result["properties"], list):
+                affix_result["properties"] = [affix_result["properties"], affix["properties"]]
+            else:
+                affix_result["properties"].append(affix["properties"])
+            affix_result["equipment"].update(affix["equipment"])
+        else:
+            # Make sure to copy here since we alter some properties after looping
+            affixes[affixType][affixTag] = affix.copy()
+
+    # Parse the equipment & properties one last time to standardize the formats
     for _, v in affixes.items():
         for _, affix in v.items():
-            affix['equipment'] = ','.join(list(affix['equipment']))
+            affix["equipment"] = ",".join(list(affix["equipment"]))
+            affix["properties"] = (
+                affix["properties"] if isinstance(affix["properties"], list) else [affix["properties"]]
+            )
 
     # Log and reset the timer:
     logging.info(f"Parsed affixes in {time.time() - start_time:.2f} seconds.")
@@ -128,14 +135,11 @@ def parse_equipment():
 
     files = []
     for resource in resources.EQUIPMENT:
-        equipment_files_globpath = paths.DB / resource
-
-        for equipment_filename in glob.glob(str(equipment_files_globpath), recursive=True):
-            equipment_path = Path(equipment_filename)
+        for equipment_filename in paths.DB.glob(resource):
             if not (
                 # Exclude all files in 'old' and 'default'
-                "old" in equipment_path.parts
-                or "default" in equipment_path.parts
+                "old" in equipment_filename.parts
+                or "default" in equipment_filename.parts
             ):
                 files.append(equipment_filename)
 
