@@ -939,10 +939,12 @@ class RacialBonusParser(TQDBParser):
             else:
                 races.append(race)
 
+        values = []
         for value in dbr[field]:
-            TQDBParser.insert_value(
-                field,
-                # Create a list of all racial bonuses
-                [texts.get(field).format(value, race) for race in races],
-                result,
-            )
+            # Create a list of all racial bonuses
+            values.append([texts.get(field).format(value, race) for race in races])
+
+        if len(values) == 1:
+            TQDBParser.insert_value(field, values[0], result)
+        else:
+            TQDBParser.insert_value(field, values, result)

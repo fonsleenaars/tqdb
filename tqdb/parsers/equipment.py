@@ -369,7 +369,12 @@ class ItemRelicParser(TQDBParser):
 
         # Setup properties as list to correspond to adding pieces of a relic:
         for key, values in result["properties"].items():
-            if not isinstance(values, list):
+            if key.startswith('racialBonus') and len(values) == max_pieces:
+                # Since racial bonuses are 2D lists, put the whole list on each tier:
+                for i in range(len(values)):
+                    properties[i][key] = values[i]
+                continue
+            elif not isinstance(values, list) or key.startswith('racialBonus'):
                 # This property is just repeated for all tiers:
                 for i in range(max_pieces):
                     properties[i][key] = values
