@@ -243,7 +243,7 @@ class ParametersDefensiveParser(TQDBParser):
             if field not in iteration:
                 continue
 
-            chance = iteration.get(f"{field}Chance", i)
+            chance = iteration.get(f"{field}Chance", 0)
             value = iteration[field]
 
             # Format the value using the texts:
