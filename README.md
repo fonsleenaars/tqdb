@@ -141,7 +141,7 @@ These values can thus easily be parsed into a usable dictionary or collection. T
 This parser uses the TextureViewer program created by Max McGuire to convert the TEX files into transparent PNGs. I included the program, the DLL and the readme in its entirety in the repo.
 
 ### ReactJS Website implementation
-I have created a React wrapper of the parsed JSON result on [tq-db.net][tqdb]. This wesite allows for some easy navigation and filtering of the data set. You can report any issues you find on the website on this repository's issue tracker.
+I have created a React wrapper of the parsed JSON result on [tq-db.net][tqdb]. This website allows for some easy navigation and filtering of the data set. You can report any issues you find on the website on this repository's issue tracker.
 
 [ng]: <https://www.nordicgames.at/index.php/product/titan_quest_gold_edition>
 [gb]: <https://www.gamebanshee.com/titanquest/>
