@@ -8,7 +8,7 @@ name = "pypi"
 
 [packages]
 numexpr = "*"
-Pillow = "~=9.1.1"
+Pillow = "~=10.0.1"
 pytest = "*"
 numpy = "~=1.22.4"
 
