@@ -4,21 +4,11 @@ Coverage and functional tests for all the base parsers.
 """
 import pytest
 
-from tqdb.constants import paths
 from tqdb.parsers import base
-from tqdb.templates import load_templates, templates_by_path
+from tqdb.templates import templates_by_path
 
-
-@pytest.fixture(scope="module", autouse=True)
-def game_templates():
-    """
-    Load the game's own templates, or skip the module when they are absent.
-
-    """
-    if not (paths.DB / "templates").is_dir():
-        pytest.skip("needs the extracted game templates under the data root")
-
-    load_templates()
+# Every test here reads the game's own templates; see conftest.py.
+pytestmark = pytest.mark.usefixtures("game_templates")
 
 # These fields are always allowed
 GLOBAL_ALLOWED = [

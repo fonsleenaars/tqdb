@@ -1,0 +1,3 @@
+// Synthetic item rarity names, looked up through ItemBaseParser.CLASSIFICATIONS.
+tagTutorialTip05TextE=Charmed
+tagTutorialTip05TextF=Scarce

@@ -9,8 +9,6 @@ import pkgutil
 from importlib import import_module
 from pathlib import Path
 
-from tqdb.templates import templates_by_path
-
 
 class InvalidItemError(Exception):
     """
@@ -42,17 +40,12 @@ class TQDBParser(metaclass=abc.ABCMeta):
 
     def __init__(self):
         """
-        Initialize by setting the template based on its path.
+        Parsers hold no per-instance state on construction. They are keyed
+        by the template path they declare, and that path only has to exist
+        in the registry when a record using it is parsed, so a test can load
+        a minimal template set.
 
         """
-        templates = self.get_template_path()
-
-        if isinstance(templates, list):
-            # Load all templates
-            self.template = [templates_by_path[t] for t in templates]
-        else:
-            # Just load the one template
-            self.template = templates_by_path[templates]
 
     def get_priority(self):
         """

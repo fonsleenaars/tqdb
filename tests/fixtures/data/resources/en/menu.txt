@@ -1,0 +1,5 @@
+// Synthetic difficulty titles, looked up by the equipment parsers as
+// classifications.
+tagRDifficultyTitle01=Tier One
+tagRDifficultyTitle02=Tier Two
+tagRDifficultyTitle03=Tier Three

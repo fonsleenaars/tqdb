@@ -1,0 +1,8 @@
+templateName,database\Templates\LootRandomizer.tpl,
+Class,LootRandomizer,
+FileDescription,Mighty,
+characterDexterity,0,
+characterStrength,5,
+itemClassification,Magical,
+levelRequirement,5,
+lootRandomizerName,tagPrefixMight,

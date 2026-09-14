@@ -1,7 +1,8 @@
-# Game content: never committed
-data/
-game/
-output/
+# Game content: never committed. Anchored to the repo root so that
+# tests/fixtures/data (synthetic, committed) is not caught.
+/data/
+/game/
+/output/
 
 # Build and tool state
 target/

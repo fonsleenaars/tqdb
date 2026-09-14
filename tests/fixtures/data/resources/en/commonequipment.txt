@@ -1,0 +1,18 @@
+// Synthetic item and affix names for the test fixtures.
+tagScrollEmber=Scroll of Ember
+tagScrollEmberDesc=Kindles a small flame.
+tagScrollFrost=Scroll of Rime
+tagScrollFrostDesc=Chills the air.
+tagScrollSpark=Scroll of Spark
+tagScrollSparkDesc=Crackles briefly.
+tagPrefixMight=Mighty
+tagRingFixture10=Fixture Ring 10
+tagRingFixture12=Fixture Ring 12
+tagRingFixture14=Fixture Ring 14
+tagRingFixture16=Fixture Ring 16
+tagRingFixture27=Fixture Ring 27
+tagRingFixture30=Fixture Ring 30
+tagRingFixture32=Fixture Ring 32
+tagRingFixtureStatic=Fixture Ring Static
+tagRingFixtureStaticCost=Fixture Ring Static Cost
+tagRingFixtureDot=Fixture Ring Damage Over Time

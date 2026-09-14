@@ -1,0 +1,8 @@
+templateName,database\Templates\OneShot_Scroll.tpl,
+Class,OneShot_Scroll,
+FileDescription,normal difficulty scroll,
+bitmap,Items\Scrolls\ember_64.tex,
+description,tagScrollEmber,
+itemText,tagScrollEmberDesc,
+levelRequirement,10,
+skillName,Records\Skills\Scrolls\01_Ember.dbr,

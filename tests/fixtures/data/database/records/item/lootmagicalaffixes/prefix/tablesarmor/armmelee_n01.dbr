@@ -1,0 +1,6 @@
+templateName,database\Templates\LootRandomizerTable.tpl,
+Class,LootRandomizerTable,
+randomizerName1,Records\Item\LootMagicalAffixes\Prefix\Default\Character_Might_01.dbr,
+randomizerName2,Records\Item\LootMagicalAffixes\Prefix\Default\Character_Might_02.dbr,
+randomizerWeight1,100,
+randomizerWeight2,50,

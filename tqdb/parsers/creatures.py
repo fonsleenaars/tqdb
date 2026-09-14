@@ -6,7 +6,7 @@ import logging
 
 from tqdb import dbr as DBRParser
 from tqdb import storage
-from tqdb.constants.paths import DB
+from tqdb.constants import paths
 from tqdb.constants.resources import CHESTS
 from tqdb.parsers import base as parsers
 from tqdb.parsers.main import TQDBParser, InvalidItemError
@@ -135,7 +135,7 @@ class MonsterParser(TQDBParser):
 
                 # Parse the chest and pass the monsters level as a reference:
                 loot = DBRParser.parse(
-                    DB / CHESTS[tag][index],
+                    paths.DB / CHESTS[tag][index],
                     {"level": level},
                 )
 
@@ -291,7 +291,7 @@ class MonsterSkillManager(TQDBParser):
 
     # Skills to ignore when parsing pet buffs/skills:
     IGNORE_SKILLS = [
-        str(DB / "records" / skill)
+        str(paths.DB / "records" / skill)
         for skill in [
             "skills/monster skills/passive_totaldamageabsorption01.dbr",
             "skills/monster skills/defense/armor_passive.dbr",

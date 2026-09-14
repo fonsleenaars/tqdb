@@ -1,0 +1,31 @@
+// Synthetic property format strings. Texts.load_locale requires the composite
+// pieces below (cost, duration, radius, stun, taunt) to exist in every locale;
+// their values here only need the shape the loader expects.
+characterStrength={%+.0f0} Brawn
+characterDexterity={%+.0f0} Finesse
+LifeText={%.0f0} Vigor
+ManaText={%.0f0} Focus
+spawnObjectsTimeToLive=Lasts {%.1f0} Seconds
+defensivePhysical={%.0f0}% Blunt Ward
+skillCostFormat={%.0f0 %s1}
+manaCost=Focus Price
+skillFloat1Format={%.1f0 %s1}
+activeLifeCost=Vigor Drain per Tick
+activeManaCost=Focus Drain per Tick
+skillSecondFormat={%.1f0 Sec %s1}
+activeDuration=Span
+skillDistanceFormat={%.1f0 Yard %s1}
+targetRadius=Reach
+retaliationStun=Daze Backlash
+damageStun={%.1f0} beat(s) of Daze
+damageTaunt=Provoke
+DamageDurationBleeding= Seeping Harm
+DamageDurationCold= Rime Harm
+DamageSingleFormat={%.0f0}
+DamageRangeFormat={%.0f0} to {%.0f1}
+DamageSingleFormatTime= across {%.1f0} Ticks
+DamageRangeFormatTime= across {%.1f0} - {%.1f1} Ticks
+DamageDurationRunSpeed=% Stride Loss
+DamageInfluenceSingleFormat={%.1f0}
+DamageFixedSingleFormatTime= lasting {%.1f0} Ticks
+DamageFixedRangeFormatTime= lasting {%.1f0} - {%.1f1} Ticks

@@ -52,7 +52,9 @@ There are no platform deadlines: the output is static JSON consumed by a website
 ## Verification ladder
 
 1. `just lint` — clippy with warnings as errors, rustfmt.
-2. `just test` — `cargo test` and `pytest` on synthetic fixtures. No game data needed.
+2. `just test` — `cargo test` and `pytest` on synthetic fixtures. No game data needed. The Python tests come in two kinds:
+   - **Fixture tests** under `tests/` parse hand-written records from `tests/fixtures/data/`, a miniature of the extracted tree: `database/templates/` (only the templates the records use, with only the variables the parsers read), `database/records/` (the records, at paths shaped like the game's so file-name rules apply), and `resources/en/` (the tags and format strings the records need, plus the composite strings the text loader requires in every locale). The `fixture_data` fixture in `conftest.py` points the parser at it, loads the templates and English texts, and clears the record cache. Nothing in it is copied from the game.
+   - **Template coverage tests** in `tqdb/parsers/base_test.py` read the game's own templates through the `game_templates` fixture and skip when the data root has none.
 3. `just extract` after any change to `extract/`: every step must report zero failures. `tqextract arc info` and `tex survey` verify checksums and decoding on a single archive or directory.
 4. `just parse en` diffed against the previous `output/tqdb.en.<version>.json`, or against the website's committed baseline. Needs the extracted data volume.
 5. `just parse-all` before a release.

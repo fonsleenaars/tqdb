@@ -384,17 +384,23 @@ class Texts:
         f = paths.RES / self.locale / text_file
 
         try:
-            # Most files have UTF-16 or RAW encoding
-            lines = [l.rstrip("\n") for l in open(f, encoding="utf16")]
-        except UnicodeError:
-            # Some files have ??? encoding (literally)
-            lines = [l.rstrip("\n") for l in open(f)]
+            raw = f.read_bytes()
         except FileNotFoundError:
             # Log error and move on:
             logging.warning(f"Text resource file missing: {text_file}")
 
             # Return an empty dict not to break the loop
             return {}
+
+        # The game's text files are UTF-16 with a byte order mark, apart from
+        # four Ragnarok files in the English locale (x2mainquest, x2sidequest,
+        # x2skills, x2tutorial) that are plain ASCII. Decide by the mark, so
+        # a marker-less file is never misread as UTF-16.
+        encoding = "utf16" if raw[:2] in (b"\xff\xfe", b"\xfe\xff") else "utf8"
+        # Split on the line endings a text-mode read would translate, and
+        # nothing else (str.splitlines also breaks on NEL and the Unicode
+        # separators, which may occur inside a localized value).
+        lines = raw.decode(encoding).replace("\r\n", "\n").replace("\r", "\n").split("\n")
 
         # Parse line into a dictionary of key, value properties:
         return dict(

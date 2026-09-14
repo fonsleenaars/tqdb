@@ -111,7 +111,7 @@ Because `references` is not part of the cache key, parse order is observable: a 
 
 ## Text resources: `tqdb/utils/text.py`
 
-`Texts.load_locale` reads 34 tag files and 5 UI-string files from `data/resources/<locale>/`, UTF-16 first then platform default. It then:
+`Texts.load_locale` reads 34 tag files and 5 UI-string files from `data/resources/<locale>/`, as UTF-16 when the file starts with a byte order mark and as UTF-8 otherwise. It then:
 
 - strips `tag`/`xtag`/`x2tag` prefixes and adds aliases,
 - renames game text keys into DBR variable names (`damageFire` to `offensiveFire`, `defense*` to `defensive*`, and so on),
@@ -139,7 +139,7 @@ The JSON shape is specified in `data-contract.md`.
 
 ## Tests
 
-`tqdb/parsers/base_test.py` is the only test file. Its five tests check that every variable in a template is covered by the corresponding parser's field list. They load the game's templates themselves and skip when the data root has none. There are no functional tests.
+Functional tests live under `tests/` and parse synthetic records from `tests/fixtures/data/`, a miniature of the extracted tree; `docs/build-pipeline.md` describes the layout. `tqdb/parsers/base_test.py` checks that every variable in the game's own templates is covered by the corresponding parser's field list, and skips when the data root has no templates. Parsers are registered by the template path they declare, so a fixture only needs the templates its records use.
 
 ## Game-data workarounds
 
@@ -148,6 +148,7 @@ Defects in the game's own files that the parser compensates for. They are facts 
 - `bosschest13_chimera_epic.dbr.dbr` has a double extension (`constants/resources.py:24`).
 - A few records carry trailing whitespace in their values: the dev-test monsters in `xpack4/creatures/monster/zz_dev/` and the `FileDescription` of the cave-in skills. `dbr.read` strips every value (`dbr.py:60`), as the Windows extractor this project used to rely on did.
 - `charcteritemglobalreduction` is misspelled in the game's text files (`utils/text.py:38`).
+- Four Ragnarok text files in the English locale (`x2mainquest`, `x2sidequest`, `x2skills`, `x2tutorial`) are plain ASCII without the UTF-16 byte order mark every other text file has; the loader decides the encoding by the mark (`utils/text.py`).
 - `retaliationstun` lacks "second(s) of"; `damagetaunt` lacks its whole prefix (`utils/text.py:272`, `:287`).
 - The Chinese locale lacks the `refreshtime` tag (`utils/text.py:55`).
 - Greater Scroll of Svefnthorn references its Divine variant (`parsers/equipment.py:530`).

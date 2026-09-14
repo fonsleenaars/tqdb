@@ -39,7 +39,7 @@ Variable `class` is `static`, `variable`, `array`, or `picklist`. Variable `type
 
 ### Text resources
 
-`data/resources/<locale>/*.txt`, one directory per locale (`cs de en es fr it ja ko pl ru uk zh`; the game's Chinese archive is `Text_CH.arc`). UTF-16 with BOM. Lines are `key=value`, `//` comments. Two families:
+`data/resources/<locale>/*.txt`, one directory per locale (`cs de en es fr it ja ko pl ru uk zh`; the game's Chinese archive is `Text_CH.arc`). UTF-16 with BOM, except four English Ragnarok files (`x2mainquest`, `x2sidequest`, `x2skills`, `x2tutorial`) that are plain ASCII. Lines are `key=value`, `//` comments. Two families:
 
 - **Tags** (names): `commonequipment.txt`, `x2skills.txt`, `x4mainquest_nonvoiced.txt` and 31 more. Keys like `tagWeapon_Sword_01`.
 - **UI strings** (property templates): `ui.txt`, `xui.txt`, `x2ui.txt`, `x3basegame_nonvoiced.txt`, `x4basegame_nonvoiced.txt`. Values carry the game's own placeholder syntax, e.g. `{%.0f0}% Chance of `, and declension markers like `[ms]`/`[fs]`.

@@ -8,7 +8,7 @@ import os
 import numexpr
 
 from tqdb import dbr as DBRParser
-from tqdb.constants.paths import DB
+from tqdb.constants import paths
 from tqdb.parsers.main import TQDBParser, InvalidItemError
 from tqdb.utils.text import texts
 
@@ -216,8 +216,8 @@ class ItemEquipmentParser(TQDBParser):
         "Strength",
     ]
 
-    # The base requirements cost file, as a fallback:
-    REQUIREMENT_FALLBACK = DB / "records/game/itemcost.dbr"
+    # The base requirements cost file, relative to the data root, as a fallback:
+    REQUIREMENT_FALLBACK = "records/game/itemcost.dbr"
 
     def __init__(self):
         super().__init__()
@@ -270,7 +270,7 @@ class ItemEquipmentParser(TQDBParser):
             cost_prefix = 'bow'
 
         # Read cost file
-        cost_properties = DBRParser.read(dbr.get("itemCostName", self.REQUIREMENT_FALLBACK))
+        cost_properties = DBRParser.read(dbr.get("itemCostName", paths.DB / self.REQUIREMENT_FALLBACK))
 
         # Grab the props level (it's a variable in the equations)
         for requirement in self.REQUIREMENTS:
