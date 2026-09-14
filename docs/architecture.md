@@ -26,7 +26,7 @@ With `--all-languages` the whole database is parsed once per locale (12 times) b
 
 - Template resolution: `templateName` (path) first, else `Class` name, else error (`dbr.py:21`).
 - Only keys declared in the template survive. Values are coerced by `Variable.parse_value`.
-- **Falsy values are dropped** (`dbr.py:84`): `0`, `False`, `""`, `[]` never reach a parser. Parsers cannot distinguish "absent" from "zero".
+- **Falsy values are dropped** (`dbr.py:88`): `0`, `False`, `""`, `[]` never reach a parser. Parsers cannot distinguish "absent" from "zero".
 - Arrays with exactly one element are filtered for falsy values; arrays with more than one keep everything (`templates.py:79`). The two cases behave differently.
 
 `parse(dbr_file, references=None)` is the dispatcher every parser recurses through:
@@ -146,12 +146,13 @@ The JSON shape is specified in `data-contract.md`.
 Defects in the game's own files that the parser compensates for. They are facts about the data, not parser bugs; keep them when rewriting.
 
 - `bosschest13_chimera_epic.dbr.dbr` has a double extension (`constants/resources.py:24`).
+- A few records carry trailing whitespace in their values: the dev-test monsters in `xpack4/creatures/monster/zz_dev/` and the `FileDescription` of the cave-in skills. `dbr.read` strips every value (`dbr.py:60`), as the Windows extractor this project used to rely on did.
 - `charcteritemglobalreduction` is misspelled in the game's text files (`utils/text.py:38`).
 - `retaliationstun` lacks "second(s) of"; `damagetaunt` lacks its whole prefix (`utils/text.py:272`, `:287`).
 - The Chinese locale lacks the `refreshtime` tag (`utils/text.py:55`).
 - Greater Scroll of Svefnthorn references its Divine variant (`parsers/equipment.py:530`).
 - The Tinkerer suffix `x3tagSuffix01` has no properties (`main.py:88`).
-- Some set records are templates with no members (`parsers/equipment.py:436`). The Atlantis placeholder `xpack3/items/set/x3set(00).dbr` goes further: its only `setMembers` entry is the directory `records/xpack3/items/equipmentarmor/`, which `dbr.read` treats as a missing file (`dbr.py:60`).
+- Some set records are templates with no members (`parsers/equipment.py:436`). The Atlantis placeholder `xpack3/items/set/x3set(00).dbr` goes further: its only `setMembers` entry is the directory `records/xpack3/items/equipmentarmor/`, which `dbr.read` treats as a missing file (`dbr.py:64`).
 - The Eternal Embers dungeon consumables in `records/item/hcdungeon/x4pot_*.dbr` use the `OneShot_Scroll` template but carry no difficulty in their file name; the scroll parser skips them like XP potions (`parsers/equipment.py:514`).
 - The doppelganger summon template does not extend the monster template (`parsers/creatures.py:82`).
 - Breaking Wheel lists its skill three times (`parsers/creatures.py:293`).

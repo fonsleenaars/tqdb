@@ -52,8 +52,12 @@ def read(dbr):
             lines = (line.rstrip(",\n") for line in dbr_file)
 
             # Only add properties that have the correct format per line
-            # of: key,value
-            properties = dict(tuple(line.split(",", 1)) for line in lines if "," in line)
+            # of: key,value. Values are stripped: a few records carry a
+            # trailing space (the dev-test monsters in xpack4/creatures/
+            # monster/zz_dev/, and FileDescription "Checked - looks good "
+            # in the cave-in skills), and the Windows extractor this
+            # project used to rely on trimmed them.
+            properties = dict((k, v.strip()) for k, v in (line.split(",", 1) for line in lines if "," in line))
     except FileNotFoundError:
         logging.debug(f"No file found for {dbr}. ")
         return {}
