@@ -73,6 +73,11 @@ def test_character_template_variables():
         # Base attack speed (tag) is parsed manually
         "characterBaseAttackSpeed",
         "characterBaseAttackSpeedTag",
+        # The game has no text for these; only the Hercules' Way debuffs
+        # (records/item/heraclesway/buffs/) set them, and they never reach
+        # the output. Note the capital C in the modifier is the game's.
+        "characterManaLimitReservePercentage",
+        "CharacterManaLimitReservePercentageModifier",
     ]
 
     def is_covered_variable(field):
@@ -226,7 +231,12 @@ def test_skill_template_variables():
     Test variable coverage for `parameters_skill.tpl`.
 
     """
-    allowed = base.ParametersSkillParser.FIELDS
+    allowed = base.ParametersSkillParser.FIELDS + [
+        # The game has no text for these. Only the Neidan skill Endless Flask
+        # (records/xpack4/skills/neidan/endlessflask.dbr) sets the modifier.
+        "skillDurationModifier",
+        "skillDurationModifierChance",
+    ]
 
     def is_covered_variable(field):
         """
