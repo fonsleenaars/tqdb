@@ -119,7 +119,7 @@ Because `references` is not part of the cache key, parse order is observable: a 
 - hand-builds several composite strings (mana cost, active duration, radius) from locale-dependent pieces,
 - repairs two known-broken game strings (`retaliationstun`, `damagetaunt`).
 
-`texts.get(key)` falls back to the key itself when unknown, so unresolved tags leak into the JSON verbatim. Declension variants are de-duplicated through a `set`, so the joined order is non-deterministic across runs.
+`texts.get(key)` falls back to the key itself when unknown, so unresolved tags leak into the JSON verbatim. Declension variants are de-duplicated in the order the game lists them and joined with commas.
 
 ## Images: `tqdb/utils/images.py`
 

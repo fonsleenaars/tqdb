@@ -368,8 +368,9 @@ class Texts:
         # Split any declensions (remove empty start):
         declensions = filter(None, re.split(self.DECLENSIONS, text_value))
 
-        # Remove duplicates
-        declensions = list(set(declensions))
+        # Remove duplicates, keeping the order the game lists them in so the
+        # joined string is the same on every run:
+        declensions = list(dict.fromkeys(declensions))
 
         # Return comma joined string:
         # Replace any declension occurences ([fs], [ms], [mp], ...):
