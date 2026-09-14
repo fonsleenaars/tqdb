@@ -4,3 +4,4 @@
 pub mod arc;
 pub mod arz;
 mod cursor;
+pub mod tex;

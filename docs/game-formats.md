@@ -121,22 +121,21 @@ A file is the concatenation of its parts; each part is an independent zlib strea
 
 ### TEX (item icons)
 
-Verified against TQVaultAE, tqdatabase, and the parser's own header patch in `images.py`.
+Verified against TQVaultAE, tqdatabase, and the parser's own header patch in `images.py`, and on 2026-09-14 against all 7,070 textures in `Items.arc` and `XPack4/Item.arc` with `tqextract tex survey`: every file parses, every mip chain length matches the header, every surface decodes, and converted icons look right.
 
 ```
-v1:  "TEX\x01"  i32 (asserted 0)  i32 ddsLength  DDS…                 offset 12
-v2:  "TEX\x02"  i32               u8 flag         i32 ddsLength  DDS…  offset 13
+v1:  "TEX\x01"  u32 (0)  u32 ddsLength           DDS…  offset 12
+v2:  "TEX\x02"  u32 (0)  u8 flag  u32 ddsLength  DDS…  offset 13
 ```
 
-v2 appeared with the Anniversary Edition and later expansions; the `flag` byte is 1 for 32-bit textures with alpha. The parser downgrades v2 to v1 by removing byte 8.
+Base-game item textures are all v1; Eternal Embers ones are all v2. The parser downgrades v2 to v1 by removing byte 8.
 
 The embedded DDS has quirks:
 
-- Magic is `DDSR` or `DDS `. Patch to `DDS ` for standard decoders.
-- **`DDSR` means mipmaps are stored smallest first**; the top-level surface is the *last* `surfaceSize` bytes. Item icons have one mip, so single-frame decoders get away with ignoring this. A general converter must reorder.
-- RGB bit masks are zeroed for uncompressed formats. Readers set A8R8G8B8 masks and `DDPF_ALPHAPIXELS` when the bit count is 32.
-- Pixel formats seen: DXT1, DXT3, DXT5, and uncompressed 32-bit A8R8G8B8.
-- Multi-frame animated TEX files exist; not needed for icons.
+- Magic is `DDSR` in every texture seen so far, never `DDS `. **`DDSR` means mipmaps are stored smallest first**; the top-level surface is the *last* `surfaceSize` bytes. Every UI icon has one mip, so single-frame decoders get away with ignoring this; model textures have full chains.
+- RGB bit masks are zeroed for uncompressed formats. The bytes are B, G, R, A (A8R8G8B8 little-endian); a 32-bit surface always carries alpha even though `DDPF_ALPHAPIXELS` is not set.
+- Pixel formats seen, with counts across both archives: uncompressed 32-bit (3,056), DXT1 (2,216), DXT5 (1,446), DXT3 (338), uncompressed 24-bit (14). **Every UI icon under a `uibitmaps` directory is uncompressed 32-bit.** DXT is used only for mesh, glow, and bump textures.
+- No trailing data after the declared DDS length in any file; multi-frame animated TEX files exist elsewhere in the game but not among item textures.
 
 ### Reference implementations
 
