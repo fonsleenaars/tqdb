@@ -98,26 +98,26 @@ Grim Dawn's ARZ is the same layout with LZ4 block compression instead of zlib. G
 
 ### ARC (`Toolset/Templates.arc`, `Text/Text_EN.arc`, `Resources/Items.arc`, `Resources/Quests.arc`, and the `XPack*/` variants)
 
-Verified against TQVaultAE and tqdatabase.
+Verified against TQVaultAE and tqdatabase source, and on 2026-09-14 against the real `Templates.arc` (566 entries) and `Text_EN.arc` (57 entries, including two-part files) with `tqextract arc`: the tables add up to the file length exactly, and every entry decompresses to its stated length with a matching adler32.
 
 ```
-Header
-  0x00 "ARC"          0x04 i32 version (Grim Dawn requires 3; TQ readers ignore)   unverified for TQ
-  0x08 i32 numEntries 0x0C i32 numParts  0x10 i32 recordTableSize
-  0x14 i32 stringTableSize                0x18 i32 tocOffset
+Header, 28 bytes
+  0x00 "ARC\0"        0x04 u32 version (1 in TQ AE; Grim Dawn uses 3)
+  0x08 u32 numEntries 0x0C u32 numParts  0x10 u32 partTableSize (= numParts × 12)
+  0x14 u32 stringTableSize                0x18 u32 tocOffset
 
-At tocOffset: numParts × { i32 fileOffset, i32 compressedSize, i32 realSize }
-Then: file-name string table (names null-terminated in practice)
-Then, at fileLength − 44 × numEntries: numEntries × 44-byte entries
-  i32 storageType (1 = stored, 3 = compressed)
-  i32 fileOffset, i32 compressedSize, i32 realSize
-  i32 adler32 of decompressed data
-  i64 filetime
-  i32 numParts, i32 firstPartIndex
-  i32 nameLen, i32 nameOffset (relative to string table start)
+At tocOffset: numParts × { u32 fileOffset, u32 compressedSize, u32 realSize }
+Then: file-name string table (names null-terminated)
+Then, to the end of the file: numEntries × 44-byte entries
+  u32 storageType (1 = stored, 3 = compressed)
+  u32 fileOffset, u32 compressedSize, u32 realSize
+  u32 adler32 of decompressed data
+  u64 filetime
+  u32 numParts, u32 firstPartIndex
+  u32 nameLen, u32 nameOffset (relative to string table start)
 ```
 
-A file is the concatenation of its parts; each part is an independent zlib stream. `storageType == 1` with equal sizes is a raw copy. Entries with an empty name are deleted.
+A file is the concatenation of its parts; each part is an independent zlib stream. A part with equal compressed and real sizes is a raw copy. Entries with an empty name are deleted. Entry names in the AE archives are already lowercase with forward slashes (`templates/templatebase/itembase.tpl`); `tqextract` normalizes anyway.
 
 ### TEX (item icons)
 

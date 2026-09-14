@@ -9,7 +9,7 @@ use std::time::Instant;
 use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
 
-use tqextract::arz;
+use tqextract::{arc, arz};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -25,12 +25,10 @@ enum Command {
         #[command(subcommand)]
         command: ArzCommand,
     },
-    /// Extract every file from an ARC archive.
+    /// Read an ARC archive (Templates.arc, Text_XX.arc, Items.arc, ...).
     Arc {
-        /// Path to an .arc file
-        input: PathBuf,
-        /// Directory that will receive the archive contents
-        output: PathBuf,
+        #[command(subcommand)]
+        command: ArcCommand,
     },
     /// Convert a TEX texture to PNG.
     Tex {
@@ -64,6 +62,22 @@ enum ArzCommand {
     },
 }
 
+#[derive(Subcommand)]
+enum ArcCommand {
+    /// Print header fields, counts, and a sample of entries without extracting.
+    Info {
+        /// Path to an .arc file
+        input: PathBuf,
+    },
+    /// Extract every entry into a directory (lowercased paths).
+    Extract {
+        /// Path to an .arc file
+        input: PathBuf,
+        /// Directory that will receive the archive contents
+        output: PathBuf,
+    },
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
     match cli.command {
@@ -71,11 +85,10 @@ fn main() -> Result<()> {
             ArzCommand::Info { input } => arz_info(&input),
             ArzCommand::Extract { input, output } => arz_extract(&input, &output),
         },
-        Command::Arc { input, output } => bail!(
-            "arc extraction is not implemented yet ({} -> {})",
-            input.display(),
-            output.display()
-        ),
+        Command::Arc { command } => match command {
+            ArcCommand::Info { input } => arc_info(&input),
+            ArcCommand::Extract { input, output } => arc_extract(&input, &output),
+        },
         Command::Tex { input, output } => bail!(
             "tex conversion is not implemented yet ({} -> {})",
             input.display(),
@@ -108,6 +121,74 @@ fn arz_info(input: &Path) -> Result<()> {
         for line in record.to_dbr().lines().take(8) {
             println!("  {line}");
         }
+    }
+    Ok(())
+}
+
+fn load_arc(input: &Path) -> Result<arc::ArcFile> {
+    let bytes = fs::read(input).with_context(|| format!("reading {}", input.display()))?;
+    arc::ArcFile::parse(bytes).with_context(|| format!("parsing {}", input.display()))
+}
+
+fn arc_info(input: &Path) -> Result<()> {
+    let arc = load_arc(input)?;
+    print!("{}", arc::describe(&arc));
+
+    // Decode every entry as a probe: sizes and checksums must all agree.
+    let mut failures = 0;
+    for entry in arc.entries() {
+        if let Err(err) = arc.read_entry(entry) {
+            failures += 1;
+            eprintln!("error: {err:#}");
+        }
+    }
+    println!(
+        "decoded {} of {} entries with matching length and adler32",
+        arc.entries().len() - failures,
+        arc.entries().len()
+    );
+    if failures > 0 {
+        bail!("{failures} entries failed to decode");
+    }
+    Ok(())
+}
+
+fn arc_extract(input: &Path, output: &Path) -> Result<()> {
+    let started = Instant::now();
+    let arc = load_arc(input)?;
+    let total = arc.entries().len();
+
+    let mut created_dirs: HashSet<PathBuf> = HashSet::new();
+    let mut failures = 0usize;
+    let mut bytes = 0u64;
+
+    for entry in arc.entries() {
+        let path = output.join(arc::entry_path(&entry.name));
+        let result = arc.read_entry(entry).and_then(|data| {
+            if let Some(parent) = path.parent()
+                && created_dirs.insert(parent.to_path_buf())
+            {
+                fs::create_dir_all(parent)
+                    .with_context(|| format!("creating {}", parent.display()))?;
+            }
+            bytes += data.len() as u64;
+            fs::write(&path, data).with_context(|| format!("writing {}", path.display()))
+        });
+        if let Err(err) = result {
+            failures += 1;
+            eprintln!("error: {err:#}");
+        }
+    }
+
+    eprintln!(
+        "wrote {} entries ({bytes} bytes) from {} to {} in {:.1?}",
+        total - failures,
+        input.display(),
+        output.display(),
+        started.elapsed()
+    );
+    if failures > 0 {
+        bail!("{failures} of {total} entries failed");
     }
     Ok(())
 }

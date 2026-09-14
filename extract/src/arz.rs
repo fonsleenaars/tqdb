@@ -31,6 +31,8 @@ use std::path::PathBuf;
 use anyhow::{Context, Result, bail, ensure};
 use flate2::read::ZlibDecoder;
 
+use crate::cursor::{Cursor, decode_cp1252};
+
 /// Size of the fixed header. Record offsets are relative to this.
 pub const HEADER_LEN: usize = 24;
 
@@ -194,50 +196,6 @@ pub fn dbr_path(record_name: &str) -> PathBuf {
 }
 
 // --- parsing ---------------------------------------------------------------
-
-struct Cursor<'a> {
-    data: &'a [u8],
-    pos: usize,
-}
-
-impl<'a> Cursor<'a> {
-    fn new(data: &'a [u8], pos: usize) -> Self {
-        Self { data, pos }
-    }
-
-    fn remaining(&self) -> usize {
-        self.data.len().saturating_sub(self.pos)
-    }
-
-    fn bytes(&mut self, n: usize) -> Result<&'a [u8]> {
-        ensure!(
-            self.remaining() >= n,
-            "unexpected end of data at byte {}: wanted {n} more, {} left",
-            self.pos,
-            self.remaining()
-        );
-        let slice = &self.data[self.pos..self.pos + n];
-        self.pos += n;
-        Ok(slice)
-    }
-
-    fn u32(&mut self) -> Result<u32> {
-        Ok(u32::from_le_bytes(self.bytes(4)?.try_into().unwrap()))
-    }
-
-    fn i32(&mut self) -> Result<i32> {
-        Ok(self.u32()? as i32)
-    }
-
-    fn i16(&mut self) -> Result<i16> {
-        Ok(i16::from_le_bytes(self.bytes(2)?.try_into().unwrap()))
-    }
-}
-
-fn decode_cp1252(bytes: &[u8]) -> String {
-    let (text, _, _) = encoding_rs::WINDOWS_1252.decode(bytes);
-    text.into_owned()
-}
 
 fn parse_header(data: &[u8]) -> Result<Header> {
     ensure!(
