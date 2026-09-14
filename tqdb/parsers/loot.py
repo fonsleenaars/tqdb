@@ -308,8 +308,15 @@ class LootItemTable_DynWeightParser(TQDBParser):
             # Next compare the item's level to the target level
             target = int(level - target_level)
 
-            # Grab the adjustment from the slope (or the last one)
-            adjustment = slope[target] if len(slope) > target else slope[-1]
+            # Grab the adjustment from the slope, or the last one when the
+            # offset falls outside it. A negative offset (item below the
+            # target level) indexes the slope from its end, as it always
+            # has; an offset beyond either end takes the last entry.
+            if -len(slope) <= target < len(slope):
+                adjustment = slope[target]
+            else:
+                logging.debug(f"Offset {target} outside bellSlope of {dbr_file} at level {target_level}")
+                adjustment = slope[-1]
 
             # The adjusted weight is the default multiplied by the adjustment:
             drops[item["tag"]] = weight * adjustment

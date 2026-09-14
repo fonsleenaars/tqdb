@@ -26,11 +26,11 @@ def ordered(files):
     """
     Sort a list of record paths case-insensitively.
 
-    Parse order is observable: a loot table is cached at the level of the first
-    creature that references it (see dbr.parse), and some tables raise on the
-    wrong level. The output was originally produced on NTFS, which enumerates
-    directories in case-insensitive name order, so that order is reproduced
-    here rather than whatever the host filesystem returns.
+    Parse order is observable: when several records share a tag (affix
+    variants, multi-level bosses, skills) the first or last one parsed wins.
+    The output was originally produced on NTFS, which enumerates directories
+    in case-insensitive name order, so that order is reproduced here rather
+    than whatever the host filesystem returns.
 
     """
     return sorted(files, key=lambda f: str(f).upper())

@@ -31,8 +31,8 @@ With `--all-languages` the whole database is parsed once per locale (12 times) b
 
 `parse(dbr_file, references=None)` is the dispatcher every parser recurses through:
 
-1. Memoized in `storage.db` keyed by the path as passed (`Path` or `str`; the same file can be parsed twice under two spellings).
-2. Seeds `result = {"properties": {}, "references": references}`. `references` is a side channel (currently only `{"level": n}`) that loot parsers read. It is **not** part of the cache key, so a loot table parsed at one level is reused for every later caller.
+1. Memoized in `storage.db` keyed by the path as passed (`Path` or `str`; the same file can be parsed twice under two spellings) together with the references.
+2. Seeds `result = {"properties": {}, "references": references}`. `references` is a side channel (currently only `{"level": n}`) that loot parsers read. Because it is part of the cache key, a loot table is evaluated once per level it is reached at.
 3. Collects the parser registered for the record's template plus one for every template it includes, sorts by priority (3 highest, 1 lowest), runs each `parse(dbr, dbr_file, result)` in turn.
 4. Any `InvalidItemError` aborts the record and is re-raised with cause chain.
 
@@ -88,9 +88,9 @@ Also here: `ItemSkillAugmentParser` (granted and augmented skills; decides skill
 
 - **`equipment.py`**: artifacts, formulae, items, relics/charms, sets, scrolls, shields, weapons. Drops common items via a rarity whitelist. Derives drop difficulty from filename prefixes. Computes requirements with `numexpr` over the game's own cost equations, reading `itemLevel` and `totalAttCount` from the local frame (`equipment.py:286`). Relics spread properties over piece count, sets over bonus tiers.
 - **`creatures.py`**: monsters as 3-element difficulty arrays (Normal, Epic, Legendary) for level, properties, abilities, equipped loot, and boss chest. Boss chests come from a 260-line hand-maintained table in `constants/resources.py`. Invokes the defensive parser manually, bypassing dispatch (`creatures.py:187`). A heuristic blanks earlier difficulties when `charLevel` repeats.
-- **`loot.py`**: affix randomizer tables (weights to percentages), master tables (recursive, chances summed), fixed item loot (6 slots by 6 entries, scaled by mean spawn count), dynamic-weight tables (bell curve around a target level evaluated with `numexpr`). No cycle detection; termination relies on memoization and acyclic data. Chances across branches are summed, not combined probabilistically.
+- **`loot.py`**: affix randomizer tables (weights to percentages), master tables (recursive, chances summed), fixed item loot (6 slots by 6 entries, scaled by mean spawn count), dynamic-weight tables (bell curve around a target level evaluated with `numexpr`; an item whose offset from the target falls outside `bellSlope` takes the slope's last entry, and a negative offset within it indexes from the end). No cycle detection; termination relies on memoization and acyclic data. Chances across branches are summed, not combined probabilistically.
 - **`skills.py`**: `SkillBaseParser` re-indexes properties by skill level (capped at `skillUltimateLevel`, `skillMaxLevel`, or 99). Buff and pet-modifier parsers replace the result wholesale with the referenced skill's. `SkillSpawnPetParser` emits `summons`.
-- **`main.py` collectors**: `parse_quests` does not use the DBR machinery. It byte-scrapes `.qst` binaries with regexes (`main.py:283`). Only quests whose first `titleTag` is non-empty survive, which excludes every main quest. Rewards are parsed without a level, so a reward that is a dynamic-weight loot table only has contents if an earlier collector cached that table (see "Global state").
+- **`main.py` collectors**: `parse_quests` does not use the DBR machinery. It byte-scrapes `.qst` binaries with regexes (`main.py:283`). Only quests whose first `titleTag` is non-empty survive, which excludes every main quest. Rewards are parsed without a level, so a reward that is a dynamic-weight loot table yields nothing and the quest is dropped when no other table fills it.
 
 ## Global state
 
@@ -107,7 +107,7 @@ Everything shares module-level mutable state. Nothing is injectable, and this is
 
 Cached result dicts are handed out by reference and then mutated by callers (`category`, `bitmap`, `path`, `tag` are popped), so the cache contents drift during a run.
 
-Because `references` is not part of the cache key, parse order is observable: a dynamic-weight loot table is cached at the level of the first creature that reaches it, and some tables raise on a level they were never meant for (`loot.py:312` indexes `bellSlope` with a negative offset). The output was produced on NTFS, which enumerates directories in case-insensitive name order, so every collector sorts its file list that way (`main.py:ordered`) instead of trusting the host filesystem's order.
+Parse order is observable wherever several records share a tag: affix variants, multi-level bosses, and skills take their scalar fields from the first or last record parsed. The output was produced on NTFS, which enumerates directories in case-insensitive name order, so every collector sorts its file list that way (`main.py:ordered`) instead of trusting the host filesystem's order.
 
 ## Text resources: `tqdb/utils/text.py`
 

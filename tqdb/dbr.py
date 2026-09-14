@@ -109,9 +109,12 @@ def parse(dbr_file, references=None):
     if not parsers:
         parsers = load_parsers()
 
-    # First check if the file has been parsed before:
-    if dbr_file in storage.db:
-        return storage.db[dbr_file]
+    # Memoized per record and per set of references. The references (today
+    # only the creature level) change what a loot table yields, so a table
+    # parsed for one level must not be handed to a caller asking for another.
+    key = (dbr_file, tuple(sorted(references.items())))
+    if key in storage.db:
+        return storage.db[key]
 
     logging.debug(f"Parsing {dbr_file}")
     dbr = read(dbr_file)
@@ -161,6 +164,6 @@ def parse(dbr_file, references=None):
     result.pop("references")
 
     # Retain the parsed result in memory, for reuse:
-    storage.db[dbr_file] = result
+    storage.db[key] = result
 
     return result
