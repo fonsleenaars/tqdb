@@ -72,7 +72,7 @@ class SkillBaseParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\templatebase\\skill_base.tpl"
+        return f"{TQDBParser.base}/templatebase/skill_base.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -194,13 +194,13 @@ class SkillBuffParser(TQDBParser):
     @staticmethod
     def get_template_path():
         return [
-            f"{TQDBParser.base}\\skill_attackbuffradius.tpl",
-            f"{TQDBParser.base}\\skill_attackbuff.tpl",
-            f"{TQDBParser.base}\\skill_attackprojectiledebuf.tpl",
-            f"{TQDBParser.base}\\skill_buffradius.tpl",
-            f"{TQDBParser.base}\\skill_buffradiustoggled.tpl",
-            f"{TQDBParser.base}\\skill_buffother.tpl",
-            f"{TQDBParser.base}\\skillsecondary_buffradius.tpl",
+            f"{TQDBParser.base}/skill_attackbuffradius.tpl",
+            f"{TQDBParser.base}/skill_attackbuff.tpl",
+            f"{TQDBParser.base}/skill_attackprojectiledebuf.tpl",
+            f"{TQDBParser.base}/skill_buffradius.tpl",
+            f"{TQDBParser.base}/skill_buffradiustoggled.tpl",
+            f"{TQDBParser.base}/skill_buffother.tpl",
+            f"{TQDBParser.base}/skillsecondary_buffradius.tpl",
         ]
 
     def parse(self, dbr, dbr_file, result):
@@ -226,7 +226,7 @@ class SkillModifierParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\skill_modifier.tpl"
+        return f"{TQDBParser.base}/skill_modifier.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -250,7 +250,7 @@ class SkillPetModifier(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\skillsecondary_petmodifier.tpl"
+        return f"{TQDBParser.base}/skillsecondary_petmodifier.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -275,7 +275,7 @@ class SkillPassiveOnLifeBuffSelfParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\skill_passiveonlifebuffself.tpl"
+        return f"{TQDBParser.base}/skill_passiveonlifebuffself.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -303,7 +303,7 @@ class SkillProjectileBaseParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\templatebase\\skill_projectilebase.tpl"
+        return f"{TQDBParser.base}/templatebase/skill_projectilebase.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -332,7 +332,7 @@ class SkillRefreshCooldownParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\skill_refreshcooldown.tpl"
+        return f"{TQDBParser.base}/skill_refreshcooldown.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -345,7 +345,7 @@ class SkillRefreshCooldownParser(TQDBParser):
 
 class SkillWeaponAttackParser(TQDBParser):
     """
-    Parser for `templatebase\\skill_wpattack.tpl.tpl`.
+    Parser for `templatebase/skill_wpattack.tpl.tpl`.
 
     """
 
@@ -356,7 +356,7 @@ class SkillWeaponAttackParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\templatebase\\skill_wpattack.tpl"
+        return f"{TQDBParser.base}/templatebase/skill_wpattack.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -369,7 +369,7 @@ class SkillWeaponAttackParser(TQDBParser):
 
 class SkillSpawnPetParser(TQDBParser):
     """
-    Parser for `templatebase\\skill_spawnpet.tpl.tpl`.
+    Parser for `templatebase/skill_spawnpet.tpl.tpl`.
 
     """
 
@@ -381,8 +381,8 @@ class SkillSpawnPetParser(TQDBParser):
     @staticmethod
     def get_template_path():
         return [
-            f"{TQDBParser.base}\\skill_spawnpet.tpl",
-            f"{TQDBParser.base}\\skill_defensivewall.tpl",
+            f"{TQDBParser.base}/skill_spawnpet.tpl",
+            f"{TQDBParser.base}/skill_defensivewall.tpl",
         ]
 
     def parse(self, dbr, dbr_file, result):

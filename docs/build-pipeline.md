@@ -59,5 +59,5 @@ There are no platform deadlines: the output is static JSON consumed by a website
 
 ## Known gaps
 
-- The Python parser still has Windows-only path handling and import-time side effects (`docs/architecture.md`, templates and global state sections). `just parse` will not produce output until those are fixed.
+- The Python parser still loads templates at import time and keeps all state in module globals (`docs/architecture.md`, templates and global state sections), so `just test-python` needs the extracted data volume for anything beyond the synthetic fixtures.
 - No CI. When added, it builds the same `Dockerfile` on `ubuntu-latest` and runs steps 1 and 2.

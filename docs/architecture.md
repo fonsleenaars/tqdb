@@ -26,8 +26,8 @@ With `--all-languages` the whole database is parsed once per locale (12 times) b
 
 - Template resolution: `templateName` (path) first, else `Class` name, else error (`dbr.py:21`).
 - Only keys declared in the template survive. Values are coerced by `Variable.parse_value`.
-- **Falsy values are dropped** (`dbr.py:76`): `0`, `False`, `""`, `[]` never reach a parser. Parsers cannot distinguish "absent" from "zero".
-- Arrays with exactly one element are filtered for falsy values; arrays with more than one keep everything (`templates.py:68`). The two cases behave differently.
+- **Falsy values are dropped** (`dbr.py:84`): `0`, `False`, `""`, `[]` never reach a parser. Parsers cannot distinguish "absent" from "zero".
+- Arrays with exactly one element are filtered for falsy values; arrays with more than one keep everything (`templates.py:79`). The two cases behave differently.
 
 `parse(dbr_file, references=None)` is the dispatcher every parser recurses through:
 
@@ -38,11 +38,11 @@ With `--all-languages` the whole database is parsed once per locale (12 times) b
 
 ## Templates: `tqdb/templates.py`
 
-`.tpl` files from `data/database/templates/**` are loaded **at import time** (`templates.py:265`). Importing any parser module therefore requires the extracted game data on disk. Two registries: by path (`templates_by_path`) and by `Class` name (`templates`).
+`.tpl` files from `data/database/templates/**` are loaded **at import time** (`templates.py:276`). Importing any parser module therefore requires the extracted game data on disk. Two registries: by path (`templates_by_path`) and by `Class` name (`templates`).
 
 Parsing is line-oriented with regex preprocessing and manual brace counting, not a grammar. A template's `include` variables define inheritance: the included template's non-static variables are merged in and its path is appended to `template.templates`, which drives parser dispatch.
 
-Keys are built with `relative_to(paths.DATA)` and the OS separator (`templates.py:141`), while every parser declares its template with a hard-coded backslash path (`parsers/main.py:36`). On macOS and Linux no parser ever matches. This is the primary reason the project currently runs only on Windows.
+Keys are the template path relative to the data root, lowercase with forward slashes (`templates.py:152`), and every parser declares its template the same way (`parsers/main.py:36`). Every path read from the game files (`templateName`, `include` values, `file_dbr` and `file_tex` variables) is Windows-style with mixed case; `templates.game_path` normalizes it to the extracted tree, which `tqextract prepare` writes entirely in lowercase. The data root itself comes from the `TQDB_DATA` environment variable (`constants/paths.py`), `/data` in the container.
 
 ## Parser dispatch: `tqdb/parsers/main.py`
 
@@ -90,11 +90,11 @@ Also here: `ItemSkillAugmentParser` (granted and augmented skills; decides skill
 - **`creatures.py`**: monsters as 3-element difficulty arrays (Normal, Epic, Legendary) for level, properties, abilities, equipped loot, and boss chest. Boss chests come from a 260-line hand-maintained table in `constants/resources.py`. Invokes the defensive parser manually, bypassing dispatch (`creatures.py:187`). A heuristic blanks earlier difficulties when `charLevel` repeats.
 - **`loot.py`**: affix randomizer tables (weights to percentages), master tables (recursive, chances summed), fixed item loot (6 slots by 6 entries, scaled by mean spawn count), dynamic-weight tables (bell curve around a target level evaluated with `numexpr`). No cycle detection; termination relies on memoization and acyclic data. Chances across branches are summed, not combined probabilistically.
 - **`skills.py`**: `SkillBaseParser` re-indexes properties by skill level (capped at `skillUltimateLevel`, `skillMaxLevel`, or 99). Buff and pet-modifier parsers replace the result wholesale with the referenced skill's. `SkillSpawnPetParser` emits `summons`.
-- **`main.py` collectors**: `parse_quests` does not use the DBR machinery. It byte-scrapes `.qst` binaries with regexes (`main.py:268`); the reward regex covers `xpack`, `xpack2`, `xpack3` only, so Eternal Embers (`xpack4`) quest rewards are never found.
+- **`main.py` collectors**: `parse_quests` does not use the DBR machinery. It byte-scrapes `.qst` binaries with regexes (`main.py:283`); the reward regex covers `xpack`, `xpack2`, `xpack3` only, so Eternal Embers (`xpack4`) quest rewards are never found.
 
 ## Global state
 
-Everything shares module-level mutable state. Nothing is injectable, and this is what blocks parallelism (the `TODO: add multithreading!` at `main.py:148`) and re-entrant multi-locale parsing.
+Everything shares module-level mutable state. Nothing is injectable, and this is what blocks parallelism (the `TODO: add multithreading!` at `main.py:163`) and re-entrant multi-locale parsing.
 
 | State | Where | Reset by `storage.reset()`? |
 |---|---|---|
@@ -106,6 +106,8 @@ Everything shares module-level mutable state. Nothing is injectable, and this is
 | per-parse fields on `ParametersOffensiveParser` and `FixedItemLootParser` | `base.py:552`, `loot.py:198` | no |
 
 Cached result dicts are handed out by reference and then mutated by callers (`category`, `bitmap`, `path`, `tag` are popped), so the cache contents drift during a run.
+
+Because `references` is not part of the cache key, parse order is observable: a dynamic-weight loot table is cached at the level of the first creature that reaches it, and some tables raise on a level they were never meant for (`loot.py:312` indexes `bellSlope` with a negative offset). The output was produced on NTFS, which enumerates directories in case-insensitive name order, so every collector sorts its file list that way (`main.py:ordered`) instead of trusting the host filesystem's order.
 
 ## Text resources: `tqdb/utils/text.py`
 
@@ -121,7 +123,7 @@ Cached result dicts are handed out by reference and then mutated by callers (`ca
 
 ## Images: `tqdb/utils/images.py`
 
-Per item, `save_bitmap` patches TEX v2 headers into v1 by writing a `.fixed.tex` **into the input tree**, then shells out to a `TextureViewer.exe` once per texture (thousands of process spawns). That binary is no longer in the repo; `tqextract prepare` now writes a `.png` beside every `.tex`, and this code path has to be replaced by reading those. `SpriteCreator` packs the PNGs into a 768 px wide sheet with Pillow, writes `sprite.png` and `sprite.css`, then deletes `output/graphics`. CSS class names are the raw item tag, or the raw localized classification for formulae, which yields invalid selectors like `.lesser artifact`.
+Per item, `save_bitmap` copies the `.png` that `tqextract prepare` wrote beside the item's `.tex` into `output/graphics/<tag>.png`. `SpriteCreator` packs the PNGs into a 768 px wide sheet with Pillow, writes `sprite.png` and `sprite.css`, then deletes `output/graphics`. CSS class names are the raw item tag, or the raw localized classification for formulae, which yields invalid selectors like `.lesser artifact`.
 
 ## Output layout
 
@@ -147,11 +149,12 @@ Defects in the game's own files that the parser compensates for. They are facts 
 - `charcteritemglobalreduction` is misspelled in the game's text files (`utils/text.py:38`).
 - `retaliationstun` lacks "second(s) of"; `damagetaunt` lacks its whole prefix (`utils/text.py:272`, `:287`).
 - The Chinese locale lacks the `refreshtime` tag (`utils/text.py:55`).
-- Greater Scroll of Svefnthorn references its Divine variant (`parsers/equipment.py:520`).
-- The Tinkerer suffix `x3tagSuffix01` has no properties (`main.py:72`).
-- Some set records are templates with no members (`parsers/equipment.py:436`).
-- The doppelganger summon template does not extend the monster template (`parsers/creatures.py:80`).
-- Breaking Wheel lists its skill three times (`parsers/creatures.py:307`).
+- Greater Scroll of Svefnthorn references its Divine variant (`parsers/equipment.py:530`).
+- The Tinkerer suffix `x3tagSuffix01` has no properties (`main.py:88`).
+- Some set records are templates with no members (`parsers/equipment.py:436`). The Atlantis placeholder `xpack3/items/set/x3set(00).dbr` goes further: its only `setMembers` entry is the directory `records/xpack3/items/equipmentarmor/`, which `dbr.read` treats as a missing file (`dbr.py:60`).
+- The Eternal Embers dungeon consumables in `records/item/hcdungeon/x4pot_*.dbr` use the `OneShot_Scroll` template but carry no difficulty in their file name; the scroll parser skips them like XP potions (`parsers/equipment.py:514`).
+- The doppelganger summon template does not extend the monster template (`parsers/creatures.py:82`).
+- Breaking Wheel lists its skill three times (`parsers/creatures.py:293`).
 - Atlantis records point at `skilltree` paths that must be rewritten to `mastery` (`parsers/base.py:335`).
 - Reagent DBR references are arrays of one (`parsers/equipment.py:105`).
 - A `Placeholder` item exists in Atlantis data (filtered on the website).

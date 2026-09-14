@@ -42,5 +42,5 @@ Read `docs/architecture.md` and `docs/data-contract.md` before changing any pars
 - **Code executes in the container, never on the host.** `just test`, `just lint`, `just parse`, or `docker compose run --rm dev <cmd>`. The host has no Rust, Python, or uv. Edit on the host; run in the container.
 - Always pass `--locked` to cargo and `--frozen` to uv, as the justfile does. Lockfiles change only via `just lock`, in their own commit.
 - Run everything from the repo root. All input and output paths are relative to it.
-- The full pipeline needs roughly 2 GB of extracted game data and several minutes per locale. Prefer targeted checks on single records over full runs while iterating.
+- The full pipeline needs the extracted data volume (3.6 GB) and about 20 seconds per locale plus the sprite sheet. Prefer targeted checks on single records over full runs while iterating.
 - Parser version is `tqdb/__init__.py:__version__` and `pyproject.toml`, and appears in the output filename. Bump both in one commit.

@@ -298,7 +298,8 @@ EQUIPMENT = [
     "records/xpack/item*/le_new/*.dbr",
 ]
 
-QUESTS = "data\\quests\\*.qst"
+# Relative to paths.DATA
+QUESTS = "quests/*.qst"
 
 SETS = [
     "records/item/sets/*.dbr",

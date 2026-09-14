@@ -40,7 +40,7 @@ class ItemArtifactParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\itemartifact.tpl"
+        return f"{TQDBParser.base}/itemartifact.tpl"
 
     def parse(self, dbr, dbr_file, result):
         file_name = os.path.basename(dbr_file).split("_")
@@ -83,7 +83,7 @@ class ItemArtifactFormulaParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\itemartifactformula.tpl"
+        return f"{TQDBParser.base}/itemartifactformula.tpl"
 
     def parse(self, dbr, dbr_file, result):
         # Skip formula without artifacts
@@ -159,7 +159,7 @@ class ItemBaseParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\templatebase\\itembase.tpl"
+        return f"{TQDBParser.base}/templatebase/itembase.tpl"
 
     def parse(self, dbr, dbr_file, result):
         self.is_valid_classification(dbr, dbr_file, result)
@@ -231,7 +231,7 @@ class ItemEquipmentParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\templatebase\\itemequipment.tpl"
+        return f"{TQDBParser.base}/templatebase/itemequipment.tpl"
 
     def parse(self, dbr, dbr_file, result):
         # If no tag exists, skip parsing:
@@ -318,7 +318,7 @@ class ItemRelicParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\itemrelic.tpl"
+        return f"{TQDBParser.base}/itemrelic.tpl"
 
     def get_priority(self):
         """
@@ -406,7 +406,7 @@ class ItemSetParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\itemset.tpl"
+        return f"{TQDBParser.base}/itemset.tpl"
 
     def parse(self, dbr, dbr_file, result):
         tag = dbr.get(self.NAME, None)
@@ -492,7 +492,7 @@ class OneShotScrollParser(TQDBParser):
     @staticmethod
     def get_template_path():
         # Note: this technically handles parameters from oneshot.tpl too.
-        return f"{TQDBParser.base}\\oneshot_scroll.tpl"
+        return f"{TQDBParser.base}/oneshot_scroll.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -506,7 +506,15 @@ class OneShotScrollParser(TQDBParser):
         # Use the file name to determine the difficulty:
         file_name = os.path.basename(dbr_file).split("_")[0][1:]
         # Strip all but digits from the string, then cast to int:
-        difficulty = self.DIFFICULTIES_LIST[int("".join(filter(lambda x: x.isdigit(), file_name))) - 1]
+        digits = "".join(filter(lambda x: x.isdigit(), file_name))
+
+        # The Eternal Embers dungeon consumables (records/item/hcdungeon/x4pot_*.dbr)
+        # use the scroll template but carry no difficulty in their file name.
+        # Treat them like the XP potions above.
+        if not digits or not 1 <= int(digits) <= len(self.DIFFICULTIES_LIST):
+            return result
+
+        difficulty = self.DIFFICULTIES_LIST[int(digits) - 1]
 
         result.update(
             {
@@ -558,7 +566,7 @@ class ShieldParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\weaponarmor_shield.tpl"
+        return f"{TQDBParser.base}/weaponarmor_shield.tpl"
 
     def parse(self, dbr, dbr_file, result):
         # Set the block chance and value:
@@ -581,7 +589,7 @@ class WeaponParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\templatebase\\weapon.tpl"
+        return f"{TQDBParser.base}/templatebase/weapon.tpl"
 
     def parse(self, dbr, dbr_file, result):
         dbr_class = dbr["Class"]

@@ -27,7 +27,7 @@ class CharacterParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\character.tpl"
+        return f"{TQDBParser.base}/character.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -76,10 +76,10 @@ class MonsterParser(TQDBParser):
     @staticmethod
     def get_template_path():
         return [
-            f"{TQDBParser.base}\\monster.tpl",
+            f"{TQDBParser.base}/monster.tpl",
             # For some reason the doppel summon template does not extend the
             # regular monster template, but has its own:
-            f"{TQDBParser.base}\\doppelganger.tpl",
+            f"{TQDBParser.base}/doppelganger.tpl",
         ]
 
     def get_priority(self):
@@ -285,28 +285,27 @@ class MonsterParser(TQDBParser):
 
 class MonsterSkillManager(TQDBParser):
     """
-    Parser for `templatebase\\monsterskillmanager.tpl`.
+    Parser for `templatebase/monsterskillmanager.tpl`.
 
     """
 
     # Skills to ignore when parsing pet buffs/skills:
-    IGNORE_SKILLS = list(
-        f"data\\database\\records{skill}"
+    IGNORE_SKILLS = [
+        str(DB / "records" / skill)
         for skill in [
-            "\\skills\\monster skills\\passive_totaldamageabsorption01.dbr",
-            "\\skills\\monster skills\\defense\\armor_passive.dbr",
-            "\\skills\\monster skills\\defense\\banner_debuff.dbr",
-            "\\skills\\monster skills\\defense\\trap_resists.dbr",
-            "\\skills\\monster skills\\defense\\resist_undead.dbr",
-            "\\skills\\monster skills\\defense\\resist_ghost.dbr",
-            "\\skills\\monster skills\\defense_undeadresists.dbr",
-            "\\skills\\boss skills\\boss_conversionimmunity.dbr",
-            "\\skills\\boss skills\\hero_conversionimmunity.dbr",
+            "skills/monster skills/passive_totaldamageabsorption01.dbr",
+            "skills/monster skills/defense/armor_passive.dbr",
+            "skills/monster skills/defense/banner_debuff.dbr",
+            "skills/monster skills/defense/trap_resists.dbr",
+            "skills/monster skills/defense/resist_undead.dbr",
+            "skills/monster skills/defense/resist_ghost.dbr",
+            "skills/monster skills/defense_undeadresists.dbr",
+            "skills/boss skills/boss_conversionimmunity.dbr",
+            "skills/boss skills/hero_conversionimmunity.dbr",
+            # Breaking wheel has its skill three times for some reason:
+            "xpack/skills/scroll skills/pets/all_breakingwheel_bladeattack2.dbr",
+            "xpack/skills/scroll skills/pets/all_breakingwheel_bladeattack3.dbr",
         ]
-    ) + [
-        # Breaking wheel has its skill three times for some reason:
-        "data\\database\\records\\xpack\\skills\\scroll skills\\pets\\" "all_breakingwheel_bladeattack2.dbr",
-        "data\\database\\records\\xpack\\skills\\scroll skills\\pets\\" "all_breakingwheel_bladeattack3.dbr",
     ]
 
     PROJECTILES = "projectileLaunchNumber"
@@ -317,10 +316,10 @@ class MonsterSkillManager(TQDBParser):
     @staticmethod
     def get_template_path():
         return [
-            f"{TQDBParser.base}\\templatebase\\monsterskillmanager.tpl",
+            f"{TQDBParser.base}/templatebase/monsterskillmanager.tpl",
             # For some reason the doppel summon template does not extend the
             # regular monsterskillmanager, but has its own:
-            f"{TQDBParser.base}\\templatebase\\doppelskillmanager.tpl",
+            f"{TQDBParser.base}/templatebase/doppelskillmanager.tpl",
         ]
 
     def parse(self, dbr, dbr_file, result):

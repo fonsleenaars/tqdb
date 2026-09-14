@@ -4,9 +4,8 @@ Classes and functionality to store TQ images and styling.
 """
 import logging
 import os
-import subprocess
 from pathlib import Path
-from shutil import rmtree
+from shutil import copyfile, rmtree
 
 from PIL import Image
 
@@ -160,10 +159,18 @@ class SpriteCreator:
 #                              BITMAP UTILITY                                 #
 ###############################################################################
 def save_bitmap(item, item_type: str, graphics: Path):
+    """
+    Copy an item's icon into the graphics folder, named by its tag.
+
+    The item's bitmap is a .tex path in the extracted data tree; tqextract
+    writes the decoded .png beside every .tex, so this only copies it.
+
+    """
     bitmap = item.pop("bitmap", None)
     tag = item["tag"]
+    png = bitmap.with_suffix(".png") if bitmap else None
 
-    if not tag or not bitmap or not bitmap.is_file():
+    if not tag or not png or not png.is_file():
         logging.warning(f'Missing tag or bitmap for {item["tag"]}: {bitmap}')
         return
 
@@ -174,32 +181,5 @@ def save_bitmap(item, item_type: str, graphics: Path):
     elif item.get("classification", None) != "Rare" and os.path.isfile(graphics / f"{tag}.png"):
         return
 
-    filename = str(bitmap)
-    h = open(bitmap, "rb")
-    alls = h.read()
-    h.close()
-    magic = b"TEX" + b"\x02"
-    magicpos = alls.find(magic)
-
-    if magicpos == 0:
-        ba = bytearray(alls)
-        ba[3] = 1
-        ba.pop(8)
-        alls2 = bytes(ba)
-        basename, file_extension = os.path.splitext(bitmap)
-        filename = basename + ".fixed" + file_extension
-        h2 = open(filename, "wb")
-        h2.write(alls2)
-        h2.close()
-
-    # Run the texture viewer if a bitmap and tag are set:
-    command = [
-        "utils/textureviewer/TextureViewer.exe",
-        # Convert path to string
-        str(filename),
-        # Output to graphics folder, file name being the tag.
-        str(graphics / f"{tag}.png"),
-    ]
-    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
-    return
+    # Output to graphics folder, file name being the tag.
+    copyfile(png, graphics / f"{tag}.png")

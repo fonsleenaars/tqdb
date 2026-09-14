@@ -14,7 +14,18 @@ templates = {}
 # Global directory constants
 TEMPLATE_DIR = paths.DB / "templates/**/*.tpl"
 TEMPLATE_PREFIX = "%TEMPLATE_DIR%"
-TEXTURES = Path("data/textures/")
+TEXTURES = paths.DATA / "textures"
+
+
+def game_path(value):
+    """
+    Normalize a path as spelled inside the game files to the extracted tree.
+
+    Game records spell paths Windows-style with mixed case, while the
+    extracted data tree is entirely lowercase with forward slashes.
+
+    """
+    return value.replace("\\", "/").lower()
 
 
 class Variable:
@@ -102,10 +113,10 @@ class Variable:
             return bool(int(value)) if bool(int(value)) else None
         elif self["type"] == "file_dbr":
             # Prepare the DBR reference fully
-            return paths.DB / value.lower()
+            return paths.DB / game_path(value)
         elif self["type"] == "file_tex":
             # Prepare the TEX reference fully
-            return TEXTURES / value
+            return TEXTURES / game_path(value)
         return value
 
 
@@ -138,7 +149,7 @@ class Template:
 
         # Prepare the path of this template as a key for the templates mapping
         self.file = template_file
-        self.key = str(template_file.relative_to(paths.DATA)).lower()
+        self.key = template_file.relative_to(paths.DATA).as_posix().lower()
 
         # Open and read the file:
         content = open(self.file, "r").read()
@@ -227,7 +238,7 @@ class Template:
 
         if variable.is_template_reference():
             # Strip %TEMPLATE_DIR% from the file path if it's present:
-            template_path = variable["defaultValue"].replace(TEMPLATE_PREFIX, "").lower()
+            template_path = game_path(variable["defaultValue"].replace(TEMPLATE_PREFIX, ""))
 
             # Either parse or grab the previously parsed Template:
             template = (

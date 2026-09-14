@@ -113,7 +113,7 @@ class ParametersCharacterParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\templatebase\\parameters_character.tpl"
+        return f"{TQDBParser.base}/templatebase/parameters_character.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -209,7 +209,7 @@ class ParametersDefensiveParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\templatebase\\parameters_defensive.tpl"
+        return f"{TQDBParser.base}/templatebase/parameters_defensive.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -317,7 +317,7 @@ class ItemSkillAugmentParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\templatebase\\itemskillaugment.tpl"
+        return f"{TQDBParser.base}/templatebase/itemskillaugment.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -508,7 +508,7 @@ class ParametersOffensiveParser(TQDBParser):
         # Note: technically this parser is also handling:
         # - parameters_retaliation.tpl and
         # - parameters_weaponsbonusoffensive.tpl
-        return f"{TQDBParser.base}\\templatebase\\parameters_offensive.tpl"
+        return f"{TQDBParser.base}/templatebase/parameters_offensive.tpl"
 
     @classmethod
     def format(cls, field_type, field, min, max):
@@ -805,7 +805,7 @@ class ParametersSkillParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\templatebase\\parameters_skill.tpl"
+        return f"{TQDBParser.base}/templatebase/parameters_skill.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -850,7 +850,7 @@ class PetBonusParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\templatebase\\petbonusinc.tpl"
+        return f"{TQDBParser.base}/templatebase/petbonusinc.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """
@@ -909,7 +909,7 @@ class RacialBonusParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\templatebase\\racialbonus.tpl"
+        return f"{TQDBParser.base}/templatebase/racialbonus.tpl"
 
     def parse(self, dbr, dbr_file, result):
         """

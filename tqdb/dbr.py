@@ -12,7 +12,7 @@ import logging
 
 from tqdb import storage
 from tqdb.parsers.main import load_parsers, InvalidItemError
-from tqdb.templates import templates, templates_by_path
+from tqdb.templates import game_path, templates, templates_by_path
 
 
 parsers = {}
@@ -29,7 +29,7 @@ def get_template(dbr, dbr_file):
     """
     if "templateName" in dbr:
         # The template path is set, retrieve it from the collection:
-        return templates_by_path[dbr["templateName"].lower()]
+        return templates_by_path[game_path(dbr["templateName"])]
     elif "Class" in dbr and dbr["Class"].lower() in templates:
         # The name of the template is set:
         return templates[dbr["Class"].lower()]
@@ -56,6 +56,13 @@ def read(dbr):
             properties = dict(tuple(line.split(",", 1)) for line in lines if "," in line)
     except FileNotFoundError:
         logging.debug(f"No file found for {dbr}. ")
+        return {}
+    except IsADirectoryError:
+        # Some references point at a folder instead of a record, e.g. the
+        # placeholder set records/xpack3/items/set/x3set(00).dbr whose only
+        # setMember is records/xpack3/items/equipmentarmor/. Windows raised a
+        # PermissionError for these; treat them the same as a missing file.
+        logging.debug(f"Reference is a directory, not a record: {dbr}")
         return {}
     except PermissionError as e:
         logging.exception(f"Could not open {dbr}")

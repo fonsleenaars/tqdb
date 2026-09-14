@@ -33,7 +33,7 @@ class TQDBParser(metaclass=abc.ABCMeta):
     """
 
     # Base that all subclasses use for their template names.
-    base = "database\\templates"
+    base = "database/templates"
 
     # Priority constants:
     HIGHEST_PRIORITY = 3

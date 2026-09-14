@@ -23,7 +23,7 @@ class LootRandomizerParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\lootrandomizer.tpl"
+        return f"{TQDBParser.base}/lootrandomizer.tpl"
 
     def parse(self, dbr, dbr_file, result):
         if "lootRandomizerName" in dbr:
@@ -45,7 +45,7 @@ class LootRandomizerTableParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\lootrandomizertable.tpl"
+        return f"{TQDBParser.base}/lootrandomizertable.tpl"
 
     def parse(self, dbr, dbr_file, result):
         tables = {}
@@ -97,7 +97,7 @@ class LootMasterTableParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\lootmastertable.tpl"
+        return f"{TQDBParser.base}/lootmastertable.tpl"
 
     def parse(self, dbr, dbr_file, result):
         items = {}
@@ -164,7 +164,7 @@ class FixedItemContainerParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\fixeditemcontainer.tpl"
+        return f"{TQDBParser.base}/fixeditemcontainer.tpl"
 
     def parse(self, dbr, dbr_file, result):
         if "tables" not in dbr:
@@ -191,7 +191,7 @@ class FixedItemLootParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\fixeditemloot.tpl"
+        return f"{TQDBParser.base}/fixeditemloot.tpl"
 
     def parse(self, dbr, dbr_file, result):
         # Initialize a dictionary of item chances to add to:
@@ -261,7 +261,7 @@ class LootItemTable_DynWeightParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\lootitemtable_dynweight.tpl"
+        return f"{TQDBParser.base}/lootitemtable_dynweight.tpl"
 
     def parse(self, dbr, dbr_file, result):
         if "level" in result["references"]:
@@ -334,7 +334,7 @@ class LootItemTable_FixedWeightParser(TQDBParser):
 
     @staticmethod
     def get_template_path():
-        return f"{TQDBParser.base}\\lootitemtable_fixedweight.tpl"
+        return f"{TQDBParser.base}/lootitemtable_fixedweight.tpl"
 
     def parse(self, dbr, dbr_file, result):
         items = {}

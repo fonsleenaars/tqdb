@@ -16,9 +16,24 @@ from tqdb import storage
 from tqdb.constants import resources, paths
 from tqdb.dbr import parse, read
 from tqdb.parsers.main import InvalidItemError
+from tqdb.templates import game_path
 from tqdb.utils import images
 from tqdb.utils.text import texts
 from tqdb.utils.core import get_affix_table_type, is_duplicate_affix
+
+
+def ordered(files):
+    """
+    Sort a list of record paths case-insensitively.
+
+    Parse order is observable: a loot table is cached at the level of the first
+    creature that references it (see dbr.parse), and some tables raise on the
+    wrong level. The output was originally produced on NTFS, which enumerates
+    directories in case-insensitive name order, so that order is reproduced
+    here rather than whatever the host filesystem returns.
+
+    """
+    return sorted(files, key=lambda f: str(f).upper())
 
 
 def parse_affixes():
@@ -66,7 +81,7 @@ def parse_affixes():
     logging.info(f"Found {len(affix_files)} affix files.")
 
     affixes = {"prefixes": {}, "suffixes": {}}
-    for dbr in affix_files:
+    for dbr in ordered(affix_files):
         affix = parse(dbr)
 
         # Tinkerer needs a little custom love because it has no properties, but a special text:
@@ -148,7 +163,7 @@ def parse_equipment():
     # TODO: add multithreading!
 
     items = defaultdict(list)
-    for dbr in files:
+    for dbr in ordered(files):
         try:
             parsed = parse(dbr)
         except InvalidItemError as e:
@@ -224,7 +239,7 @@ def parse_creatures():
     logging.info(f"Found {len(files)} creature files.")
 
     creatures = {}
-    for dbr in files:
+    for dbr in ordered(files):
         try:
             logging.debug(f"Attempting to parse creature in {dbr}.")
             parsed = parse(dbr)
@@ -282,12 +297,12 @@ def parse_quests():
     # Regex to find the title tag
     TITLE = re.compile(r"titletag(?P<tag>[^\s]*)")
 
-    files = glob.glob(resources.QUESTS)
+    files = glob.glob(str(paths.DATA / resources.QUESTS))
 
     logging.info(f"Found {len(files)} quest files.")
 
     quests = {}
-    for qst in files:
+    for qst in ordered(files):
         with open(qst, "rb") as quest:
             # Read the content as printable characters only:
             content = "".join(
@@ -327,9 +342,10 @@ def parse_quests():
             else:
                 continue
 
-            # Prepend the path with the database path:
+            # Prepend the path with the database path; the scraped path is
+            # spelled Windows-style inside the quest file:
             try:
-                rewards = parse(paths.DB / reward_file)
+                rewards = parse(paths.DB / game_path(reward_file))
             except InvalidItemError as e:
                 messages = exception_messages_with_causes(e)
                 logging.debug(f"Skipping quest reward {reward_file} of {qst}. {messages}")
@@ -379,7 +395,7 @@ def parse_sets():
         files.extend(glob.glob(str(set_files), recursive=True))
 
     sets = {}
-    for dbr in files:
+    for dbr in ordered(files):
         try:
             parsed = parse(dbr)
         except InvalidItemError as e:
