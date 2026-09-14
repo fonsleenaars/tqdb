@@ -288,6 +288,8 @@ CREATURES = [
 EQUIPMENT = [
     "records/item*/animalrelics/*.dbr",
     "records/item*/equipment*/**/*.dbr",
+    # Eternal Embers dungeon rewards live outside the item type folders
+    "records/item/hcdungeon/*.dbr",
     "records/item*/relics/*.dbr",
     "records/xpack*/item*/artifacts/*.dbr",
     "records/xpack*/item*/artifacts/arcaneformulae/*.dbr",
