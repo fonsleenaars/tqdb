@@ -1,0 +1,152 @@
+# Game file formats
+
+What the parser reads, at two levels: the extracted text formats it consumes today, and the binary containers those are extracted from. The binary sections come from reading open-source implementations, not from the original tools; items marked *unverified* need checking against real game files.
+
+## Extracted formats (what the Python parser reads)
+
+### DBR records
+
+One text file per game record, path like `records/item/equipmentweapon/sword/x2_sword_01.dbr`. Comma-separated, one property per line, trailing comma, arrays joined with `;`:
+
+```
+templateName,database\templates\weaponmelee_sword.tpl,
+Class,WeaponMelee_Sword,
+offensivePhysicalMin,12;14;16,
+itemLevel,20,
+```
+
+Only the first comma splits key from value. Keys are typed by the record's template; undeclared keys are ignored. `templateName` and `Class` both identify the template. Game paths inside values use backslashes and mixed case; the parser lowercases them.
+
+### TPL templates
+
+`.tpl` files under `data/database/templates/`, one per record class, brace-delimited:
+
+```
+Group
+{
+    name = "Header"
+    Variable
+    {
+        name = "templateName"
+        class = "static"
+        type = "include"
+        defaultValue = "%TEMPLATE_DIR%database\templates\templatebase\itembase.tpl"
+    }
+}
+```
+
+Variable `class` is `static`, `variable`, `array`, or `picklist`. Variable `type` is `include`, `file_dbr`, `file_tex`, `string`, `real`, `int`, or `bool`. A `static include` variable is a template reference; its referenced template's non-static variables are inherited. The `Class` variable's `defaultValue` names the record class.
+
+### Text resources
+
+`data/resources/<locale>/*.txt`, one directory per locale (`cs de en es fr it ja ko pl ru uk zh`; the game's Chinese archive is `Text_CH.arc`). UTF-16 with BOM. Lines are `key=value`, `//` comments. Two families:
+
+- **Tags** (names): `commonequipment.txt`, `x2skills.txt`, `x4mainquest_nonvoiced.txt` and 31 more. Keys like `tagWeapon_Sword_01`.
+- **UI strings** (property templates): `ui.txt`, `xui.txt`, `x2ui.txt`, `x3basegame_nonvoiced.txt`, `x4basegame_nonvoiced.txt`. Values carry the game's own placeholder syntax, e.g. `{%.0f0}% Chance of `, and declension markers like `[ms]`/`[fs]`.
+
+Tag prefixes are semantic: `x2`, `x3`, `x4` mark Ragnarök, Atlantis, and Eternal Embers content respectively. The website derives DLC badges from them.
+
+### Quest files
+
+`data/quests/*.qst` are binary. The parser does not decode them; it lowercases the printable bytes and regex-scrapes `titletag<tag>` and reward record paths. Format unknown beyond that.
+
+### Textures
+
+`.tex` files, see below. Only item icons are converted (single frame, one mipmap in practice).
+
+## Binary containers (what an in-house extractor must read)
+
+All integers little-endian.
+
+### ARZ (`Database/database.arz`)
+
+Verified against TQVaultAE (C#, MIT) and tqdatabase (Java, GPL) source.
+
+```
+Header, 24 bytes
+  0x00 i32  unknown (readers ignore; Grim Dawn writes 0x0003_0002)      unverified for TQ
+  0x04 i32  recordTableStart
+  0x08 i32  recordTableSize
+  0x0C i32  recordCount
+  0x10 i32  stringTableStart
+  0x14 i32  stringTableSize
+Record data follows the header; record offsets are relative to file offset 24.
+
+String table at stringTableStart
+  i32 count, then count × { i32 len, len bytes cp1252 }      length-prefixed, not null-terminated
+
+Record table at recordTableStart, per record
+  i32 nameStringIndex           → the .dbr path
+  i32 typeLen, typeLen bytes    → record class string
+  i32 offset (+24)
+  i32 compressedSize
+  i32, i32                      ignored by TQ readers (Grim Dawn: decompressedSize + filetime)
+
+Record payload: one zlib stream. Decompressed length is a multiple of 4.
+  repeat until end:
+    i16 type    0 = i32, 1 = f32, 2 = string (i32 index into string table), 3 = bool (i32)
+    i16 count   ≥ 1; arrays
+    i32 nameStringIndex
+    count × i32 value
+```
+
+DBR output is one text file per record at `<out>/<nameString>` with `key,v1;v2,` lines. The exact float formatting the original ARZExtractor used is unknown; a re-implementation controls both the writer and the reader, so it only affects diffability against old extracts.
+
+Grim Dawn's ARZ is the same layout with LZ4 block compression instead of zlib. Grim Dawn tools port to Titan Quest by swapping the decompressor.
+
+### ARC (`Toolset/Templates.arc`, `Text/Text_EN.arc`, `Resources/Items.arc`, `Resources/Quests.arc`, and the `XPack*/` variants)
+
+Verified against TQVaultAE and tqdatabase.
+
+```
+Header
+  0x00 "ARC"          0x04 i32 version (Grim Dawn requires 3; TQ readers ignore)   unverified for TQ
+  0x08 i32 numEntries 0x0C i32 numParts  0x10 i32 recordTableSize
+  0x14 i32 stringTableSize                0x18 i32 tocOffset
+
+At tocOffset: numParts × { i32 fileOffset, i32 compressedSize, i32 realSize }
+Then: file-name string table (names null-terminated in practice)
+Then, at fileLength − 44 × numEntries: numEntries × 44-byte entries
+  i32 storageType (1 = stored, 3 = compressed)
+  i32 fileOffset, i32 compressedSize, i32 realSize
+  i32 adler32 of decompressed data
+  i64 filetime
+  i32 numParts, i32 firstPartIndex
+  i32 nameLen, i32 nameOffset (relative to string table start)
+```
+
+A file is the concatenation of its parts; each part is an independent zlib stream. `storageType == 1` with equal sizes is a raw copy. Entries with an empty name are deleted.
+
+### TEX (item icons)
+
+Verified against TQVaultAE, tqdatabase, and the parser's own header patch in `images.py`.
+
+```
+v1:  "TEX\x01"  i32 (asserted 0)  i32 ddsLength  DDS…                 offset 12
+v2:  "TEX\x02"  i32               u8 flag         i32 ddsLength  DDS…  offset 13
+```
+
+v2 appeared with the Anniversary Edition and later expansions; the `flag` byte is 1 for 32-bit textures with alpha. The parser downgrades v2 to v1 by removing byte 8.
+
+The embedded DDS has quirks:
+
+- Magic is `DDSR` or `DDS `. Patch to `DDS ` for standard decoders.
+- **`DDSR` means mipmaps are stored smallest first**; the top-level surface is the *last* `surfaceSize` bytes. Item icons have one mip, so single-frame decoders get away with ignoring this. A general converter must reorder.
+- RGB bit masks are zeroed for uncompressed formats. Readers set A8R8G8B8 masks and `DDPF_ALPHAPIXELS` when the bit count is 32.
+- Pixel formats seen: DXT1, DXT3, DXT5, and uncompressed 32-bit A8R8G8B8.
+- Multi-frame animated TEX files exist; not needed for icons.
+
+### Reference implementations
+
+| Project | Language | License | Covers | Use |
+|---|---|---|---|---|
+| [TQVaultAE](https://github.com/EtienneLamoureux/TQVaultAE) | C# | MIT | ARZ, ARC, TEX (via ImageMagick) | primary port source |
+| [tqdatabase](https://github.com/epinter/tqdatabase) / tqrespec `tqextract-cli` | Java | GPL-3 | ARZ, ARC, TEX with mipmap reordering | read-only cross-check; working CLI fallback |
+| [grimarz](https://github.com/atom0s/grimarz), [grimarc](https://github.com/atom0s/grimarc) | C++ | GPL-3 | Grim Dawn ARZ/ARC (LZ4) | read-only cross-check |
+| kraken444444/grim-dawn-save-editor `gdsave/arz.py` | Python | MIT | Grim Dawn ARZ, ~100 lines | reference for a minimal reader |
+| `image_dds` + `bcdec_rs`, `ddsfile`, `flate2` | Rust | MIT | DDS decode, DDS header, zlib | building blocks |
+| `bcdec.h`, zlib, `stb_image_write` | C | MIT/Unlicense | same, in C | building blocks |
+
+No Rust, Go, or Python crate for TQ or Grim Dawn ARZ/ARC exists on crates.io, PyPI, or GitHub as of September 2026. The three formats total a few hundred lines; porting from the MIT sources is the intended route.
+
+The bundled `utils/arzextractor/ARZExtractor.exe` is a .NET 2.0 C++/CLI repackaging of TQVault's data layer with a WinForms front end, author unknown, 2009. `utils/textureviewer/TextureViewer.exe` is Max McGuire's native Win32 tool over DevIL.
