@@ -1,7 +1,6 @@
 //! `tqextract`: in-house replacement for ARZExtractor.exe, the game's
 //! ArchiveTool.exe, and TextureViewer.exe. Format notes: `docs/game-formats.md`.
 
-use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -9,7 +8,7 @@ use std::time::Instant;
 use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
 
-use tqextract::{arc, arz, tex};
+use tqextract::{Report, arc, arz, prepare, tex};
 
 #[derive(Parser)]
 #[command(version, about, long_about = None)]
@@ -41,6 +40,9 @@ enum Command {
         game: PathBuf,
         /// Data directory to populate (see docs/setup.md for the layout)
         data: PathBuf,
+        /// Print the plan and exit without extracting anything
+        #[arg(long)]
+        dry_run: bool,
     },
 }
 
@@ -90,6 +92,13 @@ enum TexCommand {
         /// Path of the PNG to write
         output: PathBuf,
     },
+    /// Convert every .tex under a directory to a .png at the same relative path.
+    ConvertDir {
+        /// Directory to walk
+        input: PathBuf,
+        /// Directory to write into (may equal input)
+        output: PathBuf,
+    },
     /// Parse and decode every .tex under a directory and print a histogram of what was found.
     Survey {
         /// Directory to walk
@@ -111,15 +120,39 @@ fn main() -> Result<()> {
         Command::Tex { command } => match command {
             TexCommand::Info { input } => tex_info(&input),
             TexCommand::Convert { input, output } => tex_convert(&input, &output),
+            TexCommand::ConvertDir { input, output } => tex_convert_dir(&input, &output),
             TexCommand::Survey { dir } => tex_survey(&dir),
         },
-        Command::Prepare { game, data } => bail!(
-            "prepare is not implemented yet ({} -> {})",
-            game.display(),
-            data.display()
-        ),
+        Command::Prepare {
+            game,
+            data,
+            dry_run,
+        } => run_prepare(&game, &data, dry_run),
     }
 }
+
+/// Print a report and turn any failures into a non-zero exit.
+fn finish(what: &str, report: &Report, elapsed: std::time::Duration) -> Result<()> {
+    for err in &report.errors {
+        eprintln!("error: {err}");
+    }
+    eprintln!(
+        "{what}: {} written ({} bytes) in {elapsed:.1?}{}",
+        report.written,
+        report.bytes,
+        if report.is_ok() {
+            String::new()
+        } else {
+            format!(", {} failed", report.errors.len())
+        }
+    );
+    if !report.is_ok() {
+        bail!("{} failures", report.errors.len());
+    }
+    Ok(())
+}
+
+// --- arz -------------------------------------------------------------------
 
 fn load_arz(input: &Path) -> Result<arz::ArzFile> {
     let bytes = fs::read(input).with_context(|| format!("reading {}", input.display()))?;
@@ -143,6 +176,16 @@ fn arz_info(input: &Path) -> Result<()> {
     }
     Ok(())
 }
+
+fn arz_extract(input: &Path, output: &Path) -> Result<()> {
+    let started = Instant::now();
+    let arz = load_arz(input)?;
+    eprintln!("{} records in {}", arz.records().len(), input.display());
+    let report = arz.extract_all(output, |done, total| eprintln!("  {done}/{total}"));
+    finish("arz extract", &report, started.elapsed())
+}
+
+// --- arc -------------------------------------------------------------------
 
 fn load_arc(input: &Path) -> Result<arc::ArcFile> {
     let bytes = fs::read(input).with_context(|| format!("reading {}", input.display()))?;
@@ -175,42 +218,11 @@ fn arc_info(input: &Path) -> Result<()> {
 fn arc_extract(input: &Path, output: &Path) -> Result<()> {
     let started = Instant::now();
     let arc = load_arc(input)?;
-    let total = arc.entries().len();
-
-    let mut created_dirs: HashSet<PathBuf> = HashSet::new();
-    let mut failures = 0usize;
-    let mut bytes = 0u64;
-
-    for entry in arc.entries() {
-        let path = output.join(arc::entry_path(&entry.name));
-        let result = arc.read_entry(entry).and_then(|data| {
-            if let Some(parent) = path.parent()
-                && created_dirs.insert(parent.to_path_buf())
-            {
-                fs::create_dir_all(parent)
-                    .with_context(|| format!("creating {}", parent.display()))?;
-            }
-            bytes += data.len() as u64;
-            fs::write(&path, data).with_context(|| format!("writing {}", path.display()))
-        });
-        if let Err(err) = result {
-            failures += 1;
-            eprintln!("error: {err:#}");
-        }
-    }
-
-    eprintln!(
-        "wrote {} entries ({bytes} bytes) from {} to {} in {:.1?}",
-        total - failures,
-        input.display(),
-        output.display(),
-        started.elapsed()
-    );
-    if failures > 0 {
-        bail!("{failures} of {total} entries failed");
-    }
-    Ok(())
+    let report = arc.extract_all(output);
+    finish("arc extract", &report, started.elapsed())
 }
+
+// --- tex -------------------------------------------------------------------
 
 fn tex_info(input: &Path) -> Result<()> {
     let bytes = fs::read(input).with_context(|| format!("reading {}", input.display()))?;
@@ -223,17 +235,14 @@ fn tex_info(input: &Path) -> Result<()> {
 }
 
 fn tex_convert(input: &Path, output: &Path) -> Result<()> {
-    let bytes = fs::read(input).with_context(|| format!("reading {}", input.display()))?;
-    let tex =
-        tex::TexFile::parse(&bytes).with_context(|| format!("parsing {}", input.display()))?;
-    let png = tex
-        .to_png()
-        .with_context(|| format!("converting {}", input.display()))?;
-    if let Some(parent) = output.parent() {
-        fs::create_dir_all(parent).with_context(|| format!("creating {}", parent.display()))?;
-    }
-    fs::write(output, png).with_context(|| format!("writing {}", output.display()))?;
+    tex::convert_file(input, output)?;
     Ok(())
+}
+
+fn tex_convert_dir(input: &Path, output: &Path) -> Result<()> {
+    let started = Instant::now();
+    let report = tex::convert_dir(input, output)?;
+    finish("tex convert-dir", &report, started.elapsed())
 }
 
 fn tex_survey(dir: &Path) -> Result<()> {
@@ -241,7 +250,7 @@ fn tex_survey(dir: &Path) -> Result<()> {
 
     let started = Instant::now();
     let mut files = Vec::new();
-    collect_tex_files(dir, &mut files)?;
+    tex::collect_tex_files(dir, &mut files)?;
 
     let mut by_key: BTreeMap<String, usize> = BTreeMap::new();
     let mut chain_mismatch = 0usize;
@@ -299,58 +308,61 @@ fn tex_survey(dir: &Path) -> Result<()> {
     Ok(())
 }
 
-fn collect_tex_files(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
-    for entry in fs::read_dir(dir).with_context(|| format!("reading {}", dir.display()))? {
-        let path = entry?.path();
-        if path.is_dir() {
-            collect_tex_files(&path, out)?;
-        } else if path
-            .extension()
-            .is_some_and(|e| e.eq_ignore_ascii_case("tex"))
-        {
-            out.push(path);
-        }
-    }
-    Ok(())
-}
+// --- prepare ---------------------------------------------------------------
 
-fn arz_extract(input: &Path, output: &Path) -> Result<()> {
+fn run_prepare(game: &Path, data: &Path, dry_run: bool) -> Result<()> {
     let started = Instant::now();
-    let arz = load_arz(input)?;
-    let total = arz.records().len();
-    eprintln!("{total} records in {}", input.display());
-
-    let mut created_dirs: HashSet<PathBuf> = HashSet::new();
-    let mut failures = 0usize;
-
-    for (i, info) in arz.records().iter().enumerate() {
-        let path = output.join(arz::dbr_path(&info.name));
-        let result = arz.read_record(info).and_then(|record| {
-            if let Some(parent) = path.parent()
-                && created_dirs.insert(parent.to_path_buf())
-            {
-                fs::create_dir_all(parent)
-                    .with_context(|| format!("creating {}", parent.display()))?;
-            }
-            fs::write(&path, record.to_dbr()).with_context(|| format!("writing {}", path.display()))
-        });
-        if let Err(err) = result {
-            failures += 1;
-            eprintln!("error: {err:#}");
-        }
-        if (i + 1) % 10_000 == 0 {
-            eprintln!("  {}/{total}", i + 1);
-        }
-    }
+    let steps = prepare::plan(game, data)?;
 
     eprintln!(
-        "wrote {} records to {} in {:.1?}",
-        total - failures,
-        output.display(),
-        started.elapsed()
+        "{} steps from {} into {}",
+        steps.len(),
+        game.display(),
+        data.display()
     );
-    if failures > 0 {
-        bail!("{failures} of {total} records failed");
+    for step in &steps {
+        eprintln!(
+            "  {:<9} {}  ->  {}",
+            format!("{:?}", step.kind).to_lowercase(),
+            step.source
+                .strip_prefix(game)
+                .unwrap_or(&step.source)
+                .display(),
+            step.target
+                .strip_prefix(data)
+                .unwrap_or(&step.target)
+                .display()
+        );
     }
-    Ok(())
+    if dry_run {
+        return Ok(());
+    }
+
+    let mut total = Report::default();
+    for step in &steps {
+        let name = step
+            .source
+            .strip_prefix(game)
+            .unwrap_or(&step.source)
+            .display()
+            .to_string();
+        let (report, elapsed) = prepare::run(step).with_context(|| format!("step {name}"))?;
+        eprintln!(
+            "{name}: {} written ({} bytes) in {elapsed:.1?}{}",
+            report.written,
+            report.bytes,
+            if report.is_ok() {
+                String::new()
+            } else {
+                format!(", {} failed", report.errors.len())
+            }
+        );
+        for err in &report.errors {
+            eprintln!("  error: {err}");
+        }
+        total.written += report.written;
+        total.bytes += report.bytes;
+        total.errors.extend(report.errors);
+    }
+    finish("prepare", &total, started.elapsed())
 }

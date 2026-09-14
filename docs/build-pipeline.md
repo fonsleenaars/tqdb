@@ -53,11 +53,11 @@ There are no platform deadlines: the output is static JSON consumed by a website
 
 1. `just lint` — clippy with warnings as errors, rustfmt.
 2. `just test` — `cargo test` and `pytest` on synthetic fixtures. No game data needed.
-3. `just parse en` diffed against the previous `output/tqdb.en.<version>.json`, or against the website's committed baseline. Needs the extracted data volume.
-4. `just parse-all` before a release.
+3. `just extract` after any change to `extract/`: every step must report zero failures. `tqextract arc info` and `tex survey` verify checksums and decoding on a single archive or directory.
+4. `just parse en` diffed against the previous `output/tqdb.en.<version>.json`, or against the website's committed baseline. Needs the extracted data volume.
+5. `just parse-all` before a release.
 
 ## Known gaps
 
-- `tqextract` subcommands are stubs until the game files are on the box.
 - The Python parser still has Windows-only path handling and import-time side effects (`docs/architecture.md`, templates and global state sections). `just parse` will not produce output until those are fixed.
 - No CI. When added, it builds the same `Dockerfile` on `ubuntu-latest` and runs steps 1 and 2.

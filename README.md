@@ -1,12 +1,8 @@
 # TQDB
-TQDB is a Python parser written for the extracted content of Titan Quest, currently owned by [Nordic Games][ng].
-
-> **Documentation** lives in [`docs/`](docs/): architecture, game file formats, the website data contract, setup, and the build pipeline.
->
-> **Development** happens in a container: install Colima and `just`, then `colima start`, `just build`, `just test`. See [`docs/setup.md`](docs/setup.md) and [`docs/build-pipeline.md`](docs/build-pipeline.md). The Pipenv instructions below are obsolete; the game-data extraction steps still describe the only working method until the in-house extractor lands.
+TQDB is a parser for the game data of Titan Quest Anniversary Edition. It turns the game's ARZ database, ARC archives, and TEX textures into one JSON file per locale plus a sprite sheet, which power the equipment database at [tq-db.net][tqdb].
 
 ## Titan Quest
-Although the base game Titan Quest was released in 2006 and the expansion Immortal Throne in 2007, I, as many others kept playing it throughout the years. With the recent pick up by Nordic Games there are changes being made to the database that are no longer reflect in the other databases that are still around (most notably [GameBanshee][gb]).
+Although the base game Titan Quest was released in 2006 and the expansion Immortal Throne in 2007, I, as many others kept playing it throughout the years. With the pick up by THQ Nordic there are changes being made to the database that are no longer reflected in the other databases that are still around (most notably [GameBanshee][gb]).
 
 That, and a desire to create a smoother equipment database running on some more modern technologies, prompted me to start breaking down the ARZ and ARC files that make up the in-game content for Titan Quest.
 
@@ -14,116 +10,55 @@ The result is two files containing all in-game information:
   - A single JSON file (per locale) containing the data (equipment, sets, skills, boss loot, etc.)
   - A single sprite image along with a CSS sprite sheet containing all the graphics for the equipment available in the JSON file.
 
-## Automated Setup
+## Documentation
 
-The `prepare.py` module automates most of the setup required, with the exception of the ARZ Database.
+- [`docs/setup.md`](docs/setup.md) — host setup, game data, input layout
+- [`docs/build-pipeline.md`](docs/build-pipeline.md) — the container image, version pins, update policy
+- [`docs/architecture.md`](docs/architecture.md) — how the parser works
+- [`docs/game-formats.md`](docs/game-formats.md) — DBR, TPL, ARZ, ARC, and TEX formats
+- [`docs/data-contract.md`](docs/data-contract.md) — the JSON and sprite output the website depends on
 
-Automated setup assumes that you have Titan Quest Anniversary Edition installed through Steam. It will (currently) not work for other installation setups. Please report an issue describing your setup if it doesn't work for you.
+## Setup
 
-To run the automated setup:
+Everything runs in a container; the host needs Docker (Colima on macOS) and [`just`](https://github.com/casey/just). No Rust or Python is installed on the host.
 
-1. Run:
+1. Copy your Titan Quest Anniversary Edition install, or just its `Database`, `Toolset`, `Text`, and `Resources` folders, to `game/` in this repository. It is gitignored.
+2. Build the image and run the tests:
 
-    ```
-    python prepare.py
-    ```
-2. Next, set up the ARZ Database by following only item 1 of the Manual Setup instructions below.
+   ```sh
+   just build
+   just test
+   ```
 
-## Manual Setup
+3. Extract the game data. This reads `game/` and writes about 3.6 GB into a Docker volume:
 
-During the setup we're going to use the following example paths:
+   ```sh
+   just extract
+   ```
 
-- Location of your clone of this git repository: `c:/tqdb`
-- TQ Install: `c:/Steam/SteamApps/Common/Titan Quest - Anniversary Edition/`
-
-The `data` directory needs to be created in the same directory as your git clone, so for this example that would be `c:/tqdb/data`. Directories such as `data/database` are assumed to be relative to your cloned repo.
-
-### 1. ARZ Database
-
-1. Make sure the `data/database` directory exists. You will need about 2GB of free space.
-2. Run `utils/arzextractor/ARZExtractor.exe`
-3. Select the `Database/database.arz` file from your Titan Quest installation directory, choose `data/database` as the
-destination folder, and click Extract.
-
-   **ARZ file**: database.arz
- 
-   **Destination folder**: data/database
-
-### 2. Templates
-
-1. Make sure the `data/database` directory exists.
-2. Open up a prompt, change directory to your TQ install.
-3. Run the following command:
-`ArchiveTool.exe Toolset/Templates.arc -extract C:/tqdb/data/database`
-
-### 3. Text Resources
-
-1. Make sure the `data/resources` directory exists.
-2. Choose a language you want to extract, and create the folder for it in the `resources` directory.
-For example, english would be: `data/resources/en`.
-The available locales are:
-    - `cs` - Czech
-    - `de` - German
-    - `en` - English
-    - `es` - Spanish
-    - `fr` - French
-    - `it` - Italian
-    - `jp` - Japanese
-    - `ko` - Korean
-    - `pl` - Polish
-    - `ru` - Russian
-    - `uk` - Ukrainian
-    - `zh` - Simplified Chinese
-3. Open up a prompt, change directory to your TQ install.
-4. Run the following command:
-`ArchiveTool.exe Text/Text_EN.arc -extract C:/tqdb/data/resources/en`
-Replace the locale in both the arc file name and the directory to that of your choosing.
-
-### 4. Textures
-
-1. Make sure the following folders exist:
-  - `data/textures/Items`
-  - `data/textures/XPack/Items`
-  - `data/textures/XPack2/Items`
-2. Open up a prompt, change directory to your TQ install.
-3. Run the following commands:
-    - `ArchiveTool.exe Resources/Items.arc -extract C:/tqdb/data/textures/Items`
-    - `ArchiveTool.exe Resources/XPack/Items.arc -extract C:/tqdb/data/textures/XPack/Items`
-    - `ArchiveTool.exe Resources/XPack2/Items.arc -extract C:/tqdb/data/textures/XPack2/Items`
-
-### 5. Quests
-
-1. Make sure the `data/quests` folder exists.
-2. Open up a prompt, change directory to your TQ install.
-3. Run the following command:
-    - `ArchiveTool.exe Resources/Quests.arc -extract C:/tqdb/data/quests`
-    - `ArchiveTool.exe Resources/XPack/Quests.arc -extract C:/tqdb/data/quests`
-    - `ArchiveTool.exe Resources/XPack2/Quests.arc -extract C:/tqdb/data/quests`
+`just` on its own lists every command.
 
 ## Running the parser
 
-`just parse` - Runs the parser with the default english locale
-`just parse fr` - Runs the parser with the french locale
-
-You can specify any of the two letter locales that are mentioned in the setup.
-
-Running the project will take several minutes. Each time a category of work is completed a message will be printed.
-
-Example output:
-```
-10:52 Parsed affixes in 3.3582386547089422 seconds.
-10:54 Parsed creatures in 164.8914079976941 seconds.
-10:56 Parsed equipment in 69.75900988261375 seconds.
-10:56 Parsed quest rewards in 1.4686661400843093 seconds.
-10:56 Parsed sets in 0.37698949130347614 seconds.
-10:56 Writing output to files...
+```sh
+just parse          # english
+just parse fr       # any locale: br cs de en es fr it ja ko pl ru uk zh
+just parse-all      # all locales, then the sprite sheet
 ```
 
-There will also be messages about missing tags, bitmaps, or other unexpected values found in the records. These are used for debugging purposes.
+Output lands in `output/`: `tqdb.<locale>.<version>.json`, `sprite.png`, and `sprite.css`.
 
-## Miscellaneous
+## The extractor
 
-### DBR Parser
+`tqextract` (Rust, in `extract/`) replaces the Windows-only tools this project used to bundle. Besides `prepare`, which does the whole extraction, it can inspect and extract each format on its own:
+
+```sh
+docker compose run --rm dev tqextract arz info /game/Database/database.arz
+docker compose run --rm dev tqextract arc info /game/Toolset/Templates.arc
+docker compose run --rm dev tqextract tex survey /data/textures/items
+```
+
+## DBR records
 Titan Quest works with so called DBR files (Database Records). These files are basically dictionaries of all properties of whatever the file is referencing. The file is comma separated, with the following formats:
 
 ```
@@ -134,12 +69,8 @@ key,value1
 
 These values can thus easily be parsed into a usable dictionary or collection. The keys for these files are checked based on the Template used for the DBR file, which is defined in the `templateName` key, and indirectly in its `Class` key as well.
 
-### TextureViewer
-This parser uses the TextureViewer program created by Max McGuire to convert the TEX files into transparent PNGs. I included the program, the DLL and the readme in its entirety in the repo.
+## Website
+The React site at [tq-db.net][tqdb] wraps the parsed JSON with navigation, filtering, and search. Report issues you find on the website on this repository's issue tracker.
 
-### ReactJS Website implementation
-I have created a React wrapper of the parsed JSON result on [tq-db.net][tqdb]. This website allows for some easy navigation and filtering of the data set. You can report any issues you find on the website on this repository's issue tracker.
-
-[ng]: <https://www.nordicgames.at/index.php/product/titan_quest_gold_edition>
 [gb]: <https://www.gamebanshee.com/titanquest/>
 [tqdb]: <https://www.tq-db.net>

@@ -150,4 +150,4 @@ The embedded DDS has quirks:
 
 No Rust, Go, or Python crate for TQ or Grim Dawn ARZ/ARC exists on crates.io, PyPI, or GitHub as of September 2026. The three formats total a few hundred lines; porting from the MIT sources is the intended route.
 
-The bundled `utils/arzextractor/ARZExtractor.exe` is a .NET 2.0 C++/CLI repackaging of TQVault's data layer with a WinForms front end, author unknown, 2009. `utils/textureviewer/TextureViewer.exe` is Max McGuire's native Win32 tool over DevIL.
+Until September 2026 this repo bundled two Windows tools for this: `ARZExtractor.exe`, a .NET 2.0 C++/CLI repackaging of TQVault's data layer with a WinForms front end (author unknown, 2009), and Max McGuire's `TextureViewer.exe` over DevIL. ARC extraction relied on the game's own `ArchiveTool.exe`. All three are replaced by `tqextract` in `extract/`.

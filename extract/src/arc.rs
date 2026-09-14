@@ -30,14 +30,16 @@
 //! A part whose compressed and real sizes are equal is stored raw. Entries
 //! with an empty name are deleted.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
+use std::fs;
 use std::io::Read;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail, ensure};
 use flate2::read::ZlibDecoder;
 
+use crate::Report;
 use crate::cursor::{Cursor, decode_cp1252};
 
 pub const HEADER_LEN: usize = 28;
@@ -230,6 +232,33 @@ impl ArcFile {
 /// slashes and lowercase, like [`crate::arz::dbr_path`].
 pub fn entry_path(name: &str) -> PathBuf {
     PathBuf::from(name.replace('\\', "/").to_lowercase())
+}
+
+impl ArcFile {
+    /// Write every live entry under `output`.
+    pub fn extract_all(&self, output: &Path) -> Report {
+        let mut created_dirs: HashSet<PathBuf> = HashSet::new();
+        let mut report = Report::default();
+
+        for entry in &self.entries {
+            let path = output.join(entry_path(&entry.name));
+            let result = self.read_entry(entry).and_then(|data| {
+                if let Some(parent) = path.parent()
+                    && created_dirs.insert(parent.to_path_buf())
+                {
+                    fs::create_dir_all(parent)
+                        .with_context(|| format!("creating {}", parent.display()))?;
+                }
+                report.bytes += data.len() as u64;
+                fs::write(&path, data).with_context(|| format!("writing {}", path.display()))
+            });
+            match result {
+                Ok(()) => report.written += 1,
+                Err(err) => report.fail(err),
+            }
+        }
+        report
+    }
 }
 
 /// Adler-32 as used by zlib, computed over the decompressed entry.

@@ -23,14 +23,16 @@
 //! The two skipped bytes per record entry and the header's first word are
 //! not needed to read the file; their meaning is unverified.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Write as _;
+use std::fs;
 use std::io::Read;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail, ensure};
 use flate2::read::ZlibDecoder;
 
+use crate::Report;
 use crate::cursor::{Cursor, decode_cp1252};
 
 /// Size of the fixed header. Record offsets are relative to this.
@@ -193,6 +195,39 @@ fn join<T>(
 /// lowercase so lookups never depend on filesystem case sensitivity.
 pub fn dbr_path(record_name: &str) -> PathBuf {
     PathBuf::from(record_name.replace('\\', "/").to_lowercase())
+}
+
+impl ArzFile {
+    /// Write every record as a DBR file under `output`. `progress` is called
+    /// with (done, total) every few thousand records.
+    pub fn extract_all(&self, output: &Path, mut progress: impl FnMut(usize, usize)) -> Report {
+        let total = self.records.len();
+        let mut created_dirs: HashSet<PathBuf> = HashSet::new();
+        let mut report = Report::default();
+
+        for (i, info) in self.records.iter().enumerate() {
+            let path = output.join(dbr_path(&info.name));
+            let result = self.read_record(info).and_then(|record| {
+                if let Some(parent) = path.parent()
+                    && created_dirs.insert(parent.to_path_buf())
+                {
+                    fs::create_dir_all(parent)
+                        .with_context(|| format!("creating {}", parent.display()))?;
+                }
+                let text = record.to_dbr();
+                report.bytes += text.len() as u64;
+                fs::write(&path, text).with_context(|| format!("writing {}", path.display()))
+            });
+            match result {
+                Ok(()) => report.written += 1,
+                Err(err) => report.fail(err),
+            }
+            if (i + 1) % 10_000 == 0 {
+                progress(i + 1, total);
+            }
+        }
+        report
+    }
 }
 
 // --- parsing ---------------------------------------------------------------

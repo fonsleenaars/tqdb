@@ -20,15 +20,14 @@ Read `docs/architecture.md` and `docs/data-contract.md` before changing any pars
 
 - `justfile`, `compose.yaml`, `Dockerfile` — the dev container; `just` lists the commands
 - `rust-toolchain.toml`, `.python-version`, `Cargo.lock`, `uv.lock` — the version pins
-- `extract/` — the `tqextract` Rust crate (ARZ, ARC, TEX extraction); subcommands are stubs
-- `run.py` — Python parser entry point; `prepare.py` — Windows-only setup automation
+- `extract/` — the `tqextract` Rust crate: `arz`, `arc`, `tex` readers and `prepare`, which builds the whole `data/` tree
+- `run.py` — Python parser entry point
 - `tqdb/main.py` — the six top-level collectors (affixes, creatures, equipment, quests, sets, skills)
 - `tqdb/dbr.py`, `tqdb/templates.py`, `tqdb/storage.py` — record reader, template registry, global caches
 - `tqdb/parsers/` — one `TQDBParser` subclass per game template; `base.py` holds the property formatters
 - `tqdb/utils/text.py` — localized text loading and format-string conversion; `images.py` — TEX to PNG and sprite sheet
 - `tqdb/constants/` — input globs and the hand-maintained boss-chest table
-- `utils/` — bundled Windows binaries (ARZExtractor, TextureViewer)
-- `game/`, `data/`, `output/` — gitignored game content
+- `game/`, `data/`, `output/` — gitignored game content; `data/` is a Docker volume, not a host directory
 
 ## Hard Rules
 

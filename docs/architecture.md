@@ -121,7 +121,7 @@ Cached result dicts are handed out by reference and then mutated by callers (`ca
 
 ## Images: `tqdb/utils/images.py`
 
-Per item, `save_bitmap` patches TEX v2 headers into v1 by writing a `.fixed.tex` **into the input tree**, then shells out to `utils/textureviewer/TextureViewer.exe` once per texture (thousands of process spawns). `SpriteCreator` packs the PNGs into a 768 px wide sheet with Pillow, writes `sprite.png` and `sprite.css`, then deletes `output/graphics`. CSS class names are the raw item tag, or the raw localized classification for formulae, which yields invalid selectors like `.lesser artifact`.
+Per item, `save_bitmap` patches TEX v2 headers into v1 by writing a `.fixed.tex` **into the input tree**, then shells out to a `TextureViewer.exe` once per texture (thousands of process spawns). That binary is no longer in the repo; `tqextract prepare` now writes a `.png` beside every `.tex`, and this code path has to be replaced by reading those. `SpriteCreator` packs the PNGs into a 768 px wide sheet with Pillow, writes `sprite.png` and `sprite.css`, then deletes `output/graphics`. CSS class names are the raw item tag, or the raw localized classification for formulae, which yields invalid selectors like `.lesser artifact`.
 
 ## Output layout
 

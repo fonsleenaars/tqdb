@@ -20,10 +20,13 @@
 //! Pixel formats seen: DXT1, DXT3, DXT5, uncompressed 32-bit and 24-bit.
 
 use std::fmt::Write as _;
+use std::fs;
 use std::io::Cursor as IoCursor;
+use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result, bail, ensure};
 
+use crate::Report;
 use crate::cursor::Cursor;
 
 const DDS_HEADER_LEN: usize = 128;
@@ -291,6 +294,56 @@ pub fn describe(tex: &TexFile<'_>) -> String {
         tex.expected_chain_size()
     );
     out
+}
+
+/// Convert one `.tex` file to a PNG at `output`, creating parent directories.
+pub fn convert_file(input: &Path, output: &Path) -> Result<u64> {
+    let bytes = fs::read(input).with_context(|| format!("reading {}", input.display()))?;
+    let tex = TexFile::parse(&bytes).with_context(|| format!("parsing {}", input.display()))?;
+    let png = tex
+        .to_png()
+        .with_context(|| format!("converting {}", input.display()))?;
+    if let Some(parent) = output.parent() {
+        fs::create_dir_all(parent).with_context(|| format!("creating {}", parent.display()))?;
+    }
+    fs::write(output, &png).with_context(|| format!("writing {}", output.display()))?;
+    Ok(png.len() as u64)
+}
+
+/// Convert every `.tex` under `input` to a `.png` at the same relative path
+/// under `output`. `input` and `output` may be the same directory.
+pub fn convert_dir(input: &Path, output: &Path) -> Result<Report> {
+    let mut files = Vec::new();
+    collect_tex_files(input, &mut files)?;
+    let mut report = Report::default();
+    for path in &files {
+        let relative = path.strip_prefix(input).expect("collected under input");
+        let target = output.join(relative).with_extension("png");
+        match convert_file(path, &target) {
+            Ok(bytes) => {
+                report.written += 1;
+                report.bytes += bytes;
+            }
+            Err(err) => report.fail(err),
+        }
+    }
+    Ok(report)
+}
+
+/// Every `.tex` file under `dir`, recursively, in directory order.
+pub fn collect_tex_files(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
+    for entry in fs::read_dir(dir).with_context(|| format!("reading {}", dir.display()))? {
+        let path = entry?.path();
+        if path.is_dir() {
+            collect_tex_files(&path, out)?;
+        } else if path
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("tex"))
+        {
+            out.push(path);
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]
