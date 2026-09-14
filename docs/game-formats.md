@@ -1,6 +1,6 @@
 # Game file formats
 
-What the parser reads, at two levels: the extracted text formats it consumes today, and the binary containers those are extracted from. The binary sections come from reading open-source implementations, not from the original tools; items marked *unverified* need checking against real game files.
+What the parser reads, at two levels: the extracted text formats it consumes today, and the binary containers those are extracted from. The binary sections come from reading open-source implementations; each says whether it has also been verified against the real game files.
 
 ## Extracted formats (what the Python parser reads)
 
@@ -60,11 +60,11 @@ All integers little-endian.
 
 ### ARZ (`Database/database.arz`)
 
-Verified against TQVaultAE (C#, MIT) and tqdatabase (Java, GPL) source.
+Verified against TQVaultAE (C#, MIT) and tqdatabase (Java, GPL) source, and on 2026-09-14 against the real Anniversary Edition file with `tqextract arz`: every table size matched the header exactly, all 74,013 records inflated and decoded, and the 190,522-entry string table read cleanly.
 
 ```
 Header, 24 bytes
-  0x00 i32  unknown (readers ignore; Grim Dawn writes 0x0003_0002)      unverified for TQ
+  0x00 i32  unknown; 0x0003_0004 in TQ AE (Grim Dawn writes 0x0003_0002); readers ignore it
   0x04 i32  recordTableStart
   0x08 i32  recordTableSize
   0x0C i32  recordCount
@@ -90,7 +90,9 @@ Record payload: one zlib stream. Decompressed length is a multiple of 4.
     count × i32 value
 ```
 
-DBR output is one text file per record at `<out>/<nameString>` with `key,v1;v2,` lines. The exact float formatting the original ARZExtractor used is unknown; a re-implementation controls both the writer and the reader, so it only affects diffability against old extracts.
+About 8,000 records have an empty type string (proxy pools and similar); the type is informational and nothing depends on it.
+
+DBR output is one text file per record at `<out>/<nameString>` with `key,v1;v2,` lines. `tqextract` writes the path lowercased with forward slashes, floats in shortest round-trip form, bools as `0`/`1`, LF line endings. The original ARZExtractor's exact formatting is unknown; no old extract exists to diff against. The full database is 745 MB on disk and extracts in a few seconds.
 
 Grim Dawn's ARZ is the same layout with LZ4 block compression instead of zlib. Grim Dawn tools port to Titan Quest by swapping the decompressor.
 
