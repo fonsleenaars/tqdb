@@ -7,6 +7,7 @@ import time
 from tqdb import __version__ as tqdb_version
 from tqdb import main, storage
 from tqdb.constants import paths
+from tqdb.templates import load_templates
 from tqdb.utils import images
 from tqdb.utils.text import texts
 
@@ -118,6 +119,9 @@ def tqdb():
     # Grab the arguments:
     args = argparser.parse_args()
     logging.basicConfig(level=args.loglevel, format="%(asctime)s %(levelname)s %(message)s", datefmt="%H:%M:%S")
+
+    # The template registry is filled once, from the extracted game data:
+    load_templates()
 
     def create_sprite_sheet():
         start_time = time.time()

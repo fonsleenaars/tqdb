@@ -59,5 +59,5 @@ There are no platform deadlines: the output is static JSON consumed by a website
 
 ## Known gaps
 
-- The Python parser still loads templates at import time and keeps all state in module globals (`docs/architecture.md`, templates and global state sections), so `just test-python` needs the extracted data volume for anything beyond the synthetic fixtures.
+- The Python parser keeps all state in module globals (`docs/architecture.md`, global state section). The template coverage tests in `tqdb/parsers/base_test.py` need the extracted data volume and skip without it.
 - No CI. When added, it builds the same `Dockerfile` on `ubuntu-latest` and runs steps 1 and 2.

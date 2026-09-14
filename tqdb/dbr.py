@@ -27,6 +27,9 @@ def get_template(dbr, dbr_file):
         that "defaultValue"
     :param dbr_file: the file the dbr came from, for logging purposes
     """
+    if not templates_by_path:
+        raise RuntimeError("No templates loaded; call tqdb.templates.load_templates() before reading records.")
+
     if "templateName" in dbr:
         # The template path is set, retrieve it from the collection:
         return templates_by_path[game_path(dbr["templateName"])]

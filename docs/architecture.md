@@ -38,7 +38,7 @@ With `--all-languages` the whole database is parsed once per locale (12 times) b
 
 ## Templates: `tqdb/templates.py`
 
-`.tpl` files from `data/database/templates/**` are loaded **at import time** (`templates.py:276`). Importing any parser module therefore requires the extracted game data on disk. Two registries: by path (`templates_by_path`) and by `Class` name (`templates`).
+`.tpl` files from `database/templates/**` under the data root are loaded by an explicit `load_templates()` call, which `run.py` makes once before parsing. Importing the parser modules needs no game data; reading a record before the call raises. Reloading replaces both registries: by path (`templates_by_path`) and by `Class` name (`templates`).
 
 Parsing is line-oriented with regex preprocessing and manual brace counting, not a grammar. A template's `include` variables define inheritance: the included template's non-static variables are merged in and its path is appended to `template.templates`, which drives parser dispatch.
 
@@ -100,7 +100,7 @@ Everything shares module-level mutable state. Nothing is injectable, and this is
 |---|---|---|
 | `storage.db` (record memo cache) | `storage.py:5` | yes |
 | `storage.skills` (skill registry with tag de-duplication) | `storage.py:6` | yes |
-| `templates`, `templates_by_path` | `templates.py:11` | no, loaded at import |
+| `templates`, `templates_by_path` | `templates.py:11` | no, filled by `load_templates()` |
 | `dbr.parsers` (parser singletons) | `dbr.py:18` | no |
 | `texts` (one locale at a time) | `utils/text.py:411` | no, mutated in place per locale |
 | per-parse fields on `ParametersOffensiveParser` and `FixedItemLootParser` | `base.py:552`, `loot.py:198` | no |
@@ -139,7 +139,7 @@ The JSON shape is specified in `data-contract.md`.
 
 ## Tests
 
-`tqdb/parsers/base_test.py` is the only test file. Its five tests check that every variable in a template is covered by the corresponding parser's field list. There are no functional tests, and the tests skip without the game data on disk because templates load at import.
+`tqdb/parsers/base_test.py` is the only test file. Its five tests check that every variable in a template is covered by the corresponding parser's field list. They load the game's templates themselves and skip when the data root has none. There are no functional tests.
 
 ## Game-data workarounds
 

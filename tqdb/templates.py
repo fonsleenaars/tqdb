@@ -8,13 +8,13 @@ from pathlib import Path
 
 from tqdb.constants import paths
 
+# Template registries, keyed by path relative to the data root and by Class
+# name. Both are empty until load_templates() is called; run.py does that
+# once before parsing, and tests do it against their own template set.
 templates_by_path = {}
 templates = {}
 
-# Global directory constants
-TEMPLATE_DIR = paths.DB / "templates/**/*.tpl"
 TEMPLATE_PREFIX = "%TEMPLATE_DIR%"
-TEXTURES = paths.DATA / "textures"
 
 
 def game_path(value):
@@ -116,7 +116,7 @@ class Variable:
             return paths.DB / game_path(value)
         elif self["type"] == "file_tex":
             # Prepare the TEX reference fully
-            return TEXTURES / game_path(value)
+            return paths.DATA / "textures" / game_path(value)
         return value
 
 
@@ -261,16 +261,19 @@ class Template:
 
 def load_templates():
     """
-    Load all the .tpl templates in the TEMPLATE_DIR.
+    Load every .tpl file under the data root's database/templates tree.
+
+    Must be called once before any record is read. Reloading replaces the
+    registries, so a caller can switch the data root and load again.
 
     """
-    for template_file in glob.glob(str(TEMPLATE_DIR), recursive=True):
+    templates_by_path.clear()
+    templates.clear()
+
+    for template_file in glob.glob(str(paths.DB / "templates/**/*.tpl"), recursive=True):
         # Parse the template and store it by its key
         template = Template(template_file)
         templates_by_path[template.key] = template
 
         if template.name:
             templates[template.name] = template
-
-
-load_templates()

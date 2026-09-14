@@ -4,15 +4,21 @@ Coverage and functional tests for all the base parsers.
 """
 import pytest
 
+from tqdb.constants import paths
 from tqdb.parsers import base
-from tqdb.templates import templates_by_path
+from tqdb.templates import load_templates, templates_by_path
 
-# The template registry is filled from data/database/templates at import time.
-# Without extracted game data it is empty and every parser lookup fails, so
-# these tests only run when the data is present.
-pytestmark = pytest.mark.skipif(
-    not templates_by_path, reason="needs extracted game templates in data/database/templates"
-)
+
+@pytest.fixture(scope="module", autouse=True)
+def game_templates():
+    """
+    Load the game's own templates, or skip the module when they are absent.
+
+    """
+    if not (paths.DB / "templates").is_dir():
+        pytest.skip("needs the extracted game templates under the data root")
+
+    load_templates()
 
 # These fields are always allowed
 GLOBAL_ALLOWED = [
