@@ -1,0 +1,17 @@
+[package]
+name = "tqextract"
+version = "0.1.0"
+description = "Extracts Titan Quest ARZ databases, ARC archives, and TEX textures"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "tqextract"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.104"
+clap = { version = "4.6.6", features = ["derive"] }
+encoding_rs = "0.8.41"
+flate2 = "1.1.10"

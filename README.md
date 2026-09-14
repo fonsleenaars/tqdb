@@ -1,6 +1,10 @@
 # TQDB
 TQDB is a Python parser written for the extracted content of Titan Quest, currently owned by [Nordic Games][ng].
 
+> **Documentation** lives in [`docs/`](docs/): architecture, game file formats, the website data contract, setup, and the build pipeline.
+>
+> **Development** happens in a container: install Colima and `just`, then `colima start`, `just build`, `just test`. See [`docs/setup.md`](docs/setup.md) and [`docs/build-pipeline.md`](docs/build-pipeline.md). The Pipenv instructions below are obsolete; the game-data extraction steps still describe the only working method until the in-house extractor lands.
+
 ## Titan Quest
 Although the base game Titan Quest was released in 2006 and the expansion Immortal Throne in 2007, I, as many others kept playing it throughout the years. With the recent pick up by Nordic Games there are changes being made to the database that are no longer reflect in the other databases that are still around (most notably [GameBanshee][gb]).
 
@@ -33,13 +37,6 @@ During the setup we're going to use the following example paths:
 - TQ Install: `c:/Steam/SteamApps/Common/Titan Quest - Anniversary Edition/`
 
 The `data` directory needs to be created in the same directory as your git clone, so for this example that would be `c:/tqdb/data`. Directories such as `data/database` are assumed to be relative to your cloned repo.
-
-### Python
-
-Python 3.6 or higher and Pipenv are required to run this project. To get started with a clean setup, open up a shell, navigate to this project, then run:
-
-- `pipenv clean`
-- `pipenv install`
 
 ### 1. ARZ Database
 
@@ -105,8 +102,8 @@ Replace the locale in both the arc file name and the directory to that of your c
 
 ## Running the parser
 
-`pipenv run python ./run.py` - Runs the parser with the default english locale
-`pipenv run python ./run.py --locale fr` - Runs the parser with the french locale
+`just parse` - Runs the parser with the default english locale
+`just parse fr` - Runs the parser with the french locale
 
 You can specify any of the two letter locales that are mentioned in the setup.
 

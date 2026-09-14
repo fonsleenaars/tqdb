@@ -1,4 +1,29 @@
+[project]
+name = "tqdb"
+version = "1.4.3"
+description = "Parser for Titan Quest game data, producing the JSON behind tq-db.net"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.14"
+dependencies = [
+    "numexpr>=2.10",
+    "numpy>=2.0",
+    "Pillow>=11.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tqdb", "tests"]
+python_files = ["*_test.py", "test_*.py"]
+
 [tool.black]
 line-length = 120
-target-version = ['py37']
+target-version = ['py314']
 include = '\.pyi?$'

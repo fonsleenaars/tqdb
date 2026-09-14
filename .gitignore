@@ -1,6 +1,15 @@
-__pycache__
-.pytest_cache
-data
-output
-.idea
+# Game content: never committed
+data/
+game/
+output/
+
+# Build and tool state
+target/
+.venv/
+__pycache__/
+.pytest_cache/
+
+# Editors and local agent config
+.idea/
 .vscode/
+CLAUDE.local.md

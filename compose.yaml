@@ -1,0 +1,33 @@
+# Single development service. Everything that executes code runs through it:
+#   docker compose run --rm dev cargo test
+#   docker compose run --rm dev uv run pytest
+#   docker compose run --rm dev tqextract prepare /game /data
+#
+# Mounts (see docs/build-pipeline.md):
+#   /work         the repo, read-write; output/ is written here
+#   /game         raw game install copy, read-only, read once by tqextract
+#   /data         extracted game data, named volume on the VM's ext4 disk
+#   /work/target  cargo build cache, named volume, never on virtiofs
+
+services:
+  dev:
+    build:
+      context: .
+      target: dev
+    image: tqdb-dev
+    working_dir: /work
+    volumes:
+      - .:/work
+      - ./game:/game:ro
+      - data:/data
+      - target:/work/target
+    environment:
+      TQDB_DATA: /data
+      CARGO_TARGET_DIR: /work/target
+    stdin_open: true
+    tty: true
+
+# Compose prefixes these with the project name: tqdb_data, tqdb_target.
+volumes:
+  data:
+  target:
