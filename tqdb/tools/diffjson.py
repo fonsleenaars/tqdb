@@ -35,21 +35,17 @@ def key_items(items):
     return out
 
 
-def canon_affix(affix):
-    """Order-insensitive view of an affix: equipment CSV as a set, alternatives sorted."""
-    a = dict(affix)
-    if isinstance(a.get("equipment"), str):
-        a["equipment"] = sorted(a["equipment"].split(","))
-    if isinstance(a.get("properties"), list):
-        a["properties"] = sorted(a["properties"], key=lambda p: json.dumps(p, sort_keys=True, ensure_ascii=False))
-    return a
-
-
 def collections(data):
-    """Flatten the six top-level keys into {collection: {key: entry}}."""
+    """
+    Flatten the six top-level keys into {collection: {key: entry}}.
+
+    Affixes are compared exactly as emitted: the order of `properties` and
+    of the `equipment` CSV is part of the contract.
+
+    """
     out = {}
-    out["affixes.prefixes"] = {k: canon_affix(v) for k, v in data["affixes"]["prefixes"].items()}
-    out["affixes.suffixes"] = {k: canon_affix(v) for k, v in data["affixes"]["suffixes"].items()}
+    out["affixes.prefixes"] = data["affixes"]["prefixes"]
+    out["affixes.suffixes"] = data["affixes"]["suffixes"]
     out["creatures"] = data["creatures"]
     for cat, items in data["equipment"].items():
         out[f"equipment.{cat}"] = key_items(items)

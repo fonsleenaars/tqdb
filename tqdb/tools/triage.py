@@ -38,8 +38,6 @@ def pieces(s):
 
 
 def classify(coll, key, path, old, new):
-    if coll.startswith("affixes.") and path == "levelRequirement":
-        return "known: affix level (order-dependent)"
     if key in KNOWN_KEYS.get(coll, ()):
         return "known: Typhon / skill suffix swap"
     if isinstance(old, str) and isinstance(new, str):
