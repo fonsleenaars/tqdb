@@ -1,0 +1,7 @@
+templateName,database\Templates\Skill_AttackRadius.tpl,
+Class,Skill_AttackRadius,
+FileDescription,fixture monster skill,
+skillDisplayName,tagSkillFixtureBolt,
+skillMaxLevel,5,
+skillUltimateLevel,5,
+skillManaCost,10;20;30;40;50,

@@ -1,0 +1,2 @@
+// Synthetic monster names for the test fixtures.
+tagMonsterFixture=Fixture Hero

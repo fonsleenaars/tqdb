@@ -1,0 +1,8 @@
+templateName,database\Templates\LootItemTable_FixedWeight.tpl,
+Class,LootItemTable_FixedWeight,
+lootName1,Records\XPack\Item\Scrolls\01_Ember.dbr,
+lootWeight1,1,
+lootName2,Records\XPack\Item\Scrolls\01_Frost.dbr,
+lootWeight2,1,
+lootName3,Records\XPack\Item\Scrolls\01_Spark.dbr,
+lootWeight3,2,

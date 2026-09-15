@@ -1,0 +1,4 @@
+templateName,database\Templates\LootItemTable_FixedWeight.tpl,
+Class,LootItemTable_FixedWeight,
+lootName1,Records\XPack\Item\Scrolls\01_Spark.dbr,
+lootWeight1,1,

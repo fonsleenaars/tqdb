@@ -33,14 +33,14 @@ Six keys, all required:
 | Item | `tag`, `name`, `classification`, `properties`, `bonus[].chance`, `bonus[].option`, `description`, `dropsIn`, `set`, `summons`, `reagent1..3`, `strengthRequirement`, `dexterityRequirement`, `intelligenceRequirement`, `levelRequirement` | `itemLevel`, `act` |
 | Set | `tag`, `name`, `items[]`, `properties[]` (one dict per bonus tier) | |
 | Skill | `name`, `description`, `properties[level]`, `summons[level]` | |
-| Creature | `tag`, `name`, `race`, `level[d]`, `properties[d]`, `abilities[d]`, `loot[d]`, `chest[d]` | `classification` |
+| Creature | `tag`, `name`, `race`, `level[d]`, `properties[d]`, `abilities[d]`, `loot[d]`, `chest[d]` | `classification`, `variants[]` |
 | Quest | `name`, `rewards[d]` | |
 | Affix | key as tag, `name`, `levelRequirement`, `properties[]`, `equipment` (CSV) | `variants[]` |
 | Summon | `name`, `properties`, `abilities[d]` | `classification`, `level`, `race`, `tag` |
 
 `[d]` is a positional difficulty array: index 0 Normal, 1 Epic, 2 Legendary.
 
-Numbers stay numbers only in: `bonus[].chance`, creature and quest loot chances, the four requirements, `creature.level[]`, the affix `levelRequirement` (top-level and per variant), and the granted-skill `level`.
+Numbers stay numbers only in: `bonus[].chance`, creature and quest loot chances, the four requirements, `creature.level[]` (top-level and per variant), the affix `levelRequirement` (top-level and per variant), and the granted-skill `level`.
 
 ## Load-bearing conventions
 
@@ -70,6 +70,18 @@ These are the parts a rewrite cannot change without a matching website change.
 ```
 
 `record` is the record's path under `database/records`, lowercase, forward slashes, without its `.dbr` extension. Variants are ordered by `levelRequirement`, then by `record` compared bytewise. Per variant, `equipment` is the sorted CSV of the table types that list that record, or `none` when no table does. The fields the site reads are projections of the variants: `properties[i]` is `variants[i].properties`, `levelRequirement` is the first variant's (the lowest), and `equipment` is the sorted union over all variants.
+
+**Creature variants.** A creature is one entry per tag, and `variants` holds one entry per game record that carries the tag:
+
+```json
+{ "record": "creature/monster/questbosses/boss_chimaera_29", "level": [29, 49, 64] }
+```
+
+`level` always has three entries, a number where the record spawns in that difficulty and `null` where it does not. Per record, the game's `charLevel` array is padded by repeating its last value, `0` becomes `null`, and when the game wrote the Normal level out repeatedly the record spawns only from the last repeat onwards (`66;66;66` is Legendary-only; a single value such as `42` is that level in every difficulty). That reading of a repeated level is part of the contract: changing it changes which difficulties a monster is shown in. Variants are ordered by Normal, Epic and Legendary level, `null` after any number, then by `record` compared bytewise. The first variant is the canonical record: it supplies `tag`, `name`, `race`, `classification`, `level`, `properties` and `abilities`, and there is no top-level `record`. `properties` and `abilities` always have three entries, `{}` in a difficulty without a level.
+
+`loot[d]` and `chest[d]` are the union over all variants of what they drop in that difficulty. Each chance is the first variant's, in `variants` order, that gives the item a chance above zero; an item at zero in every variant keeps the canonical's zero. A union entry may therefore describe a variant whose level is not the one shown (the Bonelord's Legendary loot includes the level-80 Eternal Embers record's items under the level-57 canonical); nothing in the shape says which variant contributed which entry. Loot is evaluated at each record's padded levels whether or not it spawns there, as it always was, so a Legendary-only record can contribute to `loot[0]`.
+
+Records the game left in its monster folders for development (under an `old`, `zz_dev` or `zzdev` directory, or named `*_old`, `credits_*`, `*test*` or `*stuntdouble*`) are not variants and are absent from the output; so are Scylla's three records, which carry the Lernean Hydra's tag, and the bones and chains that carry Typhon's (`docs/architecture.md`, game-data workarounds).
 
 **`description`** still contains the game's `{...}` markup; the site strips it.
 

@@ -12,6 +12,50 @@ from tqdb.parsers import base as parsers
 from tqdb.parsers.main import TQDBParser, InvalidItemError
 from tqdb.utils.text import texts
 
+# Normal, Epic, Legendary.
+DIFFICULTIES = 3
+
+
+def padded(values):
+    """
+    A per-difficulty array with exactly three entries.
+
+    The game reads a short array by repeating its last value (`charLevel,42`
+    means level 42 in every difficulty), which is what `extract_values`
+    does for every other per-difficulty field.
+
+    """
+    values = list(values[:DIFFICULTIES])
+    return values + [values[-1]] * (DIFFICULTIES - len(values))
+
+
+def normalize_level(levels):
+    """
+    The difficulties a record spawns in: three entries, `None` where it does
+    not.
+
+    The array is padded first; a `0` (the Eternal Embers bosses ship
+    `charLevel,0;0;N`) means no spawn and becomes `None`. Then the
+    repeated-level heuristic: when the Normal level repeats, the record only
+    spawns from the last repeat onwards (`66;66;66` is a Legendary-only
+    boss, `30;30;50` an Epic and Legendary one), so the earlier repeats
+    become `None` too. The heuristic reads a repetition the designer wrote
+    out; a single value (`charLevel,34`, the summoned pets) means that level
+    in every difficulty and is not a repetition, so padding never triggers
+    it: the summon parser takes a pet's properties from index 0. The heuristic is part of what "spawns in
+    this difficulty" means in the output; changing it changes the contract.
+
+    """
+    shipped = len(levels)
+    levels = [level or None for level in padded(levels)]
+
+    first = levels[0]
+    if shipped > 1 and first is not None:
+        for index in range(levels.count(first) - 1):
+            levels[index] = None
+
+    return levels
+
 
 class CharacterParser(TQDBParser):
     """
@@ -100,6 +144,11 @@ class MonsterParser(TQDBParser):
         if "tag" not in result or not result["level"]:
             return
 
+        # Loot and chests are evaluated at the level the game's arrays give
+        # for each difficulty, whether or not the record spawns there; the
+        # normalized level below only says where it spawns.
+        levels = padded(result["level"])
+
         # Iterate over normal, epic & legendary version of the boss:
         loot = []
         for index in range(3):
@@ -130,13 +179,10 @@ class MonsterParser(TQDBParser):
 
             # Grab the chest to parse:
             if tag in CHESTS and CHESTS[tag][index]:
-                # Grab the level for this index, or the last one:
-                level = result["level"][index] if len(result["level"]) > index else result["level"][-1]
-
                 # Parse the chest and pass the monsters level as a reference:
                 loot = DBRParser.parse(
                     paths.DB / CHESTS[tag][index],
-                    {"level": level},
+                    {"level": levels[index]},
                 )
 
                 # Convert all item chances to 4 point precision:
@@ -146,19 +192,17 @@ class MonsterParser(TQDBParser):
         if any(tier for tier in chests if tier):
             result["chest"] = chests
 
-        # Check if this monster is limited to a difficulty:
-        if len(result["level"]) != len(set(result["level"])):
-            # If a level is repeated, it means a creature doesn't spawn in
-            # some difficulties. The 'normal' difficulty level is either
-            # repeated in Epic and Legendary, so find the index and subtract
-            # 1 from that to get all difficulties that should be removed:
-            for i in range(result["level"].count(result["level"][0]) - 1):
-                if len(result["properties"]) > i:
-                    result["properties"][i] = {}
-                if len(result["abilities"]) > i:
-                    result["abilities"][i] = {}
-                if len(result["level"]) > i:
-                    result["level"][i] = None
+        # Where the record does not spawn, it has no level, no properties and
+        # no abilities; all three arrays always have an entry per difficulty.
+        result["level"] = normalize_level(result["level"])
+
+        abilities = result.get("abilities", [])
+        abilities = abilities[:DIFFICULTIES] + [{} for _ in range(DIFFICULTIES - len(abilities))]
+        for index, level in enumerate(result["level"]):
+            if level is None:
+                result["properties"][index] = {}
+                abilities[index] = {}
+        result["abilities"] = abilities
 
     def parse_creature(self, dbr, dbr_file, result):
         """

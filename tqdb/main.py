@@ -219,6 +219,84 @@ def exception_messages_with_causes(e):
     return exception_messages
 
 
+# The game ships its own development leftovers among the monsters, sharing
+# tags with the real ones: superseded records under old/ (nine for Hades
+# alone), QA monsters under zz_dev/ (a Pirate Captain with a 51-item test
+# loot table, an Ancient of the Wild with "always drop" chances of 1000),
+# records named *_old, the credits-scene actors (credits_hades.dbr, "Not in
+# game - credits scene only"), test monsters and stunt doubles. Immortal
+# Throne keeps its developer testers under zzdev/ (no underscore). Left in,
+# they would be elected canonical or feed the loot union, so they are
+# skipped before parsing. Each skipped record is logged at debug level.
+DEVELOPMENT_DIRECTORIES = {"old", "zz_dev", "zzdev"}
+DEVELOPMENT_NAMES = re.compile(r"_old$|^credits_|test|stuntdouble")
+
+# Records whose tag names another monster. Scylla's three Atlantis records
+# carry the Lernean Hydra's description tag, tagMonsterName126. Scylla spawns
+# in all three difficulties and the Hydra only in Legendary, so by level
+# Scylla would be the Hydra's canonical record, level, abilities and chest.
+# The bones and chains in Typhon's arena are destructible props with his
+# tag, tagMonsterName382, at a single level of 1 and 42; by level the bone
+# pile would be Typhon. Excluded until a variant can carry a display name
+# of its own.
+SHARED_TAG_RECORDS = {
+    "xpack3/creatures/monster/bosses/xboss_scylla_49",
+    "xpack3/creatures/monster/bosses/xboss_scylla_52",
+    "xpack3/creatures/monster/bosses/xboss_scylla_55",
+    "creature/monster/questbosses/typhon_bones",
+    "creature/monster/questbosses/typhon_chains",
+}
+
+
+def creature_exclusion(path):
+    """
+    Why a creature record stays out of the collection, or None to keep it.
+
+    """
+    identity = record(path)
+    directories, _, name = identity.rpartition("/")
+
+    if DEVELOPMENT_DIRECTORIES & set(directories.split("/")):
+        return "development directory"
+    if DEVELOPMENT_NAMES.search(name):
+        return "development record name"
+    if identity in SHARED_TAG_RECORDS:
+        return "shares its tag with another monster"
+    return None
+
+
+def level_order(level):
+    """
+    Sort key for a creature record: Normal, Epic, Legendary level, with a
+    difficulty the record does not spawn in (None) after any level.
+
+    """
+    return tuple((1, 0) if value is None else (0, value) for value in level)
+
+
+def union_over_variants(variants, field):
+    """
+    The `loot` or `chest` difficulty arrays merged over a creature's
+    variants: every item any variant lists in a difficulty, with the chance
+    of the first variant, in variants order, that gives it a chance above
+    zero. An item at zero in every variant keeps the first zero, which is
+    the canonical's when the canonical lists it.
+
+    The result is built from new dicts; the cached records are only read.
+
+    """
+    tiers = []
+    for index in range(3):
+        merged = {}
+        for variant in variants:
+            for item, chance in variant.get(field, [{}, {}, {}])[index].items():
+                if item not in merged or (merged[item] == 0 and chance > 0):
+                    merged[item] = chance
+        tiers.append(merged)
+
+    return tiers
+
+
 def parse_creatures():
     """
     Parse all creatures (bosses and heroes) in Titan Quest.
@@ -228,6 +306,11 @@ def parse_creatures():
     the first being a complete list of items that the monster can drop and the
     reverse being added to each individual item's loot table so it can be
     sorted.
+
+    A monster is one entry per tag. Every record that carries the tag is a
+    variant; the first by level, then by record, is canonical and supplies
+    the scalar fields, level, properties and abilities, while loot and chest
+    are the union over all variants (see docs/data-contract.md).
 
     """
     start_time = time.time()
@@ -239,8 +322,17 @@ def parse_creatures():
 
     logging.info(f"Found {len(files)} creature files.")
 
-    creatures = {}
+    # Every kept record by tag. Parse order still decides the suffix a
+    # monster skill gets when its tag is already taken, so it stays sorted.
+    by_tag = defaultdict(list)
+    skipped = 0
     for dbr in ordered(files):
+        reason = creature_exclusion(dbr)
+        if reason:
+            logging.debug(f"Skipping creature {record(dbr)}: {reason}.")
+            skipped += 1
+            continue
+
         try:
             logging.debug(f"Attempting to parse creature in {dbr}.")
             parsed = parse(dbr)
@@ -256,12 +348,31 @@ def parse_creatures():
             if parsed["classification"] not in ["Quest", "Hero", "Boss"]:
                 continue
 
-            # Store the monster by its tag:
-            creatures[parsed["tag"]] = parsed
+            by_tag[parsed["tag"]].append((record(dbr), parsed))
         except KeyError:
             # Skip creatures without tags
             logging.debug(f"Ignoring creature in {dbr}. No classification " "present.")
             continue
+
+    logging.info(f"Skipped {skipped} development or shared-tag creature records.")
+
+    creatures = {}
+    for tag, entries in by_tag.items():
+        entries.sort(key=lambda entry: (level_order(entry[1]["level"]), entry[0]))
+        canonical = entries[0][1]
+
+        creature = {
+            field: canonical[field]
+            for field in ("tag", "name", "race", "classification", "level", "properties", "abilities")
+        }
+        creature["variants"] = [{"record": identity, "level": parsed["level"]} for identity, parsed in entries]
+
+        for field in ("loot", "chest"):
+            union = union_over_variants([parsed for _, parsed in entries], field)
+            if any(union):
+                creature[field] = union
+
+        creatures[tag] = creature
 
     # Log the timer:
     logging.info(f"Parsed creatures in {time.time() - start_time:.2f} seconds.")
