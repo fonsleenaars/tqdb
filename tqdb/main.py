@@ -14,12 +14,12 @@ from pathlib import Path
 
 from tqdb import storage
 from tqdb.constants import resources, paths
-from tqdb.dbr import parse, read
+from tqdb.dbr import parse, read, record
 from tqdb.parsers.main import InvalidItemError
 from tqdb.templates import game_path
 from tqdb.utils import images
 from tqdb.utils.text import texts
-from tqdb.utils.core import get_affix_table_type, is_duplicate_affix
+from tqdb.utils.core import get_affix_table_type
 
 
 def ordered(files):
@@ -80,53 +80,54 @@ def parse_affixes():
 
     logging.info(f"Found {len(affix_files)} affix files.")
 
-    affixes = {"prefixes": {}, "suffixes": {}}
-    for dbr in ordered(affix_files):
-        affix = parse(dbr)
+    # One variant per record, grouped by tag. Everything assembled here is a
+    # new object: the cached parse result is read, never altered.
+    variants = {"prefixes": defaultdict(list), "suffixes": defaultdict(list)}
+    names = {}
+    for dbr in affix_files:
+        parsed = parse(dbr)
+        tag = parsed["tag"]
+        properties = parsed["properties"]
 
         # Tinkerer needs a little custom love because it has no properties, but a special text:
-        if affix["tag"] == "x3tagSuffix01":
-            affix["properties"] = {"description": texts.get("x3tagextrarelic")}
+        if tag == "x3tagSuffix01":
+            properties = {"description": texts.get("x3tagextrarelic")}
 
-        # Assign the table types to this affix:
-        if dbr not in affix_tables:
-            # Affix can occur on all equipment:
-            affix["equipment"] = {"none"}
-        else:
-            affix["equipment"] = affix_tables[dbr]
+        # An affix that no table lists can occur on all equipment:
+        equipment = affix_tables.get(dbr, {"none"})
 
         # Add affixes to their respective pre- or suffix list.
-        if "Prefix" in affix["tag"] and "suffix" not in dbr.parts:
-            affixType = "prefixes"
+        if "Prefix" in tag and "suffix" not in dbr.parts:
+            affix_type = "prefixes"
         else:
-            affixType = "suffixes"
+            affix_type = "suffixes"
 
-        affixTag = affix.pop("tag")
+        names[affix_type, tag] = parsed["name"]
+        variants[affix_type][tag].append(
+            {
+                "record": record(dbr),
+                "levelRequirement": parsed["levelRequirement"],
+                "equipment": ",".join(sorted(equipment)),
+                "properties": properties,
+            }
+        )
 
-        # Either add the affix or add its properties as an alternative
-        if affixTag in affixes[affixType]:
-            affix_result = affixes[affixType][affixTag]
-            # Skip duplicate affix properties:
-            if is_duplicate_affix(affix_result, affix):
-                continue
+    affixes = {"prefixes": {}, "suffixes": {}}
+    for affix_type, by_tag in variants.items():
+        for tag, entries in by_tag.items():
+            entries.sort(key=lambda variant: (variant["levelRequirement"], variant["record"]))
+            equipment = set()
+            for variant in entries:
+                equipment.update(variant["equipment"].split(","))
 
-            # Create a list if it wasn't already one
-            if not isinstance(affix_result["properties"], list):
-                affix_result["properties"] = [affix_result["properties"], affix["properties"]]
-            else:
-                affix_result["properties"].append(affix["properties"])
-            affix_result["equipment"].update(affix["equipment"])
-        else:
-            # Make sure to copy here since we alter some properties after looping
-            affixes[affixType][affixTag] = affix.copy()
-
-    # Parse the equipment & properties one last time to standardize the formats
-    for _, v in affixes.items():
-        for _, affix in v.items():
-            affix["equipment"] = ",".join(list(affix["equipment"]))
-            affix["properties"] = (
-                affix["properties"] if isinstance(affix["properties"], list) else [affix["properties"]]
-            )
+            affixes[affix_type][tag] = {
+                "name": names[affix_type, tag],
+                "variants": entries,
+                # The fields the site reads today are projections of the variants:
+                "properties": [variant["properties"] for variant in entries],
+                "levelRequirement": entries[0]["levelRequirement"],
+                "equipment": ",".join(sorted(equipment)),
+            }
 
     # Log and reset the timer:
     logging.info(f"Parsed affixes in {time.time() - start_time:.2f} seconds.")

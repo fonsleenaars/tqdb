@@ -31,7 +31,7 @@ With `--all-languages` the whole database is parsed once per locale (12 times) b
 
 `parse(dbr_file, references=None)` is the dispatcher every parser recurses through:
 
-1. Memoized in `storage.db` keyed by the path as passed (`Path` or `str`; the same file can be parsed twice under two spellings) together with the references.
+1. Memoized in `storage.db` keyed by the record identity together with the references. `dbr.record` produces the identity: the path under `database/records`, lowercase, forward slashes, one trailing `.dbr` removed. Every spelling of a path (`Path` from a game reference, `str` from glob, mixed case) is one entry. The same string is the `record` field in the output and the sort key of every "by record" ordering.
 2. Seeds `result = {"properties": {}, "references": references}`. `references` is a side channel (currently only `{"level": n}`) that loot parsers read. Because it is part of the cache key, a loot table is evaluated once per level it is reached at.
 3. Collects the parser registered for the record's template plus one for every template it includes, sorts by priority (3 highest, 1 lowest), runs each `parse(dbr, dbr_file, result)` in turn.
 4. Any `InvalidItemError` aborts the record and is re-raised with cause chain.
@@ -105,9 +105,9 @@ Everything shares module-level mutable state. Nothing is injectable, and this is
 | `texts` (one locale at a time) | `utils/text.py:411` | no, mutated in place per locale |
 | per-parse fields on `ParametersOffensiveParser` and `FixedItemLootParser` | `base.py:552`, `loot.py:198` | no |
 
-Cached result dicts are handed out by reference and then mutated by callers (`category`, `bitmap`, `path`, `tag` are popped), so the cache contents drift during a run.
+Cached result dicts are handed out by reference and then mutated by callers (`category`, `bitmap`, `path` are popped), so the cache contents drift during a run. Now that every spelling of a path shares one cache entry, a parser that rewrites what it gets back must copy first: the affix collector builds its output from new objects, and the summon-skill parser copies the spawn before replacing its `properties`, since the same record can be a creature in its own right and the summon of several skills (before the copy, each skill's summon showed the lifetime and health of whichever skill parsed the record last).
 
-Parse order is observable wherever several records share a tag: affix variants, multi-level bosses, and skills take their scalar fields from the first or last record parsed. The output was produced on NTFS, which enumerates directories in case-insensitive name order, so every collector sorts its file list that way (`main.py:ordered`) instead of trusting the host filesystem's order.
+Parse order is observable wherever several records share a tag: multi-level bosses and skills take their scalar fields from the first or last record parsed. The output was produced on NTFS, which enumerates directories in case-insensitive name order, so those collectors sort their file lists that way (`main.py:ordered`) instead of trusting the host filesystem's order. Affixes no longer depend on it: `parse_affixes` emits one variant per record, ordered by `levelRequirement` and then by `record`, and derives the legacy `properties`, `levelRequirement` and `equipment` fields from that list (see `docs/data-contract.md`).
 
 ## Text resources: `tqdb/utils/text.py`
 

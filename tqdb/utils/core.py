@@ -95,17 +95,5 @@ def get_affix_table_type(file_prefix):
     return file_prefix
 
 
-def is_duplicate_affix(affixes, affix):
-    """
-    Check if the properties for an affix are already known.
-
-    """
-    for properties in affixes["properties"]:
-        if properties == affix["properties"]:
-            return True
-
-    return False
-
-
 def pluck(d, *k):
     return [d[i] for i in k]

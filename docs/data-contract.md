@@ -35,12 +35,12 @@ Six keys, all required:
 | Skill | `name`, `description`, `properties[level]`, `summons[level]` | |
 | Creature | `tag`, `name`, `race`, `level[d]`, `properties[d]`, `abilities[d]`, `loot[d]`, `chest[d]` | `classification` |
 | Quest | `name`, `rewards[d]` | |
-| Affix | key as tag, `name`, `levelRequirement`, `properties[]`, `equipment` (CSV) | |
+| Affix | key as tag, `name`, `levelRequirement`, `properties[]`, `equipment` (CSV) | `variants[]` |
 | Summon | `name`, `properties`, `abilities[d]` | `classification`, `level`, `race`, `tag` |
 
 `[d]` is a positional difficulty array: index 0 Normal, 1 Epic, 2 Legendary.
 
-Numbers stay numbers only in: `bonus[].chance`, creature and quest loot chances, the four requirements, `creature.level[]`, and the granted-skill `level`.
+Numbers stay numbers only in: `bonus[].chance`, creature and quest loot chances, the four requirements, `creature.level[]`, the affix `levelRequirement` (top-level and per variant), and the granted-skill `level`.
 
 ## Load-bearing conventions
 
@@ -60,7 +60,16 @@ These are the parts a rewrite cannot change without a matching website change.
 
 **Tags carry meaning.** `x2`/`x3`/`x4` prefixes become DLC badges; quest tag prefixes become region labels; `tag === "Placeholder"` is dropped; formulae use the synthetic tag `formula-<artifactTag>` and the site recovers the artifact by stripping the prefix.
 
-**`affix.equipment`** is a CSV of exact tokens: `{head,torso,arm,arms,leg,legs}{mage,melee}`, `amulet`, `ring`, `axe`, `bow`, `club`, `shield`, `spear`, `staff`, `sword`. Unknown tokens render as "unused".
+**`affix.equipment`** is a CSV of exact tokens: `{head,torso,arm,arms,leg,legs}{mage,melee}`, `amulet`, `ring`, `axe`, `bow`, `club`, `shield`, `spear`, `staff`, `sword`. Unknown tokens render as "unused". The tokens are sorted.
+
+**Affix variants.** An affix is one entry per tag, and `variants` holds one entry per game record that carries the tag, never merged, even when two records have identical properties:
+
+```json
+{ "record": "item/lootmagicalaffixes/prefix/default/rare_spellbound_01",
+  "levelRequirement": 11, "equipment": "headmage", "properties": { ... } }
+```
+
+`record` is the record's path under `database/records`, lowercase, forward slashes, without its `.dbr` extension. Variants are ordered by `levelRequirement`, then by `record` compared bytewise. Per variant, `equipment` is the sorted CSV of the table types that list that record, or `none` when no table does. The fields the site reads are projections of the variants: `properties[i]` is `variants[i].properties`, `levelRequirement` is the first variant's (the lowest), and `equipment` is the sorted union over all variants.
 
 **`description`** still contains the game's `{...}` markup; the site strips it.
 
