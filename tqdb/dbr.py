@@ -17,6 +17,33 @@ from tqdb.templates import game_path, templates, templates_by_path
 
 parsers = {}
 
+# Every record lives under this directory of the extracted data tree.
+RECORDS = "database/records/"
+
+
+def record(path):
+    """
+    The identity of a record: its path under database/records, lowercase,
+    with forward slashes and one trailing `.dbr` removed.
+
+    Callers spell the same file several ways (a Path built from a game
+    reference, a str from glob, the game's own mixed case). This string is
+    the memo cache key and orders every "by record" listing in the output.
+    Exactly one extension comes off, so a record with a double extension
+    (`bosschest13_chimera_epic.dbr.dbr`) stays distinct from its sibling.
+
+    A reference that does not point under database/records (loot tables
+    name `nothing` for an empty slot, which resolves to `database/nothing`)
+    is not a record; its normalized path is returned unchanged so the
+    dangling reference still gets a cache entry of its own.
+
+    """
+    normalized = str(path).replace("\\", "/").lower()
+    _, found, relative = normalized.partition(RECORDS)
+    if not found:
+        return normalized
+    return relative.removesuffix(".dbr")
+
 
 def get_template(dbr, dbr_file):
     """
@@ -109,10 +136,11 @@ def parse(dbr_file, references=None):
     if not parsers:
         parsers = load_parsers()
 
-    # Memoized per record and per set of references. The references (today
+    # Memoized per record and per set of references. The record identity
+    # folds every spelling of a path into one entry. The references (today
     # only the creature level) change what a loot table yields, so a table
     # parsed for one level must not be handed to a caller asking for another.
-    key = (dbr_file, tuple(sorted(references.items())))
+    key = (record(dbr_file), tuple(sorted(references.items())))
     if key in storage.db:
         return storage.db[key]
 

@@ -396,7 +396,10 @@ class SkillSpawnPetParser(TQDBParser):
         # Parse all the summons and set them as a list:
         result["summons"] = []
         for index, spawn_file in enumerate(dbr["spawnObjects"]):
-            spawn = DBRParser.parse(spawn_file)
+            # Copy: the properties are rewritten below, and the cached
+            # record is also what the creature collector emits when the
+            # summon is a monster in its own right (Mimer, for one).
+            spawn = dict(DBRParser.parse(spawn_file))
 
             # Keep track of the original properties this summon had:
             original_properties = {}
