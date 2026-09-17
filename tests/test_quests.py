@@ -85,6 +85,30 @@ def test_master_table_carries_the_level_neutral_flag(fixture_data):
     assert "levelNeutral" not in table(fixture_data, "fixed", {"level": None})
 
 
+def test_nested_fixed_item_loot_keeps_the_outer_accumulation(fixture_data):
+    # The outer chest's slot names the fixed-weight table and then the inner
+    # chest at equal weight. Parsing the outer recurses into the inner, so
+    # the inner's table is cached during the outer's accumulation; the game
+    # never nests these, and the parser must not lose the outer's earlier
+    # entries or write its scaled entries into the inner's cached table.
+    outer = table(fixture_data, "chest", {"level": None})
+    inner = table(fixture_data, "chest_inner", {"level": None})
+    fixed = table(fixture_data, "fixed", {"level": None})
+
+    assert inner["loot_table"] == {
+        "tagScrollEmber": 25.0,
+        "tagScrollFrost": 25.0,
+        "tagScrollSpark": 50.0,
+    }
+    # Each slot entry's table scaled by its weight share (0.5), the slot
+    # chance (100) and the mean spawn count (1):
+    assert outer["loot_table"] == {
+        tag: fixed["loot_table"].get(tag, 0) * 50 + inner["loot_table"].get(tag, 0) * 50
+        for tag in set(fixed["loot_table"]) | set(inner["loot_table"])
+    }
+    assert outer["loot_table"] is not inner["loot_table"]
+
+
 def test_quest_rewards_are_level_neutral_per_difficulty(fixture_data):
     quest = main.parse_quests()["tagquestfixture"]
 

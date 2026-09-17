@@ -103,7 +103,7 @@ Everything shares module-level mutable state. Nothing is injectable, and this is
 | `templates`, `templates_by_path` | `templates.py:11` | no, filled by `load_templates()` |
 | `dbr.parsers` (parser singletons) | `dbr.py:18` | no |
 | `texts` (one locale at a time) | `utils/text.py:411` | no, mutated in place per locale |
-| per-parse fields on `ParametersOffensiveParser` and `FixedItemLootParser` | `base.py:552`, `loot.py:198` | no |
+| per-parse fields on `ParametersOffensiveParser` | `base.py:552` | no |
 
 Cached result dicts are handed out by reference and then mutated by callers (`category` and `bitmap` are popped, `store_skill` rewrites `tag`), so the cache contents drift during a run. Now that every spelling of a path shares one cache entry, a parser that rewrites what it gets back must copy first: the affix collector builds its output from new objects, and the summon-skill parser copies the spawn before replacing its `properties`, since the same record can be a creature in its own right and the summon of several skills (before the copy, each skill's summon showed the lifetime and health of whichever skill parsed the record last).
 

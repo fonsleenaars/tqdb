@@ -1,0 +1,8 @@
+templateName,database\Templates\FixedItemLoot.tpl,
+Class,FixedItemLoot,
+FileDescription,one item from the epic scroll table,
+numSpawnMinEquation,numberOfPlayers,
+numSpawnMaxEquation,numberOfPlayers,
+loot1Chance,100,
+loot1Name1,Records\Item\LootTables\fixture\epic.dbr,
+loot1Weight1,1,

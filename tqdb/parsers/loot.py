@@ -198,8 +198,10 @@ class FixedItemLootParser(TQDBParser):
         return f"{TQDBParser.base}/fixeditemloot.tpl"
 
     def parse(self, dbr, dbr_file, result):
-        # Initialize a dictionary of item chances to add to:
-        self.items = {}
+        # The item chances to add to. Local, not on the parser singleton: a
+        # slot may name a record that recurses into this parser, and that
+        # parse must not share or reset the accumulation of this one.
+        items = {}
 
         # This camelCased variable is required for the spawn equations:
         numberOfPlayers = 1  # noqa
@@ -211,11 +213,11 @@ class FixedItemLootParser(TQDBParser):
 
         # There are 6 loot slots:
         for slot in range(1, 7):
-            self.parse_loot(f"loot{slot}", spawn_number, dbr, result)
+            self.parse_loot(f"loot{slot}", spawn_number, dbr, result, items)
 
-        result["loot_table"] = self.items
+        result["loot_table"] = items
 
-    def parse_loot(self, loot_key, spawn_number, dbr, result):
+    def parse_loot(self, loot_key, spawn_number, dbr, result, items):
         chance = dbr.get(f"{loot_key}Chance", 0)
 
         # Skip slots that have 0 chance to drop
@@ -248,10 +250,7 @@ class FixedItemLootParser(TQDBParser):
                 continue
 
             for k, v in new_items.items():
-                if k in self.items:
-                    self.items[k] += v
-                else:
-                    self.items[k] = v
+                items[k] = items.get(k, 0) + v
 
 
 class LootItemTable_DynWeightParser(TQDBParser):
