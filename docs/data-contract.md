@@ -32,15 +32,15 @@ Six keys, all required:
 |---|---|---|
 | Item | `tag`, `name`, `classification`, `properties`, `bonus[].chance`, `bonus[].option`, `description`, `dropsIn`, `set`, `summons`, `reagent1..3`, `strengthRequirement`, `dexterityRequirement`, `intelligenceRequirement`, `levelRequirement` | `itemLevel`, `act` |
 | Set | `tag`, `name`, `items[]`, `properties[]` (one dict per bonus tier) | |
-| Skill | `name`, `description`, `properties[level]`, `summons[level]` | |
+| Skill | `name`, `description`, `properties[level]`, `summons[level]` | `record` |
 | Creature | `tag`, `name`, `race`, `level[d]`, `properties[d]`, `abilities[d]`, `loot[d]`, `chest[d]` | `classification`, `variants[]` |
-| Quest | `name`, `rewards[d]` | |
+| Quest | `name`, `rewards[d]` | `levelNeutral[d]` |
 | Affix | key as tag, `name`, `levelRequirement`, `properties[]`, `equipment` (CSV) | `variants[]` |
 | Summon | `name`, `properties`, `abilities[d]` | `classification`, `level`, `race`, `tag` |
 
 `[d]` is a positional difficulty array: index 0 Normal, 1 Epic, 2 Legendary.
 
-Numbers stay numbers only in: `bonus[].chance`, creature and quest loot chances, the four requirements, `creature.level[]` (top-level and per variant), the affix `levelRequirement` (top-level and per variant), and the granted-skill `level`.
+Numbers stay numbers only in: `bonus[].chance`, creature and quest loot chances, the four requirements, `creature.level[]` (top-level and per variant), the affix `levelRequirement` (top-level and per variant), and the granted-skill `level`. The only booleans are `quest.levelNeutral[]`.
 
 ## Load-bearing conventions
 
@@ -83,6 +83,10 @@ These are the parts a rewrite cannot change without a matching website change.
 
 Records the game left in its monster folders for development (under an `old`, `zz_dev` or `zzdev` directory, or named `*_old`, `credits_*`, `*test*` or `*stuntdouble*`) are not variants and are absent from the output; so are Scylla's three records, which carry the Lernean Hydra's tag, and the bones and chains that carry Typhon's (`docs/architecture.md`, game-data workarounds).
 
+**Quest rewards.** Quest reward chances from dynamic-weight tables are computed with uniform weights over the table's pool. The game favours items near a target level derived from the player's level and the spawner's, so the true chance at any level is between half and twice the value shown. `levelNeutral` is a three-entry boolean array, one per difficulty, present on every quest: `true` where any table behind `rewards[d]` was evaluated that way, `false` where every reward in that difficulty comes from fixed-weight tables and the chances are exact. A dynamic-weight table whose item level bounds themselves depend on a level contributes nothing.
+
+**Skill identity.** Every skill carries `record`, the same identity as an affix or creature variant: its path under `database/records`, lowercase, forward slashes, without its `.dbr` extension. The key a skill is stored under is its display-name tag, made unique with a `-N` suffix when several records share the tag. That suffix is assigned in parse order: it is consistent within one output but shifts between outputs whenever the set of records that reference skills changes, so `record` is the only identity that survives a re-parse.
+
 **`description`** still contains the game's `{...}` markup; the site strips it.
 
 **Sprite CSS class names** are `.<itemTag>` for items and `.<classification lowercased>` for formulae. Consumed as a CSS Module by tag.
@@ -92,6 +96,7 @@ Records the game left in its monster folders for development (under an `old`, `z
 - Formula icons never render: class names like `.lesser artifact` contain a space and are invalid selectors, in every locale. Fix by slugifying in the sprite writer and updating the site's lookup.
 - Items with `"classification": "UNKNOWN"` match no rarity filter and are invisible in listings.
 - Monster-infrequent items can collide on `tag` + `name` + `dropsIn`; the site invents `-1`, `-2` suffixes at load time. Non-MI duplicates are silently dropped.
+- Skill keys with a `-N` suffix (creature `abilities` and `itemSkillName.tag` point at them) are numbered in parse order and renumber between outputs; a link to a skill page keyed that way does not survive a re-parse. `record` is the stable identity, and the site does not use it yet.
 - `petBonus` is sometimes an array (Spear of Nemetona).
 - Any dangling reference (`itemSkillName.tag`, `formula-` artifact, reagents) is an uncaught TypeError on the site. The parser gives no referential-integrity guarantee.
 - Website-side, the loot view compares `classification === 'Rare'` in English, so MI loot tables are empty in the 11 other locales.

@@ -1,0 +1,5 @@
+templateName,database\Templates\LootItemTable_FixedWeight.tpl,
+Class,LootItemTable_FixedWeight,
+FileDescription,fixed-weight reward; exact at every level,
+lootName1,Records\XPack\Item\Scrolls\01_Frost.dbr,
+lootWeight1,1,

@@ -146,6 +146,10 @@ class LootMasterTableParser(TQDBParser):
                 else:
                     items[k] = v * chance
 
+            # A level-neutral sub-table makes the whole table level-neutral:
+            if loot.get("levelNeutral"):
+                result["levelNeutral"] = True
+
         # Add the parsed loot table
         result["loot_table"] = items
 
@@ -264,20 +268,42 @@ class LootItemTable_DynWeightParser(TQDBParser):
         return f"{TQDBParser.base}/lootitemtable_dynweight.tpl"
 
     def parse(self, dbr, dbr_file, result):
-        if "level" in result["references"]:
-            # This camelCased variable is required for the level equations.
-            # Grab the level from the references which has been passed:
-            averagePlayerLevel = result["references"]["level"]  # noqa
-            parentLevel = result["references"]["level"]  # noqa
+        """
+        Weigh the listed items for the level in the references.
 
-        # Calculate the minimum and maximum levels:
+        Three evaluation contexts, told apart by the memo key:
+
+        - a numeric level: the bell slope around the table's target level,
+          as the game does for a spawner of that level;
+        - a level of None: level-neutral. The bounds are evaluated without
+          a level and, when they are constants, every item within them
+          gets defaultWeight. The quest collector asks for this, since a
+          quest reward is rolled at the player's level when the quest is
+          turned in and the output has one chance per difficulty;
+        - no level at all: nothing. The equipment and skill collectors
+          reach dynamic tables this way and get nothing, as they always
+          have.
+
+        """
+        references = result["references"]
+        if "level" not in references:
+            logging.info(f"No level to evaluate {dbr_file} at; its loot is skipped.")
+            return
+
+        # These camelCased names are the free variables of the level
+        # equations; numexpr reads them from this frame. Level-neutral
+        # leaves them undefined, so an equation that needs one raises.
+        level = references["level"]
+        if level is not None:
+            averagePlayerLevel = level  # noqa
+            parentLevel = level  # noqa
+
         try:
             min_level = numexpr.evaluate(dbr["minItemLevelEquation"]).item()
             max_level = numexpr.evaluate(dbr["maxItemLevelEquation"]).item()
-            target_level = numexpr.evaluate(dbr["targetLevelEquation"]).item()
+            target_level = None if level is None else numexpr.evaluate(dbr["targetLevelEquation"]).item()
         except KeyError:
-            # Log the missing variable:
-            logging.info(f"Missing parentLevel in {dbr_file}")
+            logging.info(f"The item level bounds of {dbr_file} need a level and none was given; its loot is skipped.")
             return
 
         # Grab the slope and defaultWeight, to use for adjusting values later:
@@ -305,18 +331,23 @@ class LootItemTable_DynWeightParser(TQDBParser):
             if level is None or level < min_level or level > max_level:
                 continue
 
-            # Next compare the item's level to the target level
-            target = int(level - target_level)
-
-            # Grab the adjustment from the slope, or the last one when the
-            # offset falls outside it. A negative offset (item below the
-            # target level) indexes the slope from its end, as it always
-            # has; an offset beyond either end takes the last entry.
-            if -len(slope) <= target < len(slope):
-                adjustment = slope[target]
+            if target_level is None:
+                # Level-neutral: every eligible item at the default weight.
+                adjustment = 1
             else:
-                logging.debug(f"Offset {target} outside bellSlope of {dbr_file} at level {target_level}")
-                adjustment = slope[-1]
+                # Next compare the item's level to the target level
+                target = int(level - target_level)
+
+                # Grab the adjustment from the slope, or the last one when
+                # the offset falls outside it. A negative offset (item
+                # below the target level) indexes the slope from its end,
+                # as it always has; an offset beyond either end takes the
+                # last entry.
+                if -len(slope) <= target < len(slope):
+                    adjustment = slope[target]
+                else:
+                    logging.debug(f"Offset {target} outside bellSlope of {dbr_file} at level {target_level}")
+                    adjustment = slope[-1]
 
             # The adjusted weight is the default multiplied by the adjustment:
             drops[item["tag"]] = weight * adjustment
@@ -328,6 +359,8 @@ class LootItemTable_DynWeightParser(TQDBParser):
         result["loot_table"] = {
             tag: float("{0:.5f}".format(item_weight / summed)) for tag, item_weight in drops.items()
         }
+        if target_level is None:
+            result["levelNeutral"] = True
 
 
 class LootItemTable_FixedWeightParser(TQDBParser):

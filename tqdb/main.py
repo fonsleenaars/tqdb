@@ -437,6 +437,7 @@ def parse_quests():
             quests[tag] = {
                 "name": texts.get(tag),
                 "rewards": [{}, {}, {}],
+                "levelNeutral": [False, False, False],
             }
 
         # Parsed reward files (so we don't duplicate):
@@ -455,9 +456,12 @@ def parse_quests():
                 continue
 
             # Prepend the path with the database path; the scraped path is
-            # spelled Windows-style inside the quest file:
+            # spelled Windows-style inside the quest file. A quest reward
+            # is rolled at the player's level when the quest is turned in,
+            # and the output has one chance per difficulty, so dynamic-
+            # weight tables are evaluated level-neutral (see loot.py):
             try:
-                rewards = parse(paths.DB / game_path(reward_file))
+                rewards = parse(paths.DB / game_path(reward_file), {"level": None})
             except InvalidItemError as e:
                 messages = exception_messages_with_causes(e)
                 logging.debug(f"Skipping quest reward {reward_file} of {qst}. {messages}")
@@ -473,6 +477,9 @@ def parse_quests():
                     quests[tag]["rewards"][difficulty][item] += chance
                 else:
                     quests[tag]["rewards"][difficulty][item] = chance
+
+            if rewards.get("levelNeutral"):
+                quests[tag]["levelNeutral"][difficulty] = True
 
         # Don't save quests without item rewards:
         if not any(reward for reward in quests[tag]["rewards"]):
@@ -530,18 +537,16 @@ def parse_sets():
 
 def parse_skills():
     """
-    Clean up the indexed skills during parsing.
+    Collect the skills the other collectors registered while parsing.
 
-    While parsing, all other functions will add to the skills variable in the
-    storage module. This dictionary just needs to be cleaned up a little by
-    removing the 'path' property of each skill, which was used during parsing
-    but is no longer required for output.
+    Skills are never enumerated from disk: items and monsters register the
+    ones they reference in the storage module, under a tag made unique with
+    a parse-order suffix. Each skill's `path`, kept for that de-duplication,
+    becomes its `record`, the stable identity of the record it was parsed
+    from. The cached parse results are read, never altered.
 
     """
-    skills = storage.skills.copy()
-    for skill in skills.values():
-        # Pop the 'path' property, it was used during parsing to ensure correct
-        # skill tag references for requipment.
-        skill.pop("path")
-
-    return skills
+    return {
+        tag: {**{field: value for field, value in skill.items() if field != "path"}, "record": record(skill["path"])}
+        for tag, skill in storage.skills.items()
+    }

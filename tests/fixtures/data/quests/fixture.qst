@@ -1,0 +1,7 @@
+Synthetic quest file. The collector reads the printable bytes of a .qst and
+scrapes the title tag and the item[d] reward references with regexes, so a
+plain text file with the same tokens stands in for the game's binary.
+titleTagtagQuestFixture
+item[0] Records\Quests\Rewards\fixture\master.dbr
+item[1] Records\Quests\Rewards\fixture\fixed.dbr
+item[2] Records\Quests\Rewards\fixture\levelled.dbr

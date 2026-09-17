@@ -1,0 +1,7 @@
+templateName,database\Templates\LootMasterTable.tpl,
+Class,LootMasterTable,
+FileDescription,a dynamic-weight and a fixed-weight table at equal weight,
+lootName1,Records\Quests\Rewards\fixture\constant.dbr,
+lootWeight1,1,
+lootName2,Records\Quests\Rewards\fixture\fixed.dbr,
+lootWeight2,1,

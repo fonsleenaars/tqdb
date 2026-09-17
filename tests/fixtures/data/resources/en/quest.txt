@@ -1,0 +1,2 @@
+// Synthetic quest names for the test fixtures.
+tagQuestFixture=Fixture Quest

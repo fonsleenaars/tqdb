@@ -1,0 +1,6 @@
+templateName,database\Templates\Jewelry_Ring.tpl,
+Class,ArmorJewelry_Ring,
+FileDescription,fixture ring at item level 16,
+itemClassification,Epic,
+itemLevel,16,
+itemNameTag,tagRingFixture16,
