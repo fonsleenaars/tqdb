@@ -124,7 +124,11 @@ def test_level_is_normalized_per_record(fixture_data):
     normal = parsed(fixture_data, "hero_normal_10")
     assert normal["level"] == [10, 30, 50]
     assert [tier["characterLife"] for tier in normal["properties"]] == ["100 Vigor", "300 Vigor", "500 Vigor"]
-    assert normal["abilities"] == [{"tagSkillFixtureBolt": 1}, {"tagSkillFixtureBolt": 2}, {"tagSkillFixtureBolt": 3}]
+    assert normal["abilities"] == [
+        {"tagSkillFixtureBolt": 1},
+        {"tagSkillFixtureBolt": 2, "tagSkillFixtureNova": 4},
+        {"tagSkillFixtureBolt": 3, "tagSkillFixtureNova": 4},
+    ]
 
     # charLevel 0;35: padded to [0, 35, 35], the zero becomes null.
     epic = parsed(fixture_data, "hero_epic_35")
@@ -149,6 +153,20 @@ def test_level_is_normalized_per_record(fixture_data):
     twin = parsed(fixture_data, "hero_legendary_55b")
     assert twin["level"] == [None, None, 55]
     assert twin["abilities"] == [{}, {}, {}]
+
+
+def test_ability_tiers_are_distinct_objects(fixture_data):
+    """
+    A skill the record gains in Epic (skillLevel 0;4;4) stays out of the
+    Normal tier even when it is the first skill listed, and every tier is
+    its own dict.
+
+    """
+    normal = parsed(fixture_data, "hero_normal_10")
+
+    assert "tagSkillFixtureNova" not in normal["abilities"][0]
+    assert normal["abilities"][0] is not normal["abilities"][1]
+    assert normal["abilities"][1] is not normal["abilities"][2]
 
 
 def test_variants_are_ordered_by_level_then_record(fixture_data):

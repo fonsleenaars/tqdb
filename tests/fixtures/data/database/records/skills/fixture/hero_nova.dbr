@@ -1,0 +1,7 @@
+templateName,database\Templates\Skill_AttackRadius.tpl,
+Class,Skill_AttackRadius,
+FileDescription,fixture monster skill gained in Epic,
+skillDisplayName,tagSkillFixtureNova,
+skillMaxLevel,5,
+skillUltimateLevel,5,
+skillManaCost,15;25;35;45;55,

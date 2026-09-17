@@ -406,8 +406,9 @@ class MonsterSkillManager(TQDBParser):
                     continue
 
                 if len(abilities) - 1 < difficulty:
-                    # Create missing tiers:
-                    abilities += [{}] * (difficulty - len(abilities) + 1)
+                    # Create missing tiers, each its own dict: a shared one
+                    # would put a skill gained in Epic into Normal as well.
+                    abilities += [{} for _ in range(difficulty - len(abilities) + 1)]
 
                 abilities[difficulty][skill_tag] = level
 

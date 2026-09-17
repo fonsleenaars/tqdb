@@ -1,2 +1,3 @@
 // Synthetic skill names for the test fixtures.
 tagSkillFixtureBolt=Fixture Bolt
+tagSkillFixtureNova=Fixture Nova
