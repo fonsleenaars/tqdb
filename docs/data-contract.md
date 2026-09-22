@@ -89,11 +89,10 @@ Records the game left in its monster folders for development (under an `old`, `z
 
 **`description`** still contains the game's `{...}` markup; the site strips it.
 
-**Sprite CSS class names** are `.<itemTag>` for items and `.<classification lowercased>` for formulae. Consumed as a CSS Module by tag.
+**Sprite CSS class names** are `.<itemTag>` for items and `.<classification lowercased>` for formulae, with each space in the classification written as `.` (`.lesser.artifact`): the site sets the lowercased classification as the class attribute, which makes one class per word. Consumed as a CSS Module by tag.
 
 ## Known contract defects (parser side)
 
-- Formula icons never render: class names like `.lesser artifact` contain a space and are invalid selectors, in every locale. Fix by slugifying in the sprite writer and updating the site's lookup.
 - Items with `"classification": "UNKNOWN"` match no rarity filter and are invisible in listings.
 - Monster-infrequent items can collide on `tag` + `name` + `dropsIn`; the site invents `-1`, `-2` suffixes at load time. Non-MI duplicates are silently dropped.
 - Skill keys with a `-N` suffix (creature `abilities` and `itemSkillName.tag` point at them) are numbered in parse order and renumber between outputs; a link to a skill page keyed that way does not survive a re-parse. `record` is the stable identity, and the site does not use it yet.

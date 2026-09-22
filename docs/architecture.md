@@ -123,7 +123,7 @@ Parse order is observable wherever several records share a tag: skills take thei
 
 ## Images: `tqdb/utils/images.py`
 
-Per item, `save_bitmap` copies the `.png` that `tqextract prepare` wrote beside the item's `.tex` into `output/graphics/<tag>.png`. `SpriteCreator` packs the PNGs into a 768 px wide sheet with Pillow, writes `sprite.png` and `sprite.css`, then deletes `output/graphics`. CSS class names are the raw item tag, or the raw localized classification for formulae, which yields invalid selectors like `.lesser artifact`.
+Per item, `save_bitmap` copies the `.png` that `tqextract prepare` wrote beside the item's `.tex` into `output/graphics/<tag>.png`. `SpriteCreator` packs the PNGs into a 768 px wide sheet with Pillow, writes `sprite.png` and `sprite.css`, then deletes `output/graphics`. CSS class names are the raw item tag, or the localized classification for formulae with spaces written as `.`, a compound selector (`.lesser.artifact`) matching the one-class-per-word attribute the site sets. The sheet holds every locale's formula classifications.
 
 ## Output layout
 

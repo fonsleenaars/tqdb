@@ -31,7 +31,10 @@ class SpriteCreator:
             # Iterate through all the files and make a list of the image objects
             for file in paths.GRAPHICS.glob("*.png"):
                 image = Image.open(file)
-                image.filename = os.path.basename(file).split(".")[0]
+                # A formula is named by its classification ("lesser artifact"),
+                # which the site sets as the class attribute: one class per
+                # word, so the selector must be the compound ".lesser.artifact".
+                image.filename = os.path.basename(file).split(".")[0].replace(" ", ".")
                 images.append(image)
 
             if len(images) <= 0:
