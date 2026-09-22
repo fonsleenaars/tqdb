@@ -8,6 +8,7 @@ usage, from the repo root:
 
 Writes OUT_DIR/summary.md (human) and OUT_DIR/detail.json (everything).
 """
+
 import json
 import re
 import sys
@@ -134,9 +135,16 @@ for coll in sorted(set(bc) | set(nc)):
         f"changed {changed_entries}/{len(common)}\n"
     )
     if added:
-        summary.append("added: " + ", ".join(f"{k} ({name(n, k)})" for k in added[:25]) + ("…" if len(added) > 25 else "") + "\n")
+        summary.append(
+            "added: " + ", ".join(f"{k} ({name(n, k)})" for k in added[:25]) + ("…" if len(added) > 25 else "") + "\n"
+        )
     if removed:
-        summary.append("removed: " + ", ".join(f"{k} ({name(b, k)})" for k in removed[:25]) + ("…" if len(removed) > 25 else "") + "\n")
+        summary.append(
+            "removed: "
+            + ", ".join(f"{k} ({name(b, k)})" for k in removed[:25])
+            + ("…" if len(removed) > 25 else "")
+            + "\n"
+        )
     if field_counts:
         summary.append("\n| field | count | example (key: old -> new) |\n|---|---|---|\n")
         for fp, c in field_counts.most_common(40):

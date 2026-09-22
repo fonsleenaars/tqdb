@@ -2,6 +2,7 @@
 Path constants
 
 """
+
 import os
 from pathlib import Path
 

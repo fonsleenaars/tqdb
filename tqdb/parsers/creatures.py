@@ -2,6 +2,7 @@
 Creature and monster template parsers.
 
 """
+
 import logging
 
 from tqdb import dbr as DBRParser

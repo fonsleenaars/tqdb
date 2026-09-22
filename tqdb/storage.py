@@ -2,6 +2,7 @@
 All functions related to storage while parsing the TQ DB.
 
 """
+
 db = {}
 skills = {}
 # The tag each stored skill record was given, by its path:

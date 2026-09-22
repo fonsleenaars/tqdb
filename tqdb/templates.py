@@ -2,6 +2,7 @@
 Classes and functionality relating to Templates.
 
 """
+
 import glob
 import re
 from pathlib import Path

@@ -2,6 +2,7 @@
 Utility functions.
 
 """
+
 import argparse
 import os
 import sys
@@ -86,7 +87,7 @@ def get_affix_table_type(file_prefix):
         "staff",
         "sword",
         # Ranged one-hand; throwing weapons
-        "roh"
+        "roh",
     ]:
         if file_prefix.startswith(prefix):
             return prefix

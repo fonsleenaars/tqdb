@@ -2,6 +2,7 @@
 Main entry point for parsers, including the abstract base class.
 
 """
+
 import abc
 import inspect
 import pkgutil
@@ -135,9 +136,12 @@ class TQDBParser(metaclass=abc.ABCMeta):
         return max(
             (
                 # If properties are lists, grab their length:
-                len(field) if isinstance(field, list)
-                # Regular properties just have a single tier:
-                else 1
+                (
+                    len(field)
+                    if isinstance(field, list)
+                    # Regular properties just have a single tier:
+                    else 1
+                )
                 for field in fields
             ),
             # If there aren't any properties, default to 1
@@ -185,7 +189,7 @@ def load_parsers():
     parser_map = {}
 
     # Run through all sibling modules
-    for (_, name, _) in pkgutil.iter_modules([Path(__file__).parent]):
+    for _, name, _ in pkgutil.iter_modules([Path(__file__).parent]):
         # Import the module so we can check its variables, classes, etc.
         module = import_module(f".{name}", package=__package__)
 

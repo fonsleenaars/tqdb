@@ -36,7 +36,7 @@ Dependencies are baked into the image at build time. Changing a lockfile means `
 
 ## Regenerating lockfiles
 
-`just lock` builds the toolchain-only `base` stage, runs `uv lock` and `cargo generate-lockfile` inside it against the bind-mounted manifests, then rebuilds `dev`. Never edit a lockfile by hand.
+`just lock` builds the toolchain-only `base` stage, runs `uv lock` and `cargo generate-lockfile` inside it against the bind-mounted manifests, then rebuilds `dev`. A change to `pyproject.toml` alone takes `docker compose run --rm dev uv lock` followed by `just build`, which leaves `Cargo.lock` untouched. Never edit a lockfile by hand.
 
 ## Update policy
 
@@ -51,7 +51,7 @@ There are no platform deadlines: the output is static JSON consumed by a website
 
 ## Verification ladder
 
-1. `just lint` — clippy with warnings as errors, rustfmt.
+1. `just lint` — clippy with warnings as errors, rustfmt, and `black --check` over the Python tree (line length and target version in `pyproject.toml`).
 2. `just test` — `cargo test` and `pytest` on synthetic fixtures. No game data needed. The Python tests come in two kinds:
    - **Fixture tests** under `tests/` parse hand-written records from `tests/fixtures/data/`, a miniature of the extracted tree: `database/templates/` (only the templates the records use, with only the variables the parsers read), `database/records/` (the records, at paths shaped like the game's so file-name rules apply), `quests/` (a plain-text stand-in for a `.qst` binary, since the quest collector only scrapes printable bytes), and `resources/en/` (the tags and format strings the records need, plus the composite strings the text loader requires in every locale). The `fixture_data` fixture in `conftest.py` points the parser at it, loads the templates and English texts, and clears the record cache. Nothing in it is copied from the game.
    - **Template coverage tests** in `tqdb/parsers/base_test.py` read the game's own templates through the `game_templates` fixture and skip when the data root has none.

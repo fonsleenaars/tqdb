@@ -2,6 +2,7 @@
 Scroll records: the drop difficulty comes from the file name prefix.
 
 """
+
 import pytest
 
 from tqdb import dbr

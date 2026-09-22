@@ -5,6 +5,7 @@ These text related functions are the strings that are displayed for attributes,
 item names, and all other properties used in Titan Quest.abs
 
 """
+
 import json
 import logging
 import os

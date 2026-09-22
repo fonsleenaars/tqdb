@@ -2,6 +2,7 @@
 All wearable/usable equipment parsers.
 
 """
+
 import logging
 import os
 
@@ -266,8 +267,8 @@ class ItemEquipmentParser(TQDBParser):
         cost_prefix = dbr["Class"].split("_")[1]
         cost_prefix = cost_prefix[:1].lower() + cost_prefix[1:]
 
-        if cost_prefix == 'rangedOneHand':
-            cost_prefix = 'bow'
+        if cost_prefix == "rangedOneHand":
+            cost_prefix = "bow"
 
         # Read cost file
         cost_properties = DBRParser.read(dbr.get("itemCostName", paths.DB / self.REQUIREMENT_FALLBACK))
@@ -369,12 +370,12 @@ class ItemRelicParser(TQDBParser):
 
         # Setup properties as list to correspond to adding pieces of a relic:
         for key, values in result["properties"].items():
-            if key.startswith('racialBonus') and len(values) == max_pieces:
+            if key.startswith("racialBonus") and len(values) == max_pieces:
                 # Since racial bonuses are 2D lists, put the whole list on each tier:
                 for i in range(len(values)):
                     properties[i][key] = values[i]
                 continue
-            elif not isinstance(values, list) or key.startswith('racialBonus'):
+            elif not isinstance(values, list) or key.startswith("racialBonus"):
                 # This property is just repeated for all tiers:
                 for i in range(max_pieces):
                     properties[i][key] = values

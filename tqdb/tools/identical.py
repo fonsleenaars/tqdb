@@ -12,6 +12,7 @@ usage, from the repo root:
 
 Exit status is 0 when the JSON output and sprite.css match, 1 otherwise.
 """
+
 import hashlib
 import subprocess
 import sys

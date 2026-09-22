@@ -2,6 +2,7 @@
 Coverage and functional tests for all the base parsers.
 
 """
+
 import pytest
 
 from tqdb.parsers import base

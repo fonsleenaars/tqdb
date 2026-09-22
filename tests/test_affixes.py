@@ -2,6 +2,7 @@
 Affixes: records that share a tag are one affix with one variant per record.
 
 """
+
 import copy
 
 from tqdb import dbr, main

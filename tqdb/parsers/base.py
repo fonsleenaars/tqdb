@@ -2,6 +2,7 @@
 Base templates that are often included by other templates.
 
 """
+
 import logging
 
 from tqdb import dbr as DBRParser
@@ -628,9 +629,12 @@ class ParametersOffensiveParser(TQDBParser):
         """
         # Grab the value for this index from the global stores:
         fields = dict(
-            (k, v[index]) if index < len(v)
-            # If this value isn't repeated, grab the last value
-            else (k, v[-1])
+            (
+                (k, v[index])
+                if index < len(v)
+                # If this value isn't repeated, grab the last value
+                else (k, v[-1])
+            )
             for k, v in all_fields.items()
         )
 

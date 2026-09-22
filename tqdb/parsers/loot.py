@@ -2,6 +2,7 @@
 All loot table parsers.
 
 """
+
 import logging
 import numexpr
 import os
@@ -245,7 +246,7 @@ class FixedItemLootParser(TQDBParser):
                 # Parse the table and multiply the values by the chance:
                 loot_chance = float("{0:.5f}".format(weight / summed))
                 new_items = dict((k, v * loot_chance * chance * spawn_number) for k, v in loot["loot_table"].items())
-            except (KeyError, InvalidItemError):
+            except KeyError, InvalidItemError:
                 # Skip files that weren't found/parsed (no loot_table)
                 continue
 
@@ -394,7 +395,7 @@ class LootItemTable_FixedWeightParser(TQDBParser):
                 item = DBRParser.parse(dbr[f"lootName{i}"])
                 # Store the chance of this item by its tag:
                 items[item["tag"]] = float("{0:.5f}".format(weight / summed))
-            except (KeyError, InvalidItemError):
+            except KeyError, InvalidItemError:
                 # Skip items that have no tag:
                 continue
 

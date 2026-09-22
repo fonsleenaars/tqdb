@@ -14,6 +14,7 @@ Both load into the module-level registries the parser keeps, so a test
 declares exactly one of them.
 
 """
+
 from pathlib import Path
 
 import pytest

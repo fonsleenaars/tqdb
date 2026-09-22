@@ -3,6 +3,7 @@ Creatures: one entry per tag with a variant per record, the canonical record
 chosen by level, and loot and chest unioned over the variants.
 
 """
+
 import copy
 import logging
 from pathlib import Path

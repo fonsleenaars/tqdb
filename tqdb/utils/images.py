@@ -2,6 +2,7 @@
 Classes and functionality to store TQ images and styling.
 
 """
+
 import logging
 import os
 from pathlib import Path
@@ -28,7 +29,7 @@ class SpriteCreator:
 
         try:
             # Iterate through all the files and make a list of the image objects
-            for file in paths.GRAPHICS.glob('*.png'):
+            for file in paths.GRAPHICS.glob("*.png"):
                 image = Image.open(file)
                 image.filename = os.path.basename(file).split(".")[0]
                 images.append(image)

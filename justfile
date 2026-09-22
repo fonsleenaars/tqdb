@@ -25,10 +25,11 @@ test-rust:
 test-python:
     {{run}} uv run --frozen pytest
 
-# Clippy with warnings as errors, then rustfmt check
+# Clippy with warnings as errors, rustfmt check, then black check
 lint:
     {{run}} cargo clippy --locked --all-targets -- -D warnings
     {{run}} cargo fmt --check
+    {{run}} uv run --frozen black --check .
 
 # Build tqextract in release mode
 extractor:

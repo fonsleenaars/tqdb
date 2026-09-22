@@ -3,6 +3,7 @@ Quest rewards: a dynamic-weight table is evaluated level-neutral for a quest,
 and every quest says per difficulty whether its chances are.
 
 """
+
 import logging
 
 from tqdb import dbr, main

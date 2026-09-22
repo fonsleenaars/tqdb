@@ -8,12 +8,12 @@ Upon receiving a file to parse it will grab the template associated with
 the DBR and then parse it according to all properties in that template.
 
 """
+
 import logging
 
 from tqdb import storage
 from tqdb.parsers.main import load_parsers, InvalidItemError
 from tqdb.templates import game_path, templates, templates_by_path
-
 
 parsers = {}
 

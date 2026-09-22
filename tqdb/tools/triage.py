@@ -9,6 +9,7 @@ usage, from the repo root:
 Reuses the keying and walk from diffjson.py (same directory). Writes
 OUT_DIR/triage-<locale>.md and OUT_DIR/triage-<locale>.json.
 """
+
 import json
 import re
 import sys
@@ -112,4 +113,11 @@ json.dump(
     ensure_ascii=False,
     indent=1,
 )
-print(locale, dict(counts), "added", {k: len(v) for k, v in added.items()}, "removed", {k: len(v) for k, v in removed.items()})
+print(
+    locale,
+    dict(counts),
+    "added",
+    {k: len(v) for k, v in added.items()},
+    "removed",
+    {k: len(v) for k, v in removed.items()},
+)

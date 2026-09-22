@@ -2,6 +2,7 @@
 All resource constants.
 
 """
+
 from pathlib import Path
 
 # This is being replaced by only parsing loot affixes that appear in

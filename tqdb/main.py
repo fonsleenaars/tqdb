@@ -2,6 +2,7 @@
 Main functions to parse the full Titan Quest Database.
 
 """
+
 import glob
 import logging
 import os

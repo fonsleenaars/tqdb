@@ -2,6 +2,7 @@
 Record parsing: the memo cache is keyed by record and by references.
 
 """
+
 from pathlib import Path
 
 from tqdb import dbr
