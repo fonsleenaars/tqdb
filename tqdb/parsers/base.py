@@ -686,14 +686,17 @@ class ParametersOffensiveParser(TQDBParser):
             duration_min = dbr.get(f"{field}DurationMin", 0)
             duration_max = dbr.get(f"{field}DurationMax", 0)
 
+            # The damage is per second over the minimum duration; the maximum
+            # duration only widens the time shown ("over 3.0 - 6.0 Seconds"),
+            # as the game's tooltip does.
             if duration_min:
                 min *= duration_min
-                suffix = texts.get(DOT_SINGLE).format(duration_min)
+                max *= duration_min
 
-                if duration_max and max == min:
-                    max = min * duration_max
-                elif max:
-                    max *= duration_min
+                if duration_max and duration_max != duration_min:
+                    suffix = texts.get(DOT_RANGE).format(duration_min, duration_max)
+                else:
+                    suffix = texts.get(DOT_SINGLE).format(duration_min)
         elif field_type == self.EOT:
             duration_min = dbr.get(f"{field}DurationMin", 0)
 

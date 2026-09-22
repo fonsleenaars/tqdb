@@ -1,0 +1,8 @@
+templateName,database\Templates\Jewelry_Ring.tpl,
+Class,ArmorJewelry_Ring,
+FileDescription,fixture ring with a single frostburn value and no max duration,
+itemClassification,Epic,
+itemLevel,10,
+itemNameTag,tagRingFixtureDot,
+offensiveSlowColdMin,5,
+offensiveSlowColdDurationMin,3,
