@@ -1,0 +1,7 @@
+templateName,database\Templates\Skill_AttackRadius.tpl,
+Class,Skill_AttackRadius,
+FileDescription,fixture buff shown by two wrapper skills,
+skillDisplayName,tagSkillFixtureAura,
+skillMaxLevel,3,
+skillUltimateLevel,3,
+skillManaCost,10;20;30,

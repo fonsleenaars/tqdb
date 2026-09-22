@@ -1,0 +1,4 @@
+templateName,database\Templates\Skill_BuffRadiusToggled.tpl,
+Class,Skill_BuffRadiusToggled,
+FileDescription,fixture wrapper B of the same aura buff,
+buffSkillName,Records\Skills\Fixture\Aura_Buff.dbr,

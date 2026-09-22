@@ -4,6 +4,8 @@ All functions related to storage while parsing the TQ DB.
 """
 db = {}
 skills = {}
+# The tag each stored skill record was given, by its path:
+skill_tags = {}
 
 
 def duplicate_suffix(needle):
@@ -21,11 +23,8 @@ def duplicate_suffix(needle):
     result = 1
 
     for haystack in skills.keys():
-        if "-" not in haystack:
-            continue
-
-        prefix, suffix = haystack.split("-", maxsplit=1)
-        if prefix == needle and int(suffix) >= result:
+        prefix, _, suffix = haystack.rpartition("-")
+        if prefix == needle and suffix.isdigit() and int(suffix) >= result:
             result += 1
 
     return result
@@ -43,21 +42,30 @@ def store_skill(skill):
     use this tag.
 
     """
+    # One record, one tag: a record stored before keeps the tag it got,
+    # whatever tag this dict carries (a buff wrapper carries its buff's).
+    if skill["path"] in skill_tags:
+        skill["tag"] = skill_tags[skill["path"]]
+        return skill["tag"]
+
     # Retrieve the tag for the skill, or fall back to 'unnamed'.
     skill_tag = skill.get("tag", "unnamed")
 
-    if skill_tag in skills and skills[skill_tag]["path"] != skill["path"]:
-        if "-" in skill_tag:
-            prefix, _ = skill_tag.split("-")
-            skill_tag = f"{prefix}-{duplicate_suffix(prefix)}"
-        else:
-            skill_tag = f"{skill_tag}-{duplicate_suffix(skill_tag)}"
+    if skill_tag in skills:
+        # A tag that already carries a suffix (a wrapper copies its buff's)
+        # gets the next one for the same prefix; a hyphen in the tag itself
+        # ("Cave-in", "Extend-o-neck") is not a suffix.
+        prefix, _, suffix = skill_tag.rpartition("-")
+        if not (prefix and suffix.isdigit()):
+            prefix = skill_tag
+        skill_tag = f"{prefix}-{duplicate_suffix(prefix)}"
 
     # Set the unique tag:
     skill["tag"] = skill_tag
 
     # Store the skill
     skills[skill_tag] = skill
+    skill_tags[skill["path"]] = skill_tag
 
     # Return this (now definitely unique) tag.
     return skill_tag
@@ -70,6 +78,7 @@ def reset():
     This is used when parsing multiple locales.
 
     """
-    global db, skills
+    global db, skills, skill_tags
     db = {}
     skills = {}
+    skill_tags = {}

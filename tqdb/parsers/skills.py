@@ -209,8 +209,11 @@ class SkillBuffParser(TQDBParser):
 
         """
         if self.BUFF in dbr:
-            # Now set our result as the result of the buff being parsed:
+            # Take the buff's parse result as this skill's content, but keep
+            # this record as its identity: the monster or item references
+            # the wrapper, and two wrappers of one buff are two records.
             result.update(DBRParser.parse(dbr[self.BUFF]))
+            result["path"] = dbr_file
 
 
 class SkillModifierParser(TQDBParser):
@@ -258,8 +261,10 @@ class SkillPetModifier(TQDBParser):
 
         """
         if self.PET_SKILL in dbr:
-            # Now set our result as the result of the pet skill being parsed:
+            # As for a buff wrapper: the pet skill's content, this record's
+            # identity.
             result.update(DBRParser.parse(dbr[self.PET_SKILL]))
+            result["path"] = dbr_file
 
 
 class SkillPassiveOnLifeBuffSelfParser(TQDBParser):
