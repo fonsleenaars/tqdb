@@ -415,17 +415,20 @@ class SkillSpawnPetParser(TQDBParser):
                 else:
                     original_properties = spawn["properties"].copy()
 
-            # We need the raw values from the spawn DBR for hp/mp
+            # We need the raw values from the spawn DBR for hp/mp. The spawn
+            # is a monster record, whose life and mana arrays are per
+            # difficulty; a summon shows its Normal values, like the tier 0
+            # properties kept above. The skill lists one spawn object per
+            # skill level with its lifetime array alongside, so the spawn
+            # index is the level index for the lifetime only.
             spawn["properties"] = {}
             spawn_dbr = DBRParser.read(spawn_file)
 
             if "characterLife" in spawn_dbr:
-                hp_list = spawn_dbr["characterLife"]
-                hp = hp_list[index] if index < len(hp_list) else hp_list[len(hp_list) - 1]
+                hp = spawn_dbr["characterLife"][0]
                 TQDBParser.insert_value("characterLife", texts.get("LifeText").format(hp), spawn)
             if "characterMana" in spawn_dbr:
-                mp_list = spawn_dbr["characterMana"]
-                mp = mp_list[index] if index < len(mp_list) else mp_list[len(mp_list) - 1]
+                mp = spawn_dbr["characterMana"][0]
                 TQDBParser.insert_value("characterMana", texts.get("ManaText").format(mp), spawn)
             if ttl_list:
                 ttl = ttl_list[index] if index < len(ttl_list) else ttl_list[len(ttl_list) - 1]

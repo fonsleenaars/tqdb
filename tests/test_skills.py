@@ -1,6 +1,7 @@
 """
 Skills: every skill carries the record it was parsed from, a buff wrapper's
-record is its own, and one record has one tag.
+record is its own, one record has one tag, and a summon's arrays line up
+with the game's axes.
 
 """
 
@@ -11,6 +12,25 @@ from tqdb import dbr, main, storage
 
 BOLT = "database/records/skills/fixture/hero_bolt.dbr"
 AURA_HERO = "database/records/creature/monster/fixture/hero_aura_40.dbr"
+SUMMON = "database/records/skills/fixture/summon.dbr"
+
+
+def test_summon_arrays_line_up(fixture_data):
+    # The game lists one spawn object per skill level, with the lifetime
+    # array alongside it. A spawn record's life and mana arrays are per
+    # difficulty, like any monster's, so every summon shows its Normal
+    # values whatever its level.
+    skill = dbr.parse(fixture_data / SUMMON)
+    first, second = skill["summons"]
+
+    assert first["name"] == "Fixture Pet A"
+    assert second["name"] == "Fixture Pet B"
+    assert first["properties"]["spawnObjectsTimeToLive"] == "Lasts 8.0 Seconds"
+    assert second["properties"]["spawnObjectsTimeToLive"] == "Lasts 9.0 Seconds"
+    assert first["properties"]["characterLife"] == "100 Vigor"
+    assert second["properties"]["characterLife"] == "120 Vigor"
+    assert first["properties"]["characterMana"] == "10 Focus"
+    assert second["properties"]["characterMana"] == "12 Focus"
 
 
 def test_buff_wrapper_record_is_its_own(fixture_data):

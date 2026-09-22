@@ -2,3 +2,4 @@
 tagSkillFixtureBolt=Fixture Bolt
 tagSkillFixtureNova=Fixture Nova
 tagSkillFixtureAura=Fixture Aura
+tagSkillFixtureSummon=Fixture Summon
