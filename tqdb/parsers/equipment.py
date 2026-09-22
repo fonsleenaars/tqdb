@@ -259,9 +259,10 @@ class ItemEquipmentParser(TQDBParser):
             # Only add the set if it has a tag:
             result["set"] = item_set.get(ItemSetParser.NAME, None)
 
-        # Stop parsing here if requirement parsing isn't necessary
-        if not self.should_parse_requirements(dbr, result):
-            return
+        # Every record has a cost file: its own itemCostName, or the engine's
+        # default (gameengine.dbr names records/game/itemcost.dbr). Each
+        # requirement the record sets itself (ItemBaseParser, above) wins;
+        # the equations fill only the fields it leaves at zero.
 
         # Cost prefix of this props is determined by its class
         cost_prefix = dbr["Class"].split("_")[1]
@@ -289,21 +290,6 @@ class ItemEquipmentParser(TQDBParser):
 
                 # Eval the equation:
                 result[req] = round(numexpr.evaluate(equation).item())
-
-    def should_parse_requirements(self, dbr, result):
-        """
-        Check if this parser should parse requirements further.
-
-        If either an requirement equation file is present, or no requirements
-        have been defined statically in the DBR, requirements should be parsed.
-
-        The latter scenario falls back to the generic `itemcost.dbr` file in
-        the game folder.
-
-        """
-        return "itemCostName" in dbr or not any(
-            f"{requirement.lower}Requirement" in dbr for requirement in self.REQUIREMENTS
-        )
 
 
 class ItemRelicParser(TQDBParser):

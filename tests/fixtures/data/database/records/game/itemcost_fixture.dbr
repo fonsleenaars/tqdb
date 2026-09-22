@@ -1,0 +1,6 @@
+templateName,database\Templates\ItemCost.tpl,
+FileDescription,fixture cost file named by a record's itemCostName,
+ringStrengthEquation,100+itemLevel,
+ringDexterityEquation,110+itemLevel,
+ringIntelligenceEquation,120+itemLevel,
+ringLevelEquation,40+itemLevel,

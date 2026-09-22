@@ -1,0 +1,6 @@
+templateName,database\Templates\ItemCost.tpl,
+FileDescription,fixture engine default cost file (gameengine.dbr itemCostName),
+ringStrengthEquation,10+itemLevel,
+ringDexterityEquation,20+itemLevel,
+ringIntelligenceEquation,30+itemLevel,
+ringLevelEquation,itemLevel+totalAttCount,
