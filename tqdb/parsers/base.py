@@ -699,9 +699,14 @@ class ParametersOffensiveParser(TQDBParser):
                     suffix = texts.get(DOT_SINGLE).format(duration_min)
         elif field_type == self.EOT:
             duration_min = dbr.get(f"{field}DurationMin", 0)
+            duration_max = dbr.get(f"{field}DurationMax", 0)
 
+            # The time reads as a range the same way as damage over time's:
             if duration_min:
-                suffix = texts.get(DFT_SINGLE).format(duration_min)
+                if duration_max and duration_max != duration_min:
+                    suffix = texts.get(DFT_RANGE).format(duration_min, duration_max)
+                else:
+                    suffix = texts.get(DFT_SINGLE).format(duration_min)
 
         # Pierce ratio is a singular exception for flat properties:
         if field == "offensivePierceRatio":
