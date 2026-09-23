@@ -6,7 +6,7 @@ The website copies parser output verbatim and renders it with almost no transfor
 
 - The site's import copies every `output/tqdb.*.json` to a data file per locale, and `output/sprite.css` and `output/sprite.png` beside its styles and images. Nothing else in `output/` is read.
 - The locale is the **second dot-separated field** of the filename. `tqdb.en.1.4.5.json` works; anything that moves the locale breaks the import.
-- Twelve data files (12 to 14 MB each) plus the sprite are **committed** to the website repo. They are the last known-good parser output and serve as a regression baseline.
+- The site commits the imported files (12 to 14 MB each, plus the sprite).
 - No offline transformation. All reshaping happens at runtime on the site (reverse maps from equipment to creature loot and quest rewards, monster-infrequent de-duplication, per-item links).
 
 ## Top-level shape

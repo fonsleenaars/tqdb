@@ -58,4 +58,4 @@ Notes:
 
 ## Regression baseline
 
-The website's history holds the output of parser 1.4.5 against game v2.10.21415 (twelve data files and the sprite pair, committed May 2023). It is the only complete known-good output available, since this repo's last release commit is parser 1.4.3 and no `output/` is preserved anywhere else.
+The website's history holds the output of parser 1.4.5 against game v2.10.21415 (twelve data files and the sprite pair, committed May 2023). It is the only complete known-good output of the old parser, since this repo's last release commit is parser 1.4.3 and no `output/` is preserved anywhere else.

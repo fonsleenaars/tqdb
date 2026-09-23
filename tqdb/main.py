@@ -220,17 +220,10 @@ def exception_messages_with_causes(e):
     return exception_messages
 
 
-# The game ships its own development leftovers among the monsters, sharing
-# tags with the real ones: superseded records under old/ (nine for Hades
-# alone), QA monsters under zz_dev/ (a Pirate Captain with a 51-item test
-# loot table, an Ancient of the Wild with "always drop" chances of 1000),
-# records named *_old, the credits-scene actors (credits_hades.dbr, "Not in
-# game - credits scene only"), test monsters and stunt doubles. Immortal
-# Throne keeps its developer testers under zzdev/ (no underscore), Ragnarok
-# its developer monsters and joke monsters (Inhuman Centipede)
-# under zzz/. Left in, they would be elected canonical, feed the loot union
-# or appear as monsters of their own, so they are skipped before parsing.
-# Each skipped record is logged at debug level.
+# Development leftovers in the game's monster folders (superseded, QA,
+# credits-scene and test records). Left in, they would be elected
+# canonical, feed the loot union or show up as monsters of their own.
+# See the game-data workarounds in docs/architecture.md.
 DEVELOPMENT_DIRECTORIES = {"old", "zz_dev", "zzdev", "zzz"}
 DEVELOPMENT_NAMES = re.compile(r"_old$|^credits_|test|stuntdouble")
 
