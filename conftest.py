@@ -5,8 +5,9 @@ Two data sources exist for tests:
 
 - `fixture_data` points the parser at the synthetic tree under
   tests/fixtures/data. It mirrors the layout of the extracted game data
-  (database/templates, database/records, resources/<locale>) with
-  hand-written records, and needs no game data at all.
+  (database/templates, database/records, resources/<locale>), but its
+  templates, records and texts are written for the tests and hold no game
+  content; it needs no game data at all.
 - `game_templates` loads the real templates from the data root and skips
   the test when they are absent. Only the template coverage tests use it.
 

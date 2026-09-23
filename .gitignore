@@ -1,5 +1,6 @@
 # Game content: never committed. Anchored to the repo root so that
-# tests/fixtures/data (synthetic, committed) is not caught.
+# tests/fixtures/data (synthetic, written for the tests, committed) is not
+# caught.
 /data/
 /game/
 /output/
