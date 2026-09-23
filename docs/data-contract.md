@@ -60,7 +60,7 @@ These are the parts a rewrite cannot change without a matching website change.
 
 **Tags carry meaning.** `x2`/`x3`/`x4` prefixes become DLC badges; quest tag prefixes become region labels; `tag === "Placeholder"` is dropped; formulae use the synthetic tag `formula-<artifactTag>` and the site recovers the artifact by stripping the prefix.
 
-**`affix.equipment`** is a CSV of exact tokens: `{head,torso,arm,arms,leg,legs}{mage,melee}`, `amulet`, `ring`, `axe`, `bow`, `club`, `shield`, `spear`, `staff`, `sword`. Unknown tokens render as "unused". The tokens are sorted.
+**`affix.equipment`** is a CSV of exact tokens: `{head,torso,arm,arms,leg,legs}{mage,melee}`, `amulet`, `ring`, `axe`, `bow`, `club`, `roh`, `shield`, `spear`, `staff`, `sword`. `roh` is one-handed ranged: Ragnarok's throwing weapons. Unknown tokens render as "unused". The tokens are sorted.
 
 **Affix variants.** An affix is one entry per tag, and `variants` holds one entry per game record that carries the tag, never merged, even when two records have identical properties:
 
@@ -81,11 +81,13 @@ These are the parts a rewrite cannot change without a matching website change.
 
 `loot[d]` and `chest[d]` are the union over all variants of what they drop in that difficulty. Each chance is the first variant's, in `variants` order, that gives the item a chance above zero; an item at zero in every variant keeps the canonical's zero. A union entry may therefore describe a variant whose level is not the one shown (the Bonelord's Legendary loot includes the level-80 Eternal Embers record's items under the level-57 canonical); nothing in the shape says which variant contributed which entry. Loot is evaluated at each record's padded levels whether or not it spawns there, as it always was, so a Legendary-only record can contribute to `loot[0]`.
 
-Records the game left in its monster folders for development (under an `old`, `zz_dev` or `zzdev` directory, or named `*_old`, `credits_*`, `*test*` or `*stuntdouble*`) are not variants and are absent from the output; so are Scylla's three records, which carry the Lernean Hydra's tag, and the bones and chains that carry Typhon's (`docs/architecture.md`, game-data workarounds).
+Records the game left in its monster folders for development (under an `old`, `zz_dev`, `zzdev` or `zzz` directory, or named `*_old`, `credits_*`, `*test*` or `*stuntdouble*`) are not variants and are absent from the output; so are Scylla's three records, which carry the Lernean Hydra's tag, and the bones and chains that carry Typhon's (`docs/architecture.md`, game-data workarounds).
 
 **Quest rewards.** Quest reward chances from dynamic-weight tables are computed with uniform weights over the table's pool. The game favours items near a target level derived from the player's level and the spawner's, so the true chance at any level is between half and twice the value shown. `levelNeutral` is a three-entry boolean array, one per difficulty, present on every quest: `true` where any table behind `rewards[d]` was evaluated that way, `false` where every reward in that difficulty comes from fixed-weight tables and the chances are exact. A dynamic-weight table whose item level bounds themselves depend on a level contributes nothing.
 
 **Skill identity.** Every skill carries `record`, the same identity as an affix or creature variant: its path under `database/records`, lowercase, forward slashes, without its `.dbr` extension. The key a skill is stored under is its display-name tag, made unique with a `-N` suffix when several records share the tag. That suffix is assigned in parse order: it is consistent within one output but shifts between outputs whenever the set of records that reference skills changes, so `record` is the only identity that survives a re-parse. A skill whose record only wraps a buff (the toggled auras, pet modifiers) shows the buff's name and properties under its own `record`; two wrappers of one buff are two skills, and no record appears under more than one tag.
+
+**Expansion from `record`.** The first segment of a creature variant's or a skill's `record` names the expansion when it is `xpack2` (Ragnarok), `xpack3` (Atlantis) or `xpack4` (Eternal Embers); any other segment is not an expansion marker. `xpack` holds Immortal Throne content but also Immortal Throne's revised copies of base-game bosses, so it does not mark an expansion. The folder is the reliable signal: tag prefixes (`x2`, `x3`, `x4`) disagree with it on some records (Eternal Embers records under `x2` tags, the level-80 Bonelord under a base tag).
 
 **`description`** still contains the game's `{...}` markup; the site strips it.
 
@@ -96,6 +98,7 @@ Records the game left in its monster folders for development (under an `old`, `z
 - Items with `"classification": "UNKNOWN"` match no rarity filter and are invisible in listings.
 - Monster-infrequent items can collide on `tag` + `name` + `dropsIn`; the site invents `-1`, `-2` suffixes at load time. Non-MI duplicates are silently dropped.
 - Skill keys with a `-N` suffix (creature `abilities` and `itemSkillName.tag` point at them) are numbered in parse order and renumber between outputs; a link to a skill page keyed that way does not survive a re-parse. `record` is the stable identity, and the site does not use it yet.
+- Affix `equipment` also carries tokens that are not slots: table file names such as `jade.dbr` or `crystal.dbr` (pools for single uniques) and `chinamonsterprefix`, `chinamonstersuffix`, `egyptmonsterprefix`, `egyptmonstersuffix` (tables nothing references). No affix consists only of them.
 - `petBonus` is sometimes an array (Spear of Nemetona).
 - Any dangling reference (`itemSkillName.tag`, `formula-` artifact, reagents) is an uncaught TypeError on the site. The parser gives no referential-integrity guarantee.
 - Website-side, the loot view compares `classification === 'Rare'` in English, so MI loot tables are empty in the 11 other locales.
