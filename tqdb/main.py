@@ -226,10 +226,12 @@ def exception_messages_with_causes(e):
 # loot table, an Ancient of the Wild with "always drop" chances of 1000),
 # records named *_old, the credits-scene actors (credits_hades.dbr, "Not in
 # game - credits scene only"), test monsters and stunt doubles. Immortal
-# Throne keeps its developer testers under zzdev/ (no underscore). Left in,
-# they would be elected canonical or feed the loot union, so they are
-# skipped before parsing. Each skipped record is logged at debug level.
-DEVELOPMENT_DIRECTORIES = {"old", "zz_dev", "zzdev"}
+# Throne keeps its developer testers under zzdev/ (no underscore), Ragnarok
+# its developer monsters and joke monsters (Inhuman Centipede)
+# under zzz/. Left in, they would be elected canonical, feed the loot union
+# or appear as monsters of their own, so they are skipped before parsing.
+# Each skipped record is logged at debug level.
+DEVELOPMENT_DIRECTORIES = {"old", "zz_dev", "zzdev", "zzz"}
 DEVELOPMENT_NAMES = re.compile(r"_old$|^credits_|test|stuntdouble")
 
 # Records whose tag names another monster. Scylla's three Atlantis records

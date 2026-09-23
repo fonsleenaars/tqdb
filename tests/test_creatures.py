@@ -42,6 +42,8 @@ def parsed(fixture_data, name):
         "xpack4/creatures/monster/zz_dev/qa folder/banditchina_piratecaptain.dbr",
         "xpack4/creatures/monster/zz_dev/ancient_forest_48.dbr",
         "xpack/creatures/monster/zzdev/z_dev01.dbr",
+        "xpack2/creatures/monster/zzz/z_dev02.dbr",
+        "xpack2/creatures/monster/zzz/am_centipede_50.dbr",
         "xpack/creatures/monster/bosses/05_hades/old/boss_hades_50_old.dbr",
         "xpack4/creatures/monster/yaoguai/x4_sq401_monster_hero_yaoguaibrute_83_a_old.dbr",
         "xpack/creatures/monster/bosses/05_hades/credits_hades.dbr",
@@ -80,19 +82,20 @@ def test_other_records_are_kept(path):
 
 def test_excluded_records_are_never_parsed_and_are_logged(fixture_data, caplog):
     """
-    The record under old/ and the one named *test* share the fixture tag and
-    would both sort before the real records; they are skipped before parsing.
+    The records under old/ and zzz/ and the one named *test* share the
+    fixture tag and would all sort before the real records; they are skipped
+    before parsing.
 
     """
     with caplog.at_level(logging.DEBUG, logger="root"):
         creature = main.parse_creatures()["tagMonsterFixture"]
 
     records = [variant["record"] for variant in creature["variants"]]
-    assert FIXTURE + "old/hero_5" not in records
-    assert FIXTURE + "hero_test" not in records
-    assert not any(key[0] in (FIXTURE + "old/hero_5", FIXTURE + "hero_test") for key in storage.db)
-    assert FIXTURE + "old/hero_5" in caplog.text
-    assert FIXTURE + "hero_test" in caplog.text
+    skipped = (FIXTURE + "old/hero_5", FIXTURE + "zzz/hero_2", FIXTURE + "hero_test")
+    assert not set(skipped) & set(records)
+    assert not any(key[0] in skipped for key in storage.db)
+    for path in skipped:
+        assert path in caplog.text
 
 
 @pytest.mark.parametrize(
