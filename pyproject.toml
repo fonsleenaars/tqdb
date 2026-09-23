@@ -1,6 +1,6 @@
 [project]
 name = "tqdb"
-version = "1.5.0"
+version = "1.5.1"
 description = "Parser for Titan Quest game data, producing the JSON behind tq-db.net"
 readme = "README.md"
 license = "MIT"

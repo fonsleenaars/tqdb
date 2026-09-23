@@ -1,6 +1,6 @@
 # Architecture (current Python parser)
 
-Describes the pipeline as it exists at parser version 1.5.0. Source references are `file:line`.
+Describes the pipeline as it exists at parser version 1.5.1. Source references are `file:line`.
 
 ## Pipeline
 
