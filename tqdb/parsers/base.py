@@ -568,15 +568,27 @@ class ParametersOffensiveParser(TQDBParser):
 
             iterations = max(len(dbr[min]) if min in dbr else 0, len(dbr[mod]) if mod in dbr else 0, 0)
 
+            # A duration longer than Min adds flat levels, but only as far as
+            # its values keep changing: the game pads each array to the skill's
+            # or item's own count, while the parser counts levels from the
+            # longest property list, so a constant tail would add bogus tiers
+            # (the act 1 batfang relics' 3;3;3;3;3;3 against five Min values).
+            flat_iterations = iterations
+            duration_min = f"{field}DurationMin"
+            if field_type in [self.DOT, self.EOT] and min in dbr and duration_min in dbr:
+                for duration in [dbr[duration_min], dbr.get(f"{field}DurationMax", [])]:
+                    changes = [i + 1 for i in range(len(dbr[min]), len(duration)) if duration[i] != duration[i - 1]]
+                    flat_iterations = max([flat_iterations] + changes)
+
             # Now iterate as many times as is necessary for this field:
-            for index in range(iterations):
+            for index in range(flat_iterations):
                 # Create a new copy of the DBR with the values for this index:
                 iteration = TQDBParser.extract_values(dbr, field, index)
 
                 if min in iteration:
                     # Parse the flat (+...) version:
                     self.parse_flat(field, field_type, iteration)
-                if mod in iteration:
+                if mod in iteration and index < iterations:
                     # Parse the modifier (+...%) version
                     self.parse_modifier(field, field_type, iteration)
 

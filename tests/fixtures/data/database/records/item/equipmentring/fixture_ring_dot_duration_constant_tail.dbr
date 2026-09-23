@@ -1,0 +1,8 @@
+templateName,database\Templates\Jewelry_Ring.tpl,
+Class,ArmorJewelry_Ring,
+FileDescription,fixture ring with frostburn whose duration is padded past its damage with the same value,
+itemClassification,Epic,
+itemLevel,10,
+itemNameTag,tagRingFixtureDot,
+offensiveSlowColdMin,5;10,
+offensiveSlowColdDurationMin,3;3;3,
